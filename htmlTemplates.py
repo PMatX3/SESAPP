@@ -37,7 +37,7 @@ bot_template = '''
 user_template = '''
 <div class="chat-message user">
     <div class="avatar">
-        <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png">
+        <img src="https://ibb.co/Q6s5QpT/SES-logo.png" alt="SES-logo" border="0" width="400" height="400">
     </div>    
     <div class="message">{{MSG}}</div>
 </div>
