@@ -10,9 +10,6 @@ from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 
 
-
-
-
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -38,16 +35,56 @@ def get_conversation_chain(vector_store):
     conversation_chain = ConversationalRetrievalChain.from_llm(llm=llm, retriever=vector_store.as_retriever(), memory=memory)
     return conversation_chain
 
-def handle_userinput(user_question):
-    #st.write(user_template.replace("{{MSG}}", user_question), unsafe_allow_html=True)
-    response = st.session_state.conversation({'question': user_question})
-    st.session_state.chat_history = response['chat_history']
+# def handle_userinput(user_question):
+#     #st.write(user_template.replace("{{MSG}}", user_question), unsafe_allow_html=True)
+#     response = st.session_state.conversation({'question': user_question})
+#     st.session_state.chat_history = response['chat_history']
 
-    for i, message in enumerate(st.session_state.chat_history):
+#     for i, message in enumerate(st.session_state.chat_history):
+#         if i % 2 == 0:
+#             st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+#         else:
+#             st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+
+def calculate_total_tokens(conversation):
+    return sum(len(message.content.split()) for message in conversation)
+
+def manage_conversation(conversation, new_message, token_limit=4096):
+    # Ensure conversation is a list
+    if conversation is None:
+        conversation = []
+    
+    total_tokens = calculate_total_tokens(conversation + [new_message])
+    st.write(total_tokens)
+
+    while total_tokens > token_limit and conversation:
+        conversation.pop(0)
+        total_tokens = calculate_total_tokens(conversation)
+
+    conversation.append(new_message)
+    return conversation
+
+def handle_userinput(user_question):
+    # The code here represents your existing functionality to get a response and update chat history
+    response = st.session_state.conversation({'question': user_question})
+    new_message = response['chat_history'][-1]  # Assuming the latest message is at the end
+
+    # Manage conversation to ensure token limit is not exceeded
+    updated_conversation = manage_conversation(st.session_state.chat_history, new_message)
+
+    # Update the chat history in the session state
+    st.session_state.chat_history = updated_conversation
+    
+    # Display the conversation
+    for i, message in enumerate(updated_conversation):
         if i % 2 == 0:
             st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
         else:
             st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+    
+    # Update the chat history in the session state
+    st.session_state.chat_history = updated_conversation
+
 
 def main():
     load_dotenv()

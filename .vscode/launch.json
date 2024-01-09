@@ -8,9 +8,10 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "/Users/patrickmattis/opt/anaconda3/envs/PythonDev/bin/streamlit",
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "args": ["run", "~/Python/SES_ChatGPT_APP/app.py"]
         }
     ]
 }
