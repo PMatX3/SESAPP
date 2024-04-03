@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import streamlit as st
+import pandas as pd
 from PyPDF2 import PdfReader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
@@ -45,6 +46,12 @@ def get_conversation_chain(vector_store):
 #             st.write(user_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
 #         else:
 #             st.write(bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True)
+
+def read_csv_file(csv_file):
+    if csv_file is not None:
+        # To read csv files as a pandas DataFrame
+        return pd.read_csv(csv_file)
+    return None
 
 def calculate_total_tokens(conversation):
     return sum(len(message.content.split()) for message in conversation)
@@ -109,7 +116,8 @@ def main():
 
     with st.sidebar:
         st.subheader("Your documents")
-        pdf_docs = st.file_uploader("Upload PDFs of your resume/CVs here and click on 'Process'", accept_multiple_files=True)
+        pdf_docs = st.file_uploader("Upload PDFs of your resume/CVs here and click on 'Process'", type=["pdf"], accept_multiple_files=True)
+        csv_docs = st.file_uploader("Upload database CSV file and click on 'Process'", type=["csv"], accept_multiple_files=True)
         if st.button("Process"):
             with st.spinner("Processing..."):
                 #get pdf text
@@ -123,6 +131,13 @@ def main():
 
                 # create conversation chain
                 st.session_state.conversation = get_conversation_chain(vector_store)
+
+                # Process CSV files
+                for csv_file in csv_docs:
+                    df = read_csv_file(csv_file)
+                    # Now you can process the DataFrame 'df' as needed
+                    # For example, you can display the DataFrame in the app
+                    st.write(df)
       
 
 if __name__ == "__main__":
