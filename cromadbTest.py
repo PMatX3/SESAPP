@@ -115,7 +115,7 @@ def cromadb_test(file_name,query):
 
 
     client = chromadb.Client()
-    collection = client.get_or_create_collection("oscars-2023",embedding_function=openai_ef)
+    collection = client.get_or_create_collection("candidates",embedding_function=openai_ef)
 
     docs=df["text"].tolist() 
     ids= [str(x) for x in df.index.tolist()]

@@ -56,7 +56,7 @@ def get_conversation_chain(vectorstore):
 
 def handle_userinput(user_question):
     # response = st.session_state.conversation({'question': user_question})
-    response = cromadb_test("output_20240403-211205.csv",user_question)
+    response = cromadb_test("SES_input_copy.csv",user_question)
     st.session_state.chat_history = response
     st.write(user_template.replace(
                 "{{MSG}}", response), unsafe_allow_html=True)
