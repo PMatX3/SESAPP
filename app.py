@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from PyPDF2 import PdfReader
 from cromadbTest import cromadb_test
 import pandas as pd
+import time
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
@@ -130,9 +131,7 @@ def main():
                 # Process CSV files
                     if csv_docs:                
                         for csv_file in csv_docs:
-                            import time
-                            print(csv_file)
-                            print(type(csv_file))
+                                                        
                             df = read_csv_file(csv_file)
                             timestamp = time.strftime("%Y%m%d-%H%M%S")
                             file_name = f'output_{timestamp}.csv'
