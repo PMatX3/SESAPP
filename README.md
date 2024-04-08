@@ -21,3 +21,45 @@ The application will
  e. run a query on ChatGPT
  f. produce a list of candidates based on the best match between the job descriptions, recruitly and CVs
 
+
+
+
+# Streamlit Python App
+
+This is a simple Streamlit Python application showcasing basic functionality.
+
+## Installation
+
+To run this application, make sure you have Python installed on your system. Then, install Streamlit using pip:
+
+```bash
+pip install streamlit
+```
+
+Clone this repository:
+```bash
+git clone [(https://github.com/PMatX3/SESAPP.git)](https://github.com/PMatX3/SESAPP.git)
+```
+
+Navigate to the directory:
+```bash
+cd your_repository
+```
+
+Install the required dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+Run the Streamlit app:
+
+```bash
+streamlit run app.py
+```
+
+Access the application by opening the provided URL in your web browser.
+
+
+
