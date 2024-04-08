@@ -38,7 +38,7 @@ pip install streamlit
 
 Clone this repository:
 ```bash
-git clone [(https://github.com/PMatX3/SESAPP.git)](https://github.com/PMatX3/SESAPP.git)
+git clone https://github.com/PMatX3/SESAPP.git
 ```
 
 Navigate to the directory:
