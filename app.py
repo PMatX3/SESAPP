@@ -1,8 +1,9 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from cromadbTest import cromadb_test
+from cromadbTest import cromadb_test ,load_data , execute_query ,load_pdf_data
 import pandas as pd
+import csv
 import time
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
@@ -55,27 +56,39 @@ def get_conversation_chain(vectorstore):
     return conversation_chain
 
 
+# Modify the handle_userinput function to store both questions and responses
+chat_history = []
 def handle_userinput(user_question):
-    # response = st.session_state.conversation({'question': user_question})
-    response = cromadb_test("SES_input_copy.csv",user_question)
-    st.session_state.chat_history = response
-    st.write(user_template.replace(
-                "{{MSG}}", response), unsafe_allow_html=True)
+    response = execute_query(user_question)    
+    chat_history.append({"question": user_question, "response": response})
     
-    # for i, message in enumerate(st.session_state.chat_history):
-    #     if i % 2 == 0:
-    #         st.write(user_template.replace(
-    #             "{{MSG}}", message.content), unsafe_allow_html=True)
-    #     else:
-    #         st.write(bot_template.replace(
-    #             "{{MSG}}", message.content), unsafe_allow_html=True)
+    for i, message in enumerate(chat_history):        
+        st.write(user_template.replace("{{MSG}}", message["question"]), unsafe_allow_html=True)
+        st.write(bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True)
 
+# chat_history = []
+# def handle_userinput(user_question):
+        
+#     response = execute_query(user_question)
+#     # st.session_state.chat_history = response
+#     chat_history.append(response)
+    
+#     for i, message in enumerate(chat_history):
+#         print("Message detail : ",message)
+#         print("Message detail i : ",i)
+#         st.write(user_template.replace(
+#                 "{{MSG}}", message), unsafe_allow_html=True)
+        # if i % 2 == 0:
+        #     st.write(user_template.replace(
+        #         "{{MSG}}", message), unsafe_allow_html=True)
+        # else:
+        #     st.write(bot_template.replace(
+        #         "{{MSG}}", message), unsafe_allow_html=True)
 
-import csv
 
 def csv_to_text(csv_file):
     text_data = ""
-    with open(csv_file, 'r',encoding="utf8") as csv_file:
+    with open(csv_file, 'r',encoding="utf-8") as csv_file:
         csv_reader = csv.reader(csv_file)
         for row in csv_reader:
             text_data += ' '.join(row) + '\n'
@@ -120,23 +133,24 @@ def main():
                     if pdf_docs:
                         raw_text = get_pdf_text(pdf_docs) 
                         # get the text chunks
+                        load_pdf_data(raw_text)
                         text_chunks = get_text_chunks(raw_text)
 
-                        # create vector store
-                        vectorstore = get_vectorstore(text_chunks)
-
-                        # create conversation chain
-                        st.session_state.conversation = get_conversation_chain(
-                            vectorstore)
+                        # # create vector store
+                        # vectorstore = get_vectorstore(text_chunks)
+                        # print("vector storage:",vectorstore)
+                        # # create conversation chain
+                        # st.session_state.conversation = get_conversation_chain(
+                        #     vectorstore)
                 # Process CSV files
                     if csv_docs:                
                         for csv_file in csv_docs:
                                                         
                             df = read_csv_file(csv_file)
                             timestamp = time.strftime("%Y%m%d-%H%M%S")
-                            file_name = f'output_{timestamp}.csv'
+                            file_name = f'csvdata/output_{timestamp}.csv'
                             df.to_csv(file_name, index=False)
-                                                        
+                            load_data(file_name)                
                             raw_text_csv = csv_to_text(file_name)
                             text_chunks_csv = get_text_chunks(raw_text_csv)
 
