@@ -4,7 +4,11 @@ import os
 import openai
 import chromadb
 from chromadb.utils import embedding_functions
-
+import os
+import openai
+import chromadb
+from chromadb.utils import embedding_functions
+    
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -22,17 +26,7 @@ openai_ef = embedding_functions.OpenAIEmbeddingFunction(
 collection = client.get_or_create_collection("candidates",embedding_function=openai_ef)
 
 def load_pdf_data(text):
-    # Add code here to load data from a PDF file
-    # Example code to read text from a PDF using PyPDF2 library:
-    # import PyPDF2
-
-    # text = ""
-    # with open(file_name, "rb") as file:
-    #     pdf_reader = PyPDF2.PdfFileReader(file)
-    #     for page_num in range(pdf_reader.numPages):
-    #         page = pdf_reader.getPage(page_num)
-    #         text += page.extract_text()
-
+    
     # Add code here to load the extracted text into the collection
     collection.add(
         documents=[text],
@@ -43,7 +37,7 @@ def load_pdf_data(text):
 def load_data(file_name):
     df=pd.read_csv(file_name)
     df.head()
-    
+
     df['text'] = (
         'Candidate ID: ' + df['Candidate Id'].astype(str) + '\n' +
         'Employer Name: ' + df['Employer Name'].astype(str) + '\n' +
@@ -157,14 +151,10 @@ def execute_query(query):
     # print("Last response : ",response_message)
     return response_message
 
-def cromadb_test(file_name,query):
-    # df=pd.read_csv('the_oscar_award.csv')
+def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)
     df.head()
-    # print(df.head())
-    # df['text'] = 'Candidate ID : ' + df['Candidate Id'] + 'Employer name is ' + df['Employer Name'] + 'Start data is ' + df['Start Date'] 
-    # df.loc[df['winner'] == False, 'text'] = df['name'] + ' got nominated under the category, ' + df['category'] + ', for the film ' + df['film'] + ' but did not win'
-    # Create a new column 'text' concatenating values from each column
+    
 
     df['text'] = (
         'Candidate ID: ' + df['Candidate Id'].astype(str) + '\n' +
@@ -246,15 +236,6 @@ def cromadb_test(file_name,query):
         'Mobile: ' + df['Mobile'].astype(str)
     )
 
-    # Print the first few rows to verify
-    # print(df['text'].head())
-
-    # print(df.head()['text'])
-    # exit()
-    import os
-    import openai
-    import chromadb
-    from chromadb.utils import embedding_functions
     
     def text_embedding(text):
         response = openai.Embedding.create(model="text-embedding-ada-002", input=text)
@@ -283,8 +264,7 @@ def cromadb_test(file_name,query):
         n_results=15,
         include=["documents"]
     )
-    res = "\n".join(str(item) for item in results['documents'][0])
-    # print(res)
+    res = "\n".join(str(item) for item in results['documents'][0])    
     prompt=f'```{res}```Based on the data in ```, answer {query}'
     messages = [
             {"role": "system", "content": "You answer questions about 95th Oscar awards."},
@@ -295,6 +275,5 @@ def cromadb_test(file_name,query):
         messages=messages,
         temperature=0
     )
-    response_message = response["choices"][0]["message"]["content"]
-    # print("Last response : ",response_message)
+    response_message = response["choices"][0]["message"]["content"]    
     return response_message
