@@ -61,5 +61,10 @@ streamlit run app.py
 
 Access the application by opening the provided URL in your web browser.
 
+## Run Project in Mac
 
+Run the Streamlit app in MAC OS:
 
+```bash
+bash run.sh
+```
