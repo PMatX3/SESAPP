@@ -1,7 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from cromadbTest import cromadb_test ,load_data , execute_query ,load_pdf_data
+from cromadbTest import load_data , execute_query ,load_pdf_data
 import pandas as pd
 import csv
 import time
