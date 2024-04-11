@@ -14,6 +14,8 @@ from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 import hmac
 import streamlit as st
+import requests
+
 # from langchain.llms import HuggingFaceHub
 
 
@@ -167,14 +169,21 @@ def main():
                             # For example, you can display the DataFrame in the app
                             st.write(df)
 
-
+def get_password(application_id):
+    response = requests.get(f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}")
+    password = response.text.strip()
+    if password == "Password not found":
+        st.error("Invalid application_id")
+    return password
 
 def check_password():
     """Returns `True` if the user had the correct password."""
 
     def password_entered():
+        password_from_api = get_password(st.session_state["application_id"])
+        print("password_from_api == ",password_from_api)
         """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
+        if hmac.compare_digest(st.session_state["password"], password_from_api):
             st.session_state["password_correct"] = True
             del st.session_state["password"]  # Don't store the password.
         else:
@@ -185,6 +194,7 @@ def check_password():
         return True
 
     # Show input for password.
+    st.text_input("application_id", type='default', key='application_id')
     st.text_input(
         "Password", type="password", on_change=password_entered, key="password"
     )
