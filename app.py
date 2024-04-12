@@ -159,10 +159,10 @@ def main():
                             # create conversation chain
                             st.session_state.conversation = get_conversation_chain(
                                 vectorstore_csv)
-                            # df = read_csv_file(csv_file)
-                            # Now you can process the DataFrame 'df' as needed
-                            # For example, you can display the DataFrame in the app
-                            st.write(df)
+                            # Comment out or remove the line that displays the DataFrame
+                            # st.write(df)
+                    # Add a message indicating the files have been processed
+                    st.success("Files processed.")
 
 def get_password(application_id):
     response = requests.get(f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}")
