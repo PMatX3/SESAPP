@@ -60,34 +60,24 @@ def get_conversation_chain(vectorstore):
     return conversation_chain
 
 
-# Modify the handle_userinput function to store both questions and responses
-chat_history = []
 def handle_userinput(user_question):
-    response = execute_query(user_question)    
-    chat_history.append({"question": user_question, "response": response})
-    
-    for i, message in enumerate(chat_history):        
+    # Ensure 'chat_history' is initialized as a list if it does not exist or is None
+    if 'chat_history' not in st.session_state or st.session_state.chat_history is None:
+        st.session_state.chat_history = []
+
+    # Execute the query to get the response
+    response = execute_query(user_question)
+
+    # Append the question and response to the session_state chat_history
+    st.session_state.chat_history.append({"question": user_question, "response": response})
+    output_list = []
+    for message in st.session_state.chat_history:
+        output_list.append({"question": message["question"], "response": message["response"]})
+    output_list.reverse()
+    # Display the chat history
+    for message in output_list:
         st.write(user_template.replace("{{MSG}}", message["question"]), unsafe_allow_html=True)
         st.write(bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True)
-
-# chat_history = []
-# def handle_userinput(user_question):
-        
-#     response = execute_query(user_question)
-#     # st.session_state.chat_history = response
-#     chat_history.append(response)
-    
-#     for i, message in enumerate(chat_history):
-#         print("Message detail : ",message)
-#         print("Message detail i : ",i)
-#         st.write(user_template.replace(
-#                 "{{MSG}}", message), unsafe_allow_html=True)
-        # if i % 2 == 0:
-        #     st.write(user_template.replace(
-        #         "{{MSG}}", message), unsafe_allow_html=True)
-        # else:
-        #     st.write(bot_template.replace(
-        #         "{{MSG}}", message), unsafe_allow_html=True)
 
 
 def csv_to_text(csv_file):
@@ -115,12 +105,17 @@ def main():
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
-    st.header("Find Your Candidate")
+    st.header("Best Candidate AI")
+    
+    
     user_question = st.text_input("Ask a question about your documents:")
+    
     if user_question:
         handle_userinput(user_question)
+    
     st.write(user_template.replace("{{MSG}}","Hello BestCandidate AI"), unsafe_allow_html=True)
     st.write(bot_template.replace("{{MSG}}", "Hello Human from SES."), unsafe_allow_html=True)
+        
     with st.sidebar:
         st.subheader("Your documents")
         pdf_docs = st.file_uploader(
@@ -192,8 +187,7 @@ def check_password():
     # Return True if the password is validated.
     if st.session_state.get("password_correct", False):
         return True
-
-    # Show input for password.
+    st.markdown("<h1 style='text-align: center; color: black;'>Best Candidate AI</h1>", unsafe_allow_html=True)   # Show input for password.
     st.text_input("application_id", type='default', key='application_id')
     st.text_input(
         "Password", type="password", on_change=password_entered, key="password"
