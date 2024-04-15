@@ -13,7 +13,6 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 import hmac
-import streamlit as st
 import requests
 
 # from langchain.llms import HuggingFaceHub
@@ -180,7 +179,7 @@ def main():
                             # Comment out or remove the line that displays the DataFrame
                             # st.write(df)
                     # Add a message indicating the files have been processed
-                    st.success("Files processed.")
+                    st.success("Files processed successfully.")
 
 def store_password(app_name, password):
     # Assuming you have an endpoint to store the password
