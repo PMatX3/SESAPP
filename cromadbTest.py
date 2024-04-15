@@ -122,10 +122,18 @@ def load_data(file_name):
     ids= [str(x) for x in df.index.tolist()]
 
 
-    collection.add(
-        documents=docs,
-        ids=ids
-    )
+    # Define maximum batch size
+    max_batch_size = 166
+
+    # Splitting the documents and ids into batches and adding them to the collection
+    for i in range(0, len(docs), max_batch_size):
+        batch_docs = docs[i:i + max_batch_size]
+        batch_ids = ids[i:i + max_batch_size]
+
+        collection.add(
+            documents=batch_docs,
+            ids=batch_ids
+        )
 
 def execute_query(query):
     # Include the content of the cromadb_test function here
