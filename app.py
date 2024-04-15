@@ -17,7 +17,9 @@ import streamlit as st
 import requests
 
 # from langchain.llms import HuggingFaceHub
-
+load_dotenv()
+st.set_page_config(page_title="Chat with multiple PDFs",
+                    page_icon=":books:")
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -94,10 +96,26 @@ def read_csv_file(csv_file):
         return pd.read_csv(csv_file)
     return None
 
+def registration_page():
+    st.title('Registration Page')
+
+    with st.form("registration_form"):
+        app_name = st.text_input("App Name")
+        password = st.text_input("Password", type="password")
+        
+        # Form submission button
+        submitted = st.form_submit_button("Register")
+        if submitted:
+            # Here, you would typically add your code to register the user
+            # For example, saving the user data to a database
+            # Now also store the password using the new function
+            if store_password(app_name, password):
+                st.success(f"Account created for {app_name}!")
+            else:
+                st.error("Failed to create account. Please try again.")
+
 def main():
-    load_dotenv()
-    st.set_page_config(page_title="Chat with multiple PDFs",
-                       page_icon=":books:")
+    
     st.write(css, unsafe_allow_html=True)
 
     if "conversation" not in st.session_state:
@@ -164,6 +182,15 @@ def main():
                     # Add a message indicating the files have been processed
                     st.success("Files processed.")
 
+def store_password(app_name, password):
+    # Assuming you have an endpoint to store the password
+    response = requests.post(f"http://vaibhavsharma3070.pythonanywhere.com/store_password", data={'app_name': app_name, 'password': password})
+    if response.status_code == 200:
+        return True  # Or any other success criteria
+    else:
+        st.error("Failed to store password")
+        return False
+
 def get_password(application_id):
     response = requests.get(f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}")
     password = response.text.strip()
@@ -177,11 +204,12 @@ def check_password():
     def password_entered():
         password_from_api = get_password(st.session_state["application_id"])
         print("password_from_api == ",password_from_api)
-        """Checks whether a password entered by the user is correct."""
         if hmac.compare_digest(st.session_state["password"], password_from_api):
             st.session_state["password_correct"] = True
+            st.session_state["logged_in"] = True
             del st.session_state["password"]  # Don't store the password.
         else:
+            st.session_state["logged_in"] = False
             st.session_state["password_correct"] = False
 
     # Return True if the password is validated.
@@ -192,13 +220,26 @@ def check_password():
     st.text_input(
         "Password", type="password", on_change=password_entered, key="password"
     )
-    if "password_correct" in st.session_state:
+    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
         st.error("😕 Password incorrect")
     return False
 
-if __name__ == '__main__':
 
-    if not check_password():
-        st.stop()  # Do not continue if check_password is not True.
-    
-    main()
+if __name__ == '__main__':
+    # Check if the user is already logged in
+    if not st.session_state.get('logged_in', False):
+        page = st.sidebar.selectbox("Choose a page", ["Login", "Registration"])
+    else:
+        page = "Main"  # Directly go to the main page if already logged in
+
+    if page == "Login":
+        if not check_password():
+            st.stop()  # Do not continue if check_password is not True.
+        else:
+            # Set the logged_in state to True upon successful login
+            st.session_state.logged_in = True
+            main()
+    elif page == "Registration":
+        registration_page()
+    elif page == "Main":
+        main()
