@@ -8,10 +8,15 @@ import os
 import openai
 import chromadb
 from chromadb.utils import embedding_functions
-    
+from datetime import datetime
+import json
+from pymongo import MongoClient
+
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+m_client = MongoClient('localhost', 27017)
 
 def text_embedding(text):
         response = openai.Embedding.create(model="text-embedding-ada-002", input=text)
@@ -23,7 +28,33 @@ openai_ef = embedding_functions.OpenAIEmbeddingFunction(
                 model_name="text-embedding-ada-002"
             )
 
+db = m_client['user_db']
+
 collection = client.get_or_create_collection("candidates",embedding_function=openai_ef)
+collection2 = client.get_or_create_collection("candidates2",embedding_function=openai_ef)
+chat_history_collection = db['chat_history']
+
+def add_chat_message(user_id, message, response):
+    """
+    Adds a chat message and its response to the MongoDB collection.
+    """
+    timestamp = datetime.now().isoformat()
+    document = {
+        "user_id": user_id,
+        "message": message,
+        "response": response,
+        "timestamp": timestamp
+    }
+    chat_history_collection.insert_one(document)
+    print('Data saved to MongoDB')
+
+def get_chat_history(user_id):
+    """
+    Retrieves the chat history for a given user from MongoDB.
+    """
+    history = list(chat_history_collection.find({"user_id": user_id}))
+    # Optionally, you can convert ObjectId to string if needed, or perform other transformations
+    return history
 
 def load_pdf_data(text):
     
@@ -135,28 +166,79 @@ def load_data(file_name):
             ids=batch_ids
         )
 
-def execute_query(query):
-    # Include the content of the cromadb_test function here
-    vector=text_embedding("give me top 5 candidate list")
-    results=collection.query(    
-        query_embeddings=vector,
-        n_results=15,
-        include=["documents"]
-    )
+def load_json_data(json_data):
+    """
+    Converts JSON data to a DataFrame, then generates a new DataFrame with a 'text' column
+    that concatenates all column names and data, and finally stores this data into Cromadb.
+
+    Args:
+    - json_data: A list of dictionaries, where each dictionary represents a document to be stored in Cromadb.
+    """
+    # Convert JSON data to DataFrame
+    df = pd.DataFrame(json_data)
+
+    # Generate 'text' column by concatenating all column names and their data
+    df['text'] = df.apply(lambda row: '\n'.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
+
+    docs = df["text"].tolist()
+    ids = [str(i) for i in range(len(df))]
+
+    # Define maximum batch size for adding documents to Cromadb
+    max_batch_size = 40
+    # Splitting the documents and ids into batches and adding them to the collection
+    for i in range(0, len(docs), max_batch_size):
+        batch_docs = docs[i:i + max_batch_size]
+        batch_ids = ids[i:i + max_batch_size]
+
+        # Add the batch of documents to the collection
+        collection2.add(
+            documents=batch_docs,
+            ids=batch_ids
+        )
+    print("JSON data loaded into Cromadb successfully.")
+
+def execute_query(query, user_id, temp=False):
+    # Your existing code to process the query...
+    if temp:
+        vector = text_embedding("")
+        results = collection2.query(    
+            query_embeddings=vector,
+            n_results=10,
+            include=["documents"]
+        )
+    else:
+        vector = text_embedding("give me top 5 candidate list")
+        results = collection.query(    
+            query_embeddings=vector,
+            n_results=15,
+            include=["documents"]
+        )
     res = "\n".join(str(item) for item in results['documents'][0])
-    # print(res)
-    prompt=f'```{res}```Based on the data in ```, answer {query}'
+    prompt = f'```{res}```Based on the data in ```, answer {query}'
+
+    # Truncate the prompt if it exceeds a certain length to avoid exceeding token limits
+    MAX_LENGTH = 16000  # Adjust based on experimentation
+    if len(prompt) > MAX_LENGTH:
+        prompt = prompt[:MAX_LENGTH] + f'... Answer the question {query}'
+
+    print(prompt)
     messages = [
-            {"role": "system", "content": "You answer questions BestCandidate AI Bot."},
-            {"role": "user", "content": prompt}
+        {"role": "system", "content": "You answer questions BestCandidate AI Bot."},
+        {"role": "user", "content": prompt}
     ]
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        temperature=0
-    )
-    response_message = response["choices"][0]["message"]["content"]
-    # print("Last response : ",response_message)
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+            temperature=0
+        )
+        response_message = response["choices"][0]["message"]["content"]
+    except openai.error.InvalidRequestError as e:
+        response_message = "Error: The input is too long for the model to process."
+
+    # Add the query and response to the chat history
+    add_chat_message(user_id, query, response_message)
+    
     return response_message
 
 def cromadb_test(file_name,query):    
