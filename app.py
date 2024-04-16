@@ -1,7 +1,7 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from cromadbTest import load_data , execute_query ,load_pdf_data
+from cromadbTest import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data
 import pandas as pd
 import csv
 import time
@@ -17,8 +17,8 @@ import requests
 
 # from langchain.llms import HuggingFaceHub
 load_dotenv()
-st.set_page_config(page_title="Chat with multiple PDFs",
-                    page_icon=":books:")
+st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
+
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -31,10 +31,7 @@ def get_pdf_text(pdf_docs):
 
 def get_text_chunks(text):
     text_splitter = CharacterTextSplitter(
-        separator="\n",
-        chunk_size=1000,
-        chunk_overlap=200,
-        length_function=len
+        separator="\n", chunk_size=1000, chunk_overlap=200, length_function=len
     )
     chunks = text_splitter.split_text(text)
     return chunks
@@ -51,43 +48,53 @@ def get_conversation_chain(vectorstore):
     llm = ChatOpenAI()
     # llm = HuggingFaceHub(repo_id="google/flan-t5-xxl", model_kwargs={"temperature":0.5, "max_length":512})
 
-    memory = ConversationBufferMemory(
-        memory_key='chat_history', return_messages=True)
+    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     conversation_chain = ConversationalRetrievalChain.from_llm(
-        llm=llm,
-        retriever=vectorstore.as_retriever(),
-        memory=memory
+        llm=llm, retriever=vectorstore.as_retriever(), memory=memory
     )
     return conversation_chain
 
 
 def handle_userinput(user_question):
     # Ensure 'chat_history' is initialized as a list if it does not exist or is None
-    if 'chat_history' not in st.session_state or st.session_state.chat_history is None:
+    if "chat_history" not in st.session_state or st.session_state.chat_history is None:
         st.session_state.chat_history = []
 
     # Execute the query to get the response
-    response = execute_query(user_question)
+    if st.session_state['temp']:
+        response = execute_query(user_question, st.session_state["user_application_id"], True)
+    else:
+        response = execute_query(user_question, st.session_state["user_application_id"])
 
     # Append the question and response to the session_state chat_history
-    st.session_state.chat_history.append({"question": user_question, "response": response})
+    st.session_state.chat_history.append(
+        {"question": user_question, "response": response}
+    )
     output_list = []
     for message in st.session_state.chat_history:
-        output_list.append({"question": message["question"], "response": message["response"]})
+        output_list.append(
+            {"question": message["question"], "response": message["response"]}
+        )
     output_list.reverse()
     # Display the chat history
     for message in output_list:
-        st.write(user_template.replace("{{MSG}}", message["question"]), unsafe_allow_html=True)
-        st.write(bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True)
+        st.write(
+            user_template.replace("{{MSG}}", message["question"]),
+            unsafe_allow_html=True,
+        )
+        st.write(
+            bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True
+        )
 
 
 def csv_to_text(csv_file):
     text_data = ""
-    with open(csv_file, 'r',encoding="utf-8") as csv_file:
+    with open(csv_file, "r", encoding="utf-8") as csv_file:
         csv_reader = csv.reader(csv_file)
         for row in csv_reader:
-            text_data += ' '.join(row) + '\n'
+            text_data += " ".join(row) + "\n"
     return text_data
+
 
 def read_csv_file(csv_file):
     if csv_file is not None:
@@ -95,13 +102,14 @@ def read_csv_file(csv_file):
         return pd.read_csv(csv_file)
     return None
 
+
 def registration_page():
-    st.title('Registration Page')
+    st.title("Sign Up")
 
     with st.form("registration_form"):
-        app_name = st.text_input("App Name")
+        app_name = st.text_input("User email")
         password = st.text_input("Password", type="password")
-        
+
         # Form submission button
         submitted = st.form_submit_button("Register")
         if submitted:
@@ -113,34 +121,74 @@ def registration_page():
             else:
                 st.error("Failed to create account. Please try again.")
 
+
 def main():
-    
     st.write(css, unsafe_allow_html=True)
 
+    # Initialize session state for conversation and chat history if not already present
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
 
+    # Assuming user_id is available and uniquely identifies the user
+    # You need to determine how to obtain this ID. This could be from the session state, a login system, etc.
+    if 'user_application_id' in st.session_state:
+        user_id = st.session_state["user_application_id"]
+    else:
+        user_id = 0
+    print(st.session_state["user_application_id"])
+    # Retrieve and display the chat history for the user
+
     st.header("Best Candidate AI")
-    
-    
-    user_question = st.text_input("Ask a question about your documents:")
-    
-    if user_question:
-        handle_userinput(user_question)
-    
-    st.write(user_template.replace("{{MSG}}","Hello BestCandidate AI"), unsafe_allow_html=True)
-    st.write(bot_template.replace("{{MSG}}", "Hello Human from SES."), unsafe_allow_html=True)
-        
+
+    # Input for user's question
+    user_input = st.text_input("Type your question about your documents here:")
+    if st.button('Ask'):
+        user_question = user_input  # This line assigns the input text to user_question only when the button is clicked
+
+        # Now, you can use user_question as before
+        if user_question:
+            handle_userinput(user_question)
+
+    chat_history = get_chat_history(user_id)
+    if chat_history:
+        st.write("Your previous conversations:")
+        for message in chat_history:
+            # Assuming 'message' is a dictionary with 'message', 'response', and possibly other keys like 'timestamp'
+            st.write(user_template.replace("{{MSG}}", message["message"]), unsafe_allow_html=True)
+            st.write(bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True)
+    else:
+        st.write("No previous conversations found.")
+
+    # Example placeholders for displaying a welcome message
+    st.write(
+        user_template.replace("{{MSG}}", "Hello BestCandidate AI"),
+        unsafe_allow_html=True,
+    )
+    st.write(
+        bot_template.replace("{{MSG}}", "Hello Human from SES."), unsafe_allow_html=True
+    )
+
+    # Sidebar for document uploads (PDFs and CSVs)
     with st.sidebar:
         st.subheader("Your documents")
         pdf_docs = st.file_uploader(
-            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True)
-        csv_docs = st.file_uploader("Upload database CSV file and click on 'Process'", type=["csv"], accept_multiple_files=True)
+            "Upload your PDFs here and click on 'Process'", accept_multiple_files=True
+        )
+        csv_docs = st.file_uploader(
+            "Upload database CSV file and click on 'Process'",
+            type=["csv"],
+            accept_multiple_files=True,
+        )
+
+        # use_recrutly_data = st.checkbox("Use Recrutly.io data")
+        use_recrutly_data = st.checkbox("Use Recrutly.io data", value=False, key="use_recrutly_data")
+        st.session_state['temp'] = False
+        # Process button
         if st.button("Process"):
             with st.spinner("Processing"):
-                # Add validation for file uploads before processing
+                # Validation for file uploads
                 if pdf_docs is None or csv_docs is None:
                     st.error("Please upload both PDF and CSV files before processing.")
                 else:
@@ -161,7 +209,6 @@ def main():
                 # Process CSV files
                     if csv_docs:                
                         for csv_file in csv_docs:
-                                                        
                             df = read_csv_file(csv_file)
                             timestamp = time.strftime("%Y%m%d-%H%M%S")
                             file_name = f'csvdata/output_{timestamp}.csv'
@@ -178,34 +225,50 @@ def main():
                                 vectorstore_csv)
                             # Comment out or remove the line that displays the DataFrame
                             # st.write(df)
-                    # Add a message indicating the files have been processed
-                    st.success("Files processed successfully.")
+
+                    if use_recrutly_data:
+                        st.session_state['temp'] = True
+                        import json
+                        with open('candidates_data.json', 'r', encoding='utf-8') as file:
+                            data = json.load(file)
+                        load_json_data(data)
+                        print('json data loaded')
+                    st.success("Files processed.")
+
 
 def store_password(app_name, password):
     # Assuming you have an endpoint to store the password
-    response = requests.post(f"http://vaibhavsharma3070.pythonanywhere.com/store_password", data={'app_name': app_name, 'password': password})
+    response = requests.post(
+        f"http://vaibhavsharma3070.pythonanywhere.com/store_password",
+        data={"app_name": app_name, "password": password},
+    )
     if response.status_code == 200:
         return True  # Or any other success criteria
     else:
         st.error("Failed to store password")
         return False
 
+
 def get_password(application_id):
-    response = requests.get(f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}")
+    response = requests.get(
+        f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}"
+    )
     password = response.text.strip()
     if password == "Password not found":
         st.error("Invalid application_id")
     return password
+
 
 def check_password():
     """Returns `True` if the user had the correct password."""
 
     def password_entered():
         password_from_api = get_password(st.session_state["application_id"])
-        print("password_from_api == ",password_from_api)
+        print("password_from_api == ", password_from_api, st.session_state["application_id"])
         if hmac.compare_digest(st.session_state["password"], password_from_api):
             st.session_state["password_correct"] = True
             st.session_state["logged_in"] = True
+            st.session_state["user_application_id"] = st.session_state["application_id"]
             del st.session_state["password"]  # Don't store the password.
         else:
             st.session_state["logged_in"] = False
@@ -214,19 +277,25 @@ def check_password():
     # Return True if the password is validated.
     if st.session_state.get("password_correct", False):
         return True
-    st.markdown("<h1 style='text-align: center; color: black;'>Best Candidate AI</h1>", unsafe_allow_html=True)   # Show input for password.
-    st.text_input("application_id", type='default', key='application_id')
+    st.markdown(
+        "<h1 style='text-align: center; color: black;'>Best Candidate AI</h1>",
+        unsafe_allow_html=True,
+    )  # Show input for password.
+    st.text_input("User email", type="default", key="application_id")
     st.text_input(
         "Password", type="password", on_change=password_entered, key="password"
     )
-    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
+    if (
+        "password_correct" in st.session_state
+        and not st.session_state["password_correct"]
+    ):
         st.error("😕 Password incorrect")
     return False
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Check if the user is already logged in
-    if not st.session_state.get('logged_in', False):
+    if not st.session_state.get("logged_in", False):
         page = st.sidebar.selectbox("Choose a page", ["Login", "Registration"])
     else:
         page = "Main"  # Directly go to the main page if already logged in
