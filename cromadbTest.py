@@ -52,7 +52,7 @@ def get_chat_history(user_id):
     """
     Retrieves the chat history for a given user from MongoDB.
     """
-    history = list(chat_history_collection.find({"user_id": user_id}))
+    history = list(chat_history_collection.find({"user_id": user_id}).sort("timestamp", -1))
     # Optionally, you can convert ObjectId to string if needed, or perform other transformations
     return history
 
@@ -69,92 +69,92 @@ def load_data(file_name):
     df=pd.read_csv(file_name)
     df.head()
 
-    df['text'] = (
-        'Candidate ID: ' + df['Candidate Id'].astype(str) + '\n' +
-        'Employer Name: ' + df['Employer Name'].astype(str) + '\n' +
-        'Start Date: ' + df['Start Date'].astype(str) + '\n' +
-        'Country of birth: ' + df['Country of birth'].astype(str) + '\n' +
-        'Marketing Emails: ' + df['Marketing Emails'].astype(str) + '\n' +
-        'Current Job Title: ' + df['Current Job Title'].astype(str) + '\n' +
-        'First Name: ' + df['First Name'].astype(str) + '\n' +
-        'Gender: ' + df['Gender'].astype(str) + '\n' +
-        'Email: ' + df['Email'].astype(str) + '\n' +
-        'Home Phone: ' + df['Home Phone'].astype(str) + '\n' +
-        'Candidate Owner: ' + df['Candidate Owner'].astype(str) + '\n' +
-        'Status: ' + df['Status'].astype(str) + '\n' +
-        'Optout SMS: ' + df['Optout SMS'].astype(str) + '\n' +
-        'Internal Note: ' + df['Internal Note'].astype(str) + '\n' +
-        'Address Country: ' + df['Address Country'].astype(str) + '\n' +
-        'Expected Salary: ' + df['Expected Salary'].astype(str) + '\n' +
-        'Old Candidate ID: ' + df['Old Candidate ID'].astype(str) + '\n' +
-        'Current Company: ' + df['Current Company'].astype(str) + '\n' +
-        'Expected Max Salary: ' + df['Expected Max Salary'].astype(str) + '\n' +
-        'Preferred Sectors: ' + df['Preferred Sectors'].astype(str) + '\n' +
-        'Address County/Region: ' + df['Address County/Region'].astype(str) + '\n' +
-        'Last Contacted: ' + df['Last Contacted'].astype(str) + '\n' +
-        'Preferred Job Titles: ' + df['Preferred Job Titles'].astype(str) + '\n' +
-        'LinkedIn: ' + df['LinkedIn'].astype(str) + '\n' +
-        'National Insurance Number: ' + df['National Insurance Number'].astype(str) + '\n' +
-        'Candidate Skills: ' + df['Candidate Skills'].astype(str) + '\n' +
-        'Education Level: ' + df['Education Level'].astype(str) + '\n' +
-        'Current Salary: ' + df['Current Salary'].astype(str) + '\n' +
-        'Driving License: ' + df['Driving License'].astype(str) + '\n' +
-        'Job Types: ' + df['Job Types'].astype(str) + '\n' +
-        'Rating: ' + df['Rating'].astype(str) + '\n' +
-        'Preferences: ' + df['Preferences'].astype(str) + '\n' +
-        'Address Line 1: ' + df['Address Line 1'].astype(str) + '\n' +
-        'Created On: ' + df['Created On'].astype(str) + '\n' +
-        'Position 1: ' + df['Position 1'].astype(str) + '\n' +
-        'Position 2: ' + df['Position 2'].astype(str) + '\n' +
-        'Current City: ' + df['Current City'].astype(str) + '\n' +
-        'Date of Birth: ' + df['Date of Birth'].astype(str) + '\n' +
-        "Father's Name: " + df["Father's Name"].astype(str) + '\n' +
-        'Annual Leave Days: ' + df['Annual Leave Days'].astype(str) + '\n' +
-        'Job Title/Headline: ' + df['Job Title/Headline'].astype(str) + '\n' +
-        'Position 3: ' + df['Position 3'].astype(str) + '\n' +
-        'Position 4: ' + df['Position 4'].astype(str) + '\n' +
-        'Nationality: ' + df['Nationality'].astype(str) + '\n' +
-        'Expected Min Salary: ' + df['Expected Min Salary'].astype(str) + '\n' +
-        'Address - PIN/Postcode: ' + df['Address - PIN/Postcode'].astype(str) + '\n' +
-        'Overview: ' + df['Overview'].astype(str) + '\n' +
-        'Current Country: ' + df['Current Country'].astype(str) + '\n' +
-        'Tags: ' + df['Tags'].astype(str) + '\n' +
-        'City of Birth: ' + df['City of Birth'].astype(str) + '\n' +
-        'Candidate Category: ' + df['Candidate Category'].astype(str) + '\n' +
-        'End Date: ' + df['End Date'].astype(str) + '\n' +
-        'Current JobType: ' + df['Current JobType'].astype(str) + '\n' +
-        'Available From: ' + df['Available From'].astype(str) + '\n' +
-        'Full Name: ' + df['Full Name'].astype(str) + '\n' +
-        'Gender.1: ' + df['Gender.1'].astype(str) + '\n' +
-        'Modified On: ' + df['Modified On'].astype(str) + '\n' +
-        'Date of Birth.1: ' + df['Date of Birth.1'].astype(str) + '\n' +
-        'Work Phone: ' + df['Work Phone'].astype(str) + '\n' +
-        'Address Line 2: ' + df['Address Line 2'].astype(str) + '\n' +
-        'Surname: ' + df['Surname'].astype(str) + '\n' +
-        'Alternate Email Address: ' + df['Alternate Email Address'].astype(str) + '\n' +
-        'University Degree: ' + df['University Degree'].astype(str) + '\n' +
-        'Nationality.1: ' + df['Nationality.1'].astype(str) + '\n' +
-        'Relocate: ' + df['Relocate'].astype(str) + '\n' +
-        'Current Job Title.1: ' + df['Current Job Title.1'].astype(str) + '\n' +
-        'Marketing SMS: ' + df['Marketing SMS'].astype(str) + '\n' +
-        'Address City: ' + df['Address City'].astype(str) + '\n' +
-        'Availability: ' + df['Availability'].astype(str) + '\n' +
-        'Current Salary.1: ' + df['Current Salary.1'].astype(str) + '\n' +
-        'Reason For Leaving: ' + df['Reason For Leaving'].astype(str) + '\n' +
-        'Preferred Industries: ' + df['Preferred Industries'].astype(str) + '\n' +
-        'Title: ' + df['Title'].astype(str) + '\n' +
-        'Sick Leave Days: ' + df['Sick Leave Days'].astype(str) + '\n' +
-        'Conversation Thread: ' + df['Conversation Thread'].astype(str) + '\n' +
-        'Twitter: ' + df['Twitter'].astype(str) + '\n' +
-        'Mobile: ' + df['Mobile'].astype(str)
-    )    
+    # df['text'] = (
+    #     'Candidate ID: ' + df['Candidate Id'].astype(str) + '\n' +
+    #     'Employer Name: ' + df['Employer Name'].astype(str) + '\n' +
+    #     'Start Date: ' + df['Start Date'].astype(str) + '\n' +
+    #     'Country of birth: ' + df['Country of birth'].astype(str) + '\n' +
+    #     'Marketing Emails: ' + df['Marketing Emails'].astype(str) + '\n' +
+    #     'Current Job Title: ' + df['Current Job Title'].astype(str) + '\n' +
+    #     'First Name: ' + df['First Name'].astype(str) + '\n' +
+    #     'Gender: ' + df['Gender'].astype(str) + '\n' +
+    #     'Email: ' + df['Email'].astype(str) + '\n' +
+    #     'Home Phone: ' + df['Home Phone'].astype(str) + '\n' +
+    #     'Candidate Owner: ' + df['Candidate Owner'].astype(str) + '\n' +
+    #     'Status: ' + df['Status'].astype(str) + '\n' +
+    #     'Optout SMS: ' + df['Optout SMS'].astype(str) + '\n' +
+    #     'Internal Note: ' + df['Internal Note'].astype(str) + '\n' +
+    #     'Address Country: ' + df['Address Country'].astype(str) + '\n' +
+    #     'Expected Salary: ' + df['Expected Salary'].astype(str) + '\n' +
+    #     'Old Candidate ID: ' + df['Old Candidate ID'].astype(str) + '\n' +
+    #     'Current Company: ' + df['Current Company'].astype(str) + '\n' +
+    #     'Expected Max Salary: ' + df['Expected Max Salary'].astype(str) + '\n' +
+    #     'Preferred Sectors: ' + df['Preferred Sectors'].astype(str) + '\n' +
+    #     'Address County/Region: ' + df['Address County/Region'].astype(str) + '\n' +
+    #     'Last Contacted: ' + df['Last Contacted'].astype(str) + '\n' +
+    #     'Preferred Job Titles: ' + df['Preferred Job Titles'].astype(str) + '\n' +
+    #     'LinkedIn: ' + df['LinkedIn'].astype(str) + '\n' +
+    #     'National Insurance Number: ' + df['National Insurance Number'].astype(str) + '\n' +
+    #     'Candidate Skills: ' + df['Candidate Skills'].astype(str) + '\n' +
+    #     'Education Level: ' + df['Education Level'].astype(str) + '\n' +
+    #     'Current Salary: ' + df['Current Salary'].astype(str) + '\n' +
+    #     'Driving License: ' + df['Driving License'].astype(str) + '\n' +
+    #     'Job Types: ' + df['Job Types'].astype(str) + '\n' +
+    #     'Rating: ' + df['Rating'].astype(str) + '\n' +
+    #     'Preferences: ' + df['Preferences'].astype(str) + '\n' +
+    #     'Address Line 1: ' + df['Address Line 1'].astype(str) + '\n' +
+    #     'Created On: ' + df['Created On'].astype(str) + '\n' +
+    #     'Position 1: ' + df['Position 1'].astype(str) + '\n' +
+    #     'Position 2: ' + df['Position 2'].astype(str) + '\n' +
+    #     'Current City: ' + df['Current City'].astype(str) + '\n' +
+    #     'Date of Birth: ' + df['Date of Birth'].astype(str) + '\n' +
+    #     "Father's Name: " + df["Father's Name"].astype(str) + '\n' +
+    #     'Annual Leave Days: ' + df['Annual Leave Days'].astype(str) + '\n' +
+    #     'Job Title/Headline: ' + df['Job Title/Headline'].astype(str) + '\n' +
+    #     'Position 3: ' + df['Position 3'].astype(str) + '\n' +
+    #     'Position 4: ' + df['Position 4'].astype(str) + '\n' +
+    #     'Nationality: ' + df['Nationality'].astype(str) + '\n' +
+    #     'Expected Min Salary: ' + df['Expected Min Salary'].astype(str) + '\n' +
+    #     'Address - PIN/Postcode: ' + df['Address - PIN/Postcode'].astype(str) + '\n' +
+    #     'Overview: ' + df['Overview'].astype(str) + '\n' +
+    #     'Current Country: ' + df['Current Country'].astype(str) + '\n' +
+    #     'Tags: ' + df['Tags'].astype(str) + '\n' +
+    #     'City of Birth: ' + df['City of Birth'].astype(str) + '\n' +
+    #     'Candidate Category: ' + df['Candidate Category'].astype(str) + '\n' +
+    #     'End Date: ' + df['End Date'].astype(str) + '\n' +
+    #     'Current JobType: ' + df['Current JobType'].astype(str) + '\n' +
+    #     'Available From: ' + df['Available From'].astype(str) + '\n' +
+    #     'Full Name: ' + df['Full Name'].astype(str) + '\n' +
+    #     'Gender.1: ' + df['Gender.1'].astype(str) + '\n' +
+    #     'Modified On: ' + df['Modified On'].astype(str) + '\n' +
+    #     'Date of Birth.1: ' + df['Date of Birth.1'].astype(str) + '\n' +
+    #     'Work Phone: ' + df['Work Phone'].astype(str) + '\n' +
+    #     'Address Line 2: ' + df['Address Line 2'].astype(str) + '\n' +
+    #     'Surname: ' + df['Surname'].astype(str) + '\n' +
+    #     'Alternate Email Address: ' + df['Alternate Email Address'].astype(str) + '\n' +
+    #     'University Degree: ' + df['University Degree'].astype(str) + '\n' +
+    #     'Nationality.1: ' + df['Nationality.1'].astype(str) + '\n' +
+    #     'Relocate: ' + df['Relocate'].astype(str) + '\n' +
+    #     'Current Job Title.1: ' + df['Current Job Title.1'].astype(str) + '\n' +
+    #     'Marketing SMS: ' + df['Marketing SMS'].astype(str) + '\n' +
+    #     'Address City: ' + df['Address City'].astype(str) + '\n' +
+    #     'Availability: ' + df['Availability'].astype(str) + '\n' +
+    #     'Current Salary.1: ' + df['Current Salary.1'].astype(str) + '\n' +
+    #     'Reason For Leaving: ' + df['Reason For Leaving'].astype(str) + '\n' +
+    #     'Preferred Industries: ' + df['Preferred Industries'].astype(str) + '\n' +
+    #     'Title: ' + df['Title'].astype(str) + '\n' +
+    #     'Sick Leave Days: ' + df['Sick Leave Days'].astype(str) + '\n' +
+    #     'Conversation Thread: ' + df['Conversation Thread'].astype(str) + '\n' +
+    #     'Twitter: ' + df['Twitter'].astype(str) + '\n' +
+    #     'Mobile: ' + df['Mobile'].astype(str)
+    # )    
+
+    df['text'] = df.apply(lambda row: '\n'.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
 
     docs=df["text"].tolist() 
     ids= [str(x) for x in df.index.tolist()]
-
-
     # Define maximum batch size
-    max_batch_size = 166
+    max_batch_size = 20
 
     # Splitting the documents and ids into batches and adding them to the collection
     for i in range(0, len(docs), max_batch_size):
@@ -170,6 +170,7 @@ def load_json_data(json_data):
     """
     Converts JSON data to a DataFrame, then generates a new DataFrame with a 'text' column
     that concatenates all column names and data, and finally stores this data into Cromadb.
+    Before storing into Cromadb, it saves the DataFrame as a CSV file in the 'csvdata' folder with the name 'json_data.csv'.
 
     Args:
     - json_data: A list of dictionaries, where each dictionary represents a document to be stored in Cromadb.
@@ -177,24 +178,13 @@ def load_json_data(json_data):
     # Convert JSON data to DataFrame
     df = pd.DataFrame(json_data)
 
-    # Generate 'text' column by concatenating all column names and their data
-    df['text'] = df.apply(lambda row: '\n'.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
+    # Save the DataFrame to a CSV file in the 'csvdata' folder
+    csv_file_path = 'csvdata/json_data.csv'
+    os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)  # Ensure the directory exists
+    df.to_csv(csv_file_path, index=False)
+    print(f"JSON data saved to {csv_file_path} successfully.")
 
-    docs = df["text"].tolist()
-    ids = [str(i) for i in range(len(df))]
-
-    # Define maximum batch size for adding documents to Cromadb
-    max_batch_size = 40
-    # Splitting the documents and ids into batches and adding them to the collection
-    for i in range(0, len(docs), max_batch_size):
-        batch_docs = docs[i:i + max_batch_size]
-        batch_ids = ids[i:i + max_batch_size]
-
-        # Add the batch of documents to the collection
-        collection2.add(
-            documents=batch_docs,
-            ids=batch_ids
-        )
+    load_data(csv_file_path)
     print("JSON data loaded into Cromadb successfully.")
 
 def execute_query(query, user_id, temp=False):
