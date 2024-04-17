@@ -189,6 +189,8 @@ def main():
         if st.button("Process"):
             with st.spinner("Processing"):
                 # Validation for file uploads
+                pdfloaded = False
+                csvloaded = False
                 if pdf_docs is None or csv_docs is None:
                     st.error("Please upload both PDF and CSV files before processing.")
                 else:
@@ -199,7 +201,7 @@ def main():
                         # get the text chunks
                         load_pdf_data(raw_text)
                         text_chunks = get_text_chunks(raw_text)
-
+                        pdfloaded = True
                         # # create vector store
                         # vectorstore = get_vectorstore(text_chunks)
                         # print("vector storage:",vectorstore)
@@ -223,18 +225,22 @@ def main():
                             # create conversation chain
                             st.session_state.conversation = get_conversation_chain(
                                 vectorstore_csv)
+                            csvloaded = True
                             # Comment out or remove the line that displays the DataFrame
                             # st.write(df)
 
                     if use_recrutly_data:
                         st.session_state['temp'] = True
                         import json
+                        
                         with open('candidates_data.json', 'r', encoding='utf-8') as file:
                             data = json.load(file)
                         load_json_data(data)
                         print('json data loaded')
-                    st.success("Files processed.")
-
+                    if pdfloaded or csvloaded:
+                        st.success("Files processed.")
+                    else:
+                        st.success("Recrutly.io data processed.")
 
 def store_password(app_name, password):
     # Assuming you have an endpoint to store the password
@@ -253,22 +259,70 @@ def get_password(application_id):
     response = requests.get(
         f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}"
     )
-    password = response.text.strip()
+    login_attampt = response.json()['login']
+    password = response.json()['password']
     if password == "Password not found":
         st.error("Invalid application_id")
-    return password
+    return password, login_attampt
 
+def change_password_page():
+    st.title("Change Password")
+
+    with st.form("change_password_form"):
+        new_password = st.text_input("New Password", type="password")
+        confirm_password = st.text_input("Confirm New Password", type="password")
+
+        submitted = st.form_submit_button("Change Password")
+        if submitted:
+            if new_password and new_password == confirm_password:
+                if store_new_password(st.session_state["application_id"], new_password):
+                    st.success("Password changed successfully.")
+                    st.session_state["logged_in"] = False  # Force re-login
+                    st.session_state.show_sidebar = False  # Indicate not to show the sidebar
+                    st.experimental_rerun()
+                else:
+                    st.error("Failed to change password.")
+            else:
+                st.error("Passwords do not match.")
+
+def store_new_password(application_id, new_password):
+    response = requests.post(
+        f"https://vaibhavsharma3070.pythonanywhere.com/update_password",
+        data={"app_name": application_id, "new_password": new_password},
+    )
+    return response.status_code == 200
+
+def update_login_attempts(application_id):
+    """
+    Updates the login attempt count for a given application ID.
+
+    :param application_id: The application ID for which to update the login attempts.
+    """
+    response = requests.post(
+        "https://vaibhavsharma3070.pythonanywhere.com/update_login_attempts",
+        data={"app_name": application_id}
+    )
+    if response.status_code == 200:
+        print("Login attempts updated successfully.")
+    else:
+        print("Failed to update login attempts.")
 
 def check_password():
     """Returns `True` if the user had the correct password."""
 
     def password_entered():
-        password_from_api = get_password(st.session_state["application_id"])
-        print("password_from_api == ", password_from_api, st.session_state["application_id"])
+
+        password_from_api, login_attampt = get_password(st.session_state["application_id"])
         if hmac.compare_digest(st.session_state["password"], password_from_api):
             st.session_state["password_correct"] = True
             st.session_state["logged_in"] = True
             st.session_state["user_application_id"] = st.session_state["application_id"]
+            if login_attampt == 0:
+                st.session_state["require_password_change"] = True  # Flag to indicate password change is required
+                # No need to call change_password_page() here
+                update_login_attempts(st.session_state["application_id"])  # This can be called after successful password change
+            else:
+                st.session_state["require_password_change"] = False
             del st.session_state["password"]  # Don't store the password.
         else:
             st.session_state["logged_in"] = False
@@ -294,17 +348,26 @@ def check_password():
 
 
 if __name__ == "__main__":
-    # Check if the user is already logged in
-    if not st.session_state.get("logged_in", False):
-        page = st.sidebar.selectbox("Choose a page", ["Login", "Registration"])
-    else:
-        page = "Main"  # Directly go to the main page if already logged in
+    # Default to showing the sidebar unless explicitly set not to
+    show_sidebar = st.session_state.get("show_sidebar", True)
 
+    if not st.session_state.get("logged_in", False):
+        if show_sidebar:
+            page = st.sidebar.selectbox("Choose a page", ["Login", "Registration"])
+        else:
+            page = "Main"
+    else:
+        if st.session_state.get("require_password_change", False):
+            change_password_page()
+            st.stop()  # Stop execution to prevent main UI from showing
+        else:
+            page = "Main"  # Directly go to the main page if already logged in
+
+    # Render pages based on the 'page' variable
     if page == "Login":
         if not check_password():
             st.stop()  # Do not continue if check_password is not True.
         else:
-            # Set the logged_in state to True upon successful login
             st.session_state.logged_in = True
             main()
     elif page == "Registration":
