@@ -4,7 +4,7 @@ from PyPDF2 import PdfReader
 from cromadbTest import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data
 import pandas as pd
 import csv
-import time
+import time, json
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings, HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
@@ -13,6 +13,8 @@ from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from htmlTemplates import css, bot_template, user_template
 import hmac
+import streamlit as st
+import threading
 import requests
 
 # from langchain.llms import HuggingFaceHub
@@ -103,23 +105,23 @@ def read_csv_file(csv_file):
     return None
 
 
-def registration_page():
-    st.title("Sign Up")
+# def registration_page():
+#     st.title("Sign Up")
 
-    with st.form("registration_form"):
-        app_name = st.text_input("User email")
-        password = st.text_input("Password", type="password")
+#     with st.form("registration_form"):
+#         app_name = st.text_input("User email")
+#         password = st.text_input("Password", type="password")
 
-        # Form submission button
-        submitted = st.form_submit_button("Register")
-        if submitted:
-            # Here, you would typically add your code to register the user
-            # For example, saving the user data to a database
-            # Now also store the password using the new function
-            if store_password(app_name, password):
-                st.success(f"Account created for {app_name}!")
-            else:
-                st.error("Failed to create account. Please try again.")
+#         # Form submission button
+#         submitted = st.form_submit_button("Register")
+#         if submitted:
+#             # Here, you would typically add your code to register the user
+#             # For example, saving the user data to a database
+#             # Now also store the password using the new function
+#             if store_password(app_name, password):
+#                 st.success(f"Account created for {app_name}!")
+#             else:
+#                 st.error("Failed to create account. Please try again.")
 
 
 def main():
@@ -130,6 +132,8 @@ def main():
         st.session_state.conversation = None
     if "chat_history" not in st.session_state:
         st.session_state.chat_history = None
+    if "temp" not in st.session_state:
+        st.session_state['temp'] = False  # Initialize 'temp' to False
 
     # Assuming user_id is available and uniquely identifies the user
     # You need to determine how to obtain this ID. This could be from the session state, a login system, etc.
@@ -140,12 +144,15 @@ def main():
     print(st.session_state["user_application_id"])
     # Retrieve and display the chat history for the user
 
-    st.header("Best Candidate AI")
+    st.header("Your Best Candidate AI")
 
     # Input for user's question
-    user_input = st.text_input("Type your question about your documents here:")
+    if 'user_input' not in st.session_state:
+        st.session_state.user_input = ""
+    user_input = st.text_input("Type your question about your documents here:", value=st.session_state.user_input)
     if st.button('Ask'):
         user_question = user_input  # This line assigns the input text to user_question only when the button is clicked
+        st.session_state.user_input = ""
 
         # Now, you can use user_question as before
         if user_question:
@@ -183,15 +190,15 @@ def main():
         )
 
         # use_recrutly_data = st.checkbox("Use Recrutly.io data")
-        use_recrutly_data = st.checkbox("Use Recrutly.io data", value=False, key="use_recrutly_data")
-        st.session_state['temp'] = False
+        use_recrutly_data = st.checkbox("Use SES data", value=False, key="use_recrutly_data")
+    
         # Process button
         if st.button("Process"):
             with st.spinner("Processing"):
                 # Validation for file uploads
                 pdfloaded = False
                 csvloaded = False
-                if pdf_docs is None or csv_docs is None:
+                if pdf_docs is None or csv_docs is None or use_recrutly_data is None:
                     st.error("Please upload both PDF and CSV files before processing.")
                 else:
                     # Continue with processing the files
@@ -231,16 +238,29 @@ def main():
 
                     if use_recrutly_data:
                         st.session_state['temp'] = True
-                        import json
                         
-                        with open('candidates_data.json', 'r', encoding='utf-8') as file:
-                            data = json.load(file)
-                        load_json_data(data)
+                        # with open('candidates_data.json', 'r', encoding='utf-8') as file:
+                        #     data = json.load(file)
+                        # load_json_data(data)
                         print('json data loaded')
                     if pdfloaded or csvloaded:
+                        st.session_state['temp'] = False
                         st.success("Files processed.")
+                    elif use_recrutly_data:
+                        st.success("SES data processed.")
                     else:
-                        st.success("Recrutly.io data processed.")
+                        st.error("Choose any one option from above for proceed.")
+
+
+def load_and_cache_json_data():
+    def load_json():
+        with open('candidates_data.json', 'r', encoding='utf-8') as file:
+            data = json.load(file)
+        load_json_data(data)
+
+    # Start a new thread for loading JSON data
+    thread = threading.Thread(target=load_json)
+    thread.start()
 
 def store_password(app_name, password):
     # Assuming you have an endpoint to store the password
@@ -275,15 +295,30 @@ def change_password_page():
         submitted = st.form_submit_button("Change Password")
         if submitted:
             if new_password and new_password == confirm_password:
-                if store_new_password(st.session_state["application_id"], new_password):
-                    st.success("Password changed successfully.")
-                    st.session_state["logged_in"] = False  # Force re-login
-                    st.session_state.show_sidebar = False  # Indicate not to show the sidebar
-                    st.experimental_rerun()
+                valid, message = validate_password(new_password)
+                if valid:
+                    if store_new_password(st.session_state["application_id"], new_password):
+                        st.success("Password changed successfully.")
+                        st.session_state["logged_in"] = False  # Force re-login
+                        st.session_state.show_sidebar = False  # Indicate not to show the sidebar
+                    else:
+                        st.error("Failed to change password.")
                 else:
-                    st.error("Failed to change password.")
+                    st.error(message)
             else:
                 st.error("Passwords do not match.")
+
+def validate_password(password):
+    import re
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
+    if not re.search(r'[A-Z]', password):
+        return False, "Password must include at least one uppercase letter."
+    if not re.search(r'[0-9]', password):
+        return False, "Password must include at least one number."
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+        return False, "Password must include at least one special character."
+    return True, ""
 
 def store_new_password(application_id, new_password):
     response = requests.post(
@@ -324,6 +359,7 @@ def check_password():
             else:
                 st.session_state["require_password_change"] = False
             del st.session_state["password"]  # Don't store the password.
+            load_and_cache_json_data()  # Load JSON data in the background after successful login
         else:
             st.session_state["logged_in"] = False
             st.session_state["password_correct"] = False
@@ -332,7 +368,7 @@ def check_password():
     if st.session_state.get("password_correct", False):
         return True
     st.markdown(
-        "<h1 style='text-align: center; color: black;'>Best Candidate AI</h1>",
+        "<h1 style='text-align: center; color: black;'>Your Best Candidate AI</h1>",
         unsafe_allow_html=True,
     )  # Show input for password.
     st.text_input("User email", type="default", key="application_id")
@@ -348,29 +384,15 @@ def check_password():
 
 
 if __name__ == "__main__":
-    # Default to showing the sidebar unless explicitly set not to
-    show_sidebar = st.session_state.get("show_sidebar", True)
-
     if not st.session_state.get("logged_in", False):
-        if show_sidebar:
-            page = st.sidebar.selectbox("Choose a page", ["Login", "Registration"])
-        else:
-            page = "Main"
-    else:
-        if st.session_state.get("require_password_change", False):
-            change_password_page()
-            st.stop()  # Stop execution to prevent main UI from showing
-        else:
-            page = "Main"  # Directly go to the main page if already logged in
-
-    # Render pages based on the 'page' variable
-    if page == "Login":
         if not check_password():
             st.stop()  # Do not continue if check_password is not True.
         else:
             st.session_state.logged_in = True
             main()
-    elif page == "Registration":
-        registration_page()
-    elif page == "Main":
-        main()
+    else:
+        if st.session_state.get("require_password_change", False):
+            change_password_page()
+            st.stop()  # Stop execution to prevent main UI from showing
+        else:
+            main()  # Directly go to the main page if already logged in
