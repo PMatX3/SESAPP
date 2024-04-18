@@ -65,7 +65,7 @@ def load_pdf_data(text):
         ids=["job_profile"]
     )
 
-def load_data(file_name):
+def load_data(file_name, temp=False):
     df=pd.read_csv(file_name)
     df.head()
 
@@ -160,11 +160,17 @@ def load_data(file_name):
     for i in range(0, len(docs), max_batch_size):
         batch_docs = docs[i:i + max_batch_size]
         batch_ids = ids[i:i + max_batch_size]
+        if temp:
+            collection2.add(
+                documents=batch_docs,
+                ids=batch_ids
+            )
+        else:
+            collection.add(
+                documents=batch_docs,
+                ids=batch_ids
+            )
 
-        collection.add(
-            documents=batch_docs,
-            ids=batch_ids
-        )
 
 def load_json_data(json_data):
     """
@@ -184,7 +190,7 @@ def load_json_data(json_data):
     df.to_csv(csv_file_path, index=False)
     print(f"JSON data saved to {csv_file_path} successfully.")
 
-    load_data(csv_file_path)
+    load_data(csv_file_path, temp=True)
     print("JSON data loaded into Cromadb successfully.")
 
 def execute_query(query, user_id, temp=False):

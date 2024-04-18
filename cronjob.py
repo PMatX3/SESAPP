@@ -1,15 +1,16 @@
 import requests
 import pandas as pd
 import schedule
-import time
+import time, json
 from exatrcat_cvs import fetch_and_store_data
+from cromadbTest import load_json_data
 
 def job():
     print("Running scheduled job...")
     fetch_and_store_data()
 
 # Schedule the job every day
-schedule.every().day.at("18:20").do(job)
+schedule.every().day.at("00:00").do(job)
 
 while True:
     schedule.run_pending()
