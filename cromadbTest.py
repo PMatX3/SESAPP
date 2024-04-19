@@ -187,7 +187,7 @@ def load_json_data(json_data):
     # Save the DataFrame to a CSV file in the 'csvdata' folder
     csv_file_path = 'csvdata/json_data.csv'
     os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)  # Ensure the directory exists
-    df.to_csv(csv_file_path, index=False)
+    df.to_csv(csv_file_path, index=False, escapechar='\\')
     print(f"JSON data saved to {csv_file_path} successfully.")
 
     load_data(csv_file_path, temp=True)
