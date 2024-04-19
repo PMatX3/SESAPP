@@ -287,10 +287,10 @@ def get_password(application_id):
                 st.error("Invalid application_id")
             return password, login_attempt
         else:
-            st.error("Invalid Email!")
+            st.error("😕 Invalid Email!")
             return None, 0  # Return None for password and 0 for login_attempt in case of error
     except requests.exceptions.JSONDecodeError:
-        st.error("Invalid Email!")
+        st.error("😕 Invalid Email!")
         return None, 0  # Return None for password and 0 for login_attempt in case of error
 
 def change_password_page():
@@ -373,29 +373,28 @@ def check_password():
                     st.session_state["require_password_change"] = False
                 del st.session_state["password"]  # It's a good practice not to store the password longer than necessary.
                 load_and_cache_json_data()
+                st.experimental_rerun()  # Refresh the app state after successful login
             else:
                 st.session_state["logged_in"] = False
                 st.session_state["password_correct"] = False
         else:
             return
 
-    # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
-        return True
+    # Display login form
     st.markdown(
         "<h1 style='text-align: center; color: black;'>Your Best Candidate AI</h1>",
         unsafe_allow_html=True,
-    )  # Show input for password.
-    st.text_input("User email", type="default", key="application_id")
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
     )
-    if (
-        "password_correct" in st.session_state
-        and not st.session_state["password_correct"]
-    ):
+    application_id = st.text_input("User email", type="default", key="application_id")
+    password = st.text_input("Password", type="password", key="password")
+    
+    # Implement login button
+    if st.button('Login'):
+        password_entered()  # Call the function to check password when the button is clicked
+
+    if "password_correct" in st.session_state and not st.session_state["password_correct"]:
         st.error("😕 Password incorrect")
-    return False
+    return st.session_state.get("logged_in", False)
 
 
 if __name__ == "__main__":
