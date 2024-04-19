@@ -68,3 +68,35 @@ Run the Streamlit app in MAC OS:
 ```bash
 bash run.sh
 ```
+
+## Steps to Run Project with Docker
+
+
+Before you begin, ensure you have met the following requirements:
+
+- Docker installed on your machine.
+
+Clone this repository:
+```bash
+git clone https://github.com/PMatX3/SESAPP.git
+```
+
+Navigate to the directory:
+```bash
+cd your_repository
+```
+
+Build the Docker image:
+```bash
+docker build -t sesapp:v1 .
+```
+
+List Docker images to get the image ID [copy the image id with name sesapp]: 
+```bash
+docker image ls
+```
+
+Start the project in a Docker container:
+```bash
+docker run -p 8501:8501 <image_id>
+```

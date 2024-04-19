@@ -276,14 +276,22 @@ def store_password(app_name, password):
 
 
 def get_password(application_id):
-    response = requests.get(
-        f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}"
-    )
-    login_attampt = response.json()['login']
-    password = response.json()['password']
-    if password == "Password not found":
-        st.error("Invalid application_id")
-    return password, login_attampt
+    try:
+        response = requests.get(
+            f"http://vaibhavsharma3070.pythonanywhere.com/get_password?app_name={application_id}"
+        )
+        if response.status_code == 200:
+            login_attempt = response.json().get('login', 0)  # Using .get() to avoid KeyError
+            password = response.json().get('password', "Password not found")
+            if password == "Password not found":
+                st.error("Invalid application_id")
+            return password, login_attempt
+        else:
+            st.error("Invalid Email!")
+            return None, 0  # Return None for password and 0 for login_attempt in case of error
+    except requests.exceptions.JSONDecodeError:
+        st.error("Invalid Email!")
+        return None, 0  # Return None for password and 0 for login_attempt in case of error
 
 def change_password_page():
     st.title("Change Password")
@@ -297,10 +305,15 @@ def change_password_page():
             if new_password and new_password == confirm_password:
                 valid, message = validate_password(new_password)
                 if valid:
-                    if store_new_password(st.session_state["application_id"], new_password):
+                    if store_new_password(st.session_state["user_application_id"], new_password):
                         st.success("Password changed successfully.")
-                        st.session_state["logged_in"] = False  # Force re-login
-                        st.session_state.show_sidebar = False  # Indicate not to show the sidebar
+                        # Update session state to reflect the successful login and password change
+                        st.session_state["logged_in"] = True
+                        st.session_state["require_password_change"] = False
+                        # Optionally, you might want to reset or clear other session state flags here
+                        
+                        # Force a rerun of the app to reflect the changes immediately
+                        st.experimental_rerun()
                     else:
                         st.error("Failed to change password.")
                 else:
@@ -346,23 +359,25 @@ def check_password():
     """Returns `True` if the user had the correct password."""
 
     def password_entered():
-
-        password_from_api, login_attampt = get_password(st.session_state["application_id"])
-        if hmac.compare_digest(st.session_state["password"], password_from_api):
-            st.session_state["password_correct"] = True
-            st.session_state["logged_in"] = True
-            st.session_state["user_application_id"] = st.session_state["application_id"]
-            if login_attampt == 0:
-                st.session_state["require_password_change"] = True  # Flag to indicate password change is required
-                # No need to call change_password_page() here
-                update_login_attempts(st.session_state["application_id"])  # This can be called after successful password change
+        password_from_api, login_attempt = get_password(st.session_state.get("application_id", ""))
+        # Ensure password_from_api is not None before comparison
+        if password_from_api is not None:
+            if hmac.compare_digest(st.session_state["password"], password_from_api):
+                st.session_state["password_correct"] = True
+                st.session_state["logged_in"] = True
+                st.session_state["user_application_id"] = st.session_state["application_id"]
+                if login_attempt == 0:
+                    st.session_state["require_password_change"] = True
+                    update_login_attempts(st.session_state["application_id"])
+                else:
+                    st.session_state["require_password_change"] = False
+                del st.session_state["password"]  # It's a good practice not to store the password longer than necessary.
+                load_and_cache_json_data()
             else:
-                st.session_state["require_password_change"] = False
-            del st.session_state["password"]  # Don't store the password.
-            load_and_cache_json_data()  # Load JSON data in the background after successful login
+                st.session_state["logged_in"] = False
+                st.session_state["password_correct"] = False
         else:
-            st.session_state["logged_in"] = False
-            st.session_state["password_correct"] = False
+            return
 
     # Return True if the password is validated.
     if st.session_state.get("password_correct", False):
