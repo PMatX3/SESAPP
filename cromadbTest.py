@@ -34,13 +34,14 @@ collection = client.get_or_create_collection("candidates",embedding_function=ope
 collection2 = client.get_or_create_collection("candidates2",embedding_function=openai_ef)
 chat_history_collection = db['chat_history']
 
-def add_chat_message(user_id, message, response):
+def add_chat_message(user_id, message, response, chat_id):
     """
-    Adds a chat message and its response to the MongoDB collection.
+    Adds a chat message and its response to the MongoDB collection, including chat_id.
     """
     timestamp = datetime.now().isoformat()
     document = {
         "user_id": user_id,
+        "chat_id": chat_id,
         "message": message,
         "response": response,
         "timestamp": timestamp
@@ -48,13 +49,34 @@ def add_chat_message(user_id, message, response):
     chat_history_collection.insert_one(document)
     print('Data saved to MongoDB')
 
-def get_chat_history(user_id):
+def get_chat_history(user_id, chat_id=None):
     """
     Retrieves the chat history for a given user from MongoDB.
+    If chat_id is provided, it filters by that specific chat_id.
     """
-    history = list(chat_history_collection.find({"user_id": user_id}).sort("timestamp", -1))
-    # Optionally, you can convert ObjectId to string if needed, or perform other transformations
+    query = {"user_id": user_id}
+    if chat_id:
+        query["chat_id"] = chat_id
+    history = list(chat_history_collection.find(query).sort("timestamp", -1))
     return history
+
+def get_chat_list(user_id):
+    """
+    Retrieves a list of chats for a given user, showing the first question of each chat,
+    sorted by the timestamp of the first message in each chat to ensure consistent ordering.
+    """
+    pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$sort": {"timestamp": 1}},
+        {"$group": {
+            "_id": "$chat_id", 
+            "first_question": {"$first": "$message"},
+            "first_timestamp": {"$first": "$timestamp"}  # Capture the timestamp of the first message
+        }},
+        {"$sort": {"first_timestamp": -1}},  # Ensure consistent ordering based on the first message's timestamp
+        {"$project": {"chat_id": "$_id", "first_question": 1, "_id": 0}}
+    ]
+    return list(chat_history_collection.aggregate(pipeline))
 
 def load_pdf_data(text):
     
@@ -231,9 +253,6 @@ def execute_query(query, user_id, temp=False):
         response_message = response["choices"][0]["message"]["content"]
     except openai.error.InvalidRequestError as e:
         response_message = "Error: The input is too long for the model to process."
-
-    # Add the query and response to the chat history
-    add_chat_message(user_id, query, response_message)
     
     return response_message
 

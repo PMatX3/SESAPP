@@ -1,7 +1,8 @@
 import streamlit as st
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-from cromadbTest import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data
+from cromadbTest import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_history, get_chat_list, add_chat_message
+import uuid
 import pandas as pd
 import csv
 import time, json
@@ -68,6 +69,10 @@ def handle_userinput(user_question):
     else:
         response = execute_query(user_question, st.session_state["user_application_id"])
 
+    user_id = st.session_state["user_application_id"]  # Assuming this is how you identify your user
+    chat_id = st.session_state.get("chat_id", str(uuid.uuid4()))  # Generate or get existing chat_id
+    add_chat_message(user_id, user_question, response, chat_id)
+
     # Append the question and response to the session_state chat_history
     st.session_state.chat_history.append(
         {"question": user_question, "response": response}
@@ -123,6 +128,19 @@ def read_csv_file(csv_file):
 #             else:
 #                 st.error("Failed to create account. Please try again.")
 
+def display_selected_chat_history(user_id):
+    """
+    Displays the chat history for the selected chat_id.
+    """
+    chat_id = st.session_state.get("selected_chat_id")
+    if chat_id:
+        chat_history = get_chat_history(user_id, chat_id)
+        for message in chat_history:
+            st.write(user_template.replace("{{MSG}}", message["message"]), unsafe_allow_html=True)
+            st.write(bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True)
+    else:
+        st.write("Select a conversation to view its messages.")
+
 
 def main():
     st.write(css, unsafe_allow_html=True)
@@ -158,15 +176,7 @@ def main():
         if user_question:
             handle_userinput(user_question)
 
-    chat_history = get_chat_history(user_id)
-    if chat_history:
-        st.write("Your previous conversations:")
-        for message in chat_history:
-            # Assuming 'message' is a dictionary with 'message', 'response', and possibly other keys like 'timestamp'
-            st.write(user_template.replace("{{MSG}}", message["message"]), unsafe_allow_html=True)
-            st.write(bot_template.replace("{{MSG}}", message["response"]), unsafe_allow_html=True)
-    else:
-        st.write("No previous conversations found.")
+    display_selected_chat_history(user_id)
 
     # Example placeholders for displaying a welcome message
     st.write(
@@ -179,6 +189,11 @@ def main():
 
     # Sidebar for document uploads (PDFs and CSVs)
     with st.sidebar:
+        if st.session_state.get("logged_in", False):
+            if st.button("Logout"):
+                st.session_state.logged_in = False
+                st.session_state.user_id = None  # Reset other session states as needed
+                st.experimental_rerun()  # Refresh the app to reflect the logout
         st.subheader("Your documents")
         pdf_docs = st.file_uploader(
             "Upload your PDFs here and click on 'Process'", accept_multiple_files=True
@@ -250,7 +265,53 @@ def main():
                         st.success("SES data processed.")
                     else:
                         st.error("Choose any one option from above for proceed.")
+        # New Chat button functionality
+        if st.button("New Chat"):
+            # Generate a new chat_id and reset chat history in the session state
+            st.session_state.selected_chat_id = str(uuid.uuid4())
+            st.session_state.chat_history = []
 
+            # Clear the input and refresh the page to start a new chat
+            st.experimental_rerun()
+        st.subheader("Chat History")
+        # Display list of previous chats
+        chat_list = get_chat_list(user_id)
+        for chat in chat_list:
+            truncated_question = truncate_text(chat["first_question"])
+            if st.button(truncated_question, key=chat["chat_id"]):
+                # Load and display the chat history for the selected chat_id
+                st.session_state.selected_chat_id = chat["chat_id"]
+                # Clear the current chat history and refresh to show the selected chat's history
+                st.experimental_rerun()
+
+def truncate_text(text, max_length=30):
+    """
+    Truncates the text to a maximum specified length, adding ellipses if the text is too long.
+
+    Args:
+    text (str): The text to truncate.
+    max_length (int): The maximum length of the text, including ellipses.
+
+    Returns:
+    str: The truncated text with ellipses if necessary.
+    """
+    if len(text) > max_length:
+        return text[:max_length - 3] + "..."
+    else:
+        return text
+
+def display_chat_history(user_id, chat_id):
+    """
+    Displays the chat history for a given chat_id.
+    """
+    chat_history = get_chat_history(user_id, chat_id)
+    if chat_history:
+        for message in chat_history:
+            # Display each message. You can adjust the display format as needed.
+            st.write(f"Q: {message['message']}")
+            st.write(f"A: {message['response']}")
+    else:
+        st.write("Start a new conversation or select an existing one.")
 
 def load_and_cache_json_data():
     def load_json():
@@ -395,7 +456,6 @@ def check_password():
     if "password_correct" in st.session_state and not st.session_state["password_correct"]:
         st.error("😕 Password incorrect")
     return st.session_state.get("logged_in", False)
-
 
 if __name__ == "__main__":
     if not st.session_state.get("logged_in", False):
