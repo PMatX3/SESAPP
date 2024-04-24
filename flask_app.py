@@ -9,6 +9,7 @@ import uuid
 import threading
 import requests
 from config import BASE_URL
+import markdown
 from htmlTemplates import css, bot_template, user_template
 
 app = Flask(__name__)
@@ -27,13 +28,6 @@ class Password(db.Model):
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-@app.route('/')
-def index():
-    if 'user_id' in session:
-        return render_template('index.html')
-    else:
-        return redirect(url_for('login'))
-
 def load_and_cache_json_data():
     def load_json():
         with open('candidates_data.json', 'r', encoding='utf-8') as file:
@@ -43,6 +37,14 @@ def load_and_cache_json_data():
     # Start a new thread for loading JSON data
     thread = threading.Thread(target=load_json)
     thread.start()
+
+@app.route('/')
+def index():
+    if 'user_id' in session:
+        load_and_cache_json_data()
+        return render_template('index.html')
+    else:
+        return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -60,13 +62,14 @@ def login():
                 login_attempt = None
                 
             if login_attempt == 0:
-                return redirect('change_password')
+                return jsonify({'login_attempt':login_attempt})
             if password_from_api:
                 if password_from_api == password:
                     # Generate a new chat_id using uuid
                     chat_id = str(uuid.uuid4())
                     session['user_id'] = app_name
                     session['chat_id'] = chat_id
+                    load_and_cache_json_data()
                     return redirect('/')
                 else:
                     return jsonify({'message': 'Invalid credentials'}), 401
@@ -131,7 +134,7 @@ def change_password():
 
 @app.route('/load_data', methods=['POST'])
 def load_new_data():
-    load_and_cache_json_data()
+    
     try:
         file = request.files['file']
     except:
@@ -153,7 +156,7 @@ def load_new_data():
             # Assuming load_pdf_data function exists and is intended to process the raw text or chunks
             load_pdf_data(raw_text)  # Process the extracted text as needed
             # Further processing can be done here, similar to app.py, if necessary
-            return jsonify({'message': f'PDF {filename} processed successfully'}), 200
+            return jsonify({'message': 'File Proceed', 'type': data_type}), 200
         elif data_type == 'csv':
             # CSV processing logic
             df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
@@ -161,9 +164,9 @@ def load_new_data():
             print(file_path)
             load_data(file_path)  # Process the DataFrame as needed
             # Further processing can be done here, similar to app.py, if necessary
-            return jsonify({'message': f'CSV {filename} processed successfully'}), 200
+            return jsonify({'message': 'File Proceed', 'type': data_type}), 200
         session['recrutly_id'] = False
-        return jsonify({'message': f'File {filename} uploaded successfully', 'type': data_type}), 200
+        return jsonify({'message': 'File Proceed', 'type': data_type}), 200
     else:
         session['recrutly_id'] = True
         return jsonify({'message': 'SES data processed.', 'type': data_type}), 200
@@ -176,17 +179,16 @@ def ask():
         # Retrieve user_id and chat_id from the session
         user_id = session.get('user_id')
         chat_id = session.get('chat_id')
-        recrutly_id = session.get('recrutly_id')
-        
+        recruitly_data = session.get('recruitly-data')
         # Ensure user_id and chat_id are available
         if not user_id or not chat_id:
             return jsonify({'error': 'User ID or Chat ID missing from session'}), 400
-        if recrutly_id:
+        if recruitly_data:
             response = execute_query(user_question, 'test1', True)
         else:
             response = execute_query(user_question, 'test1')
 
-        add_chat_message(user_id, user_question, response, chat_id)
+        add_chat_message(user_id, user_question, markdown.markdown(response), chat_id)
         data = {
             "user": user_question,
             "ai": response
@@ -196,12 +198,9 @@ def ask():
 @app.route('/get_chat_history', methods=['GET'])
 def api_get_chat_history():
     with app.app_context():
-        print('Session Data:', dict(session))
         user_id = session.get('user_id')
         chat_id = session.get('chat_id')
-        
-        print('user id---->>>',user_id)
-        print('chat id---->>>',chat_id)
+    
         # Validate input
         if not user_id or not chat_id:
             return jsonify({'error': 'Missing user_id or chat_id'}), 400
@@ -216,6 +215,11 @@ def api_get_chat_history():
             return jsonify(formatted_history), 200
         else:
             return jsonify({'error': 'Chat history not found'}), 404
+
+@app.route('/set_recruitly_data', methods=['POST'])
+def set_recruitly_data():
+    session['recruitly-data'] = request.json.get('recruitlyData', False)
+    return jsonify(success=True)
 
 @app.route('/store_password', methods=['POST'])
 def store_password():
@@ -254,8 +258,10 @@ def update_password():
         password_record = Password.query.filter_by(app_name=app_name).first()
         if password_record:
             password_record.password = new_password
+            session['user_id'] = app_name
             db.session.commit()
-            requests.post(url_for('update_login_attempts', _external=True), data={'app_name': app_name})
+            with app.test_client() as client:
+                client.post(url_for('update_login_attempts'), data={'app_name': app_name})
             return 'Password updated successfully'
         else:
             return 'Password record not found'
@@ -284,7 +290,8 @@ def get_all_credentials():
         passwords = Password.query.all()
         app_names = [password.app_name for password in passwords]
         passwords_list = [password.password for password in passwords]
-        return jsonify({'app_names': app_names, 'passwords': passwords_list})
+        login_list = [password.login_attempts for password in passwords]
+        return jsonify({'app_names': app_names, 'passwords': passwords_list, 'login':login_list})
 
 if __name__ == '__main__':
     with app.app_context():

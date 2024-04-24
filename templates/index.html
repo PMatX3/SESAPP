@@ -5,22 +5,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.10/marked.min.js"></script>
     <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            /* Material Design prefers Roboto */
-            overflow-x: hidden;
-            /* Prevents horizontal scroll */
+        * {
+            box-sizing: border-box;
         }
 
-        /* Existing styles modified for Material Design */
-        .navbar,
-        .btn {
-            background-color: #6200ea;
-            /* Primary color */
+        body {
+            overflow-x: hidden;
+            margin: 0px;
+            font-family: "Source Sans Pro", sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #31333f;
+            background-color: rgb(255, 255, 255);
+            text-size-adjust: 100%;
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            -webkit-font-smoothing: auto;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: row;
+            -webkit-box-pack: start;
+            place-content: flex-start;
+            -webkit-box-align: stretch;
+            align-items: stretch;
+            position: absolute;
+            inset: 0px;
+            overflow: hidden;
+        }
+
+        .navbar {
+            display: flex;
+            position: relative;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #29313d;
+            z-index: 10000;
+            height: 50px;
+        }
+
+        .navbar span {
             color: white;
-            /* Text color */
+            font-size: 24px;
+            padding-left: 20px;
+        }
+
+        .navbar .nav-btn {
+            margin-right: 20px;
+            border: none;
+            border-radius: 4px;
+            padding: 0.25rem 0.75rem;
+            font-size: 16px;
+            color: white;
+            background-color: #475063;
+            /* Darker shade for button */
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .navbar .nav-btn:hover {
+            background-color: #29313d;
+            /* Lighter or different color on hover */
+            color: #FFDD57;
+            /* Change text color on hover */
         }
 
         .btn {
@@ -29,11 +82,37 @@
             /* Rounded corners */
             transition: background-color 0.3s;
             /* Smooth background transition */
+            display: inline-flex;
+            -webkit-box-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            justify-content: center;
+            font-weight: 400;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            min-height: 38.4px;
+            margin: 0px;
+            line-height: 1.6;
+            color: inherit;
+            width: auto;
+            user-select: none;
+            background-color: rgb(249, 249, 251);
+            border: 1px solid rgba(49, 51, 63, 0.2);
+            font-size: 16px;
         }
 
         .btn:hover {
-            background-color: #7b1fa2;
-            /* Darker shade for hover effect */
+            border-color: rgb(255, 75, 75);
+            color: rgb(255, 75, 75);
+        }
+
+        button#process-btn {
+            margin: 14px 0;
+        }
+
+        h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
         }
 
         /* Sidebar toggle button */
@@ -55,6 +134,25 @@
         .sidebar {
             transition: transform 0.3s ease-in-out;
             transform: translateX(0);
+            top: 50px;
+            background-color: rgb(240, 242, 246);
+            z-index: 1;
+            min-width: 244px;
+            max-width: 550px;
+            position: relative;
+        }
+
+        .sidebar-content {
+            padding: 4rem 1.5rem;
+        }
+
+        .app-container .content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            overflow: auto;
+            -webkit-box-align: center;
+            align-items: center;
         }
 
         /* Sidebar hidden state */
@@ -62,70 +160,44 @@
             transform: translateX(-100%);
         }
 
-        /* Loader overlay */
-        .overlay {
-            position: fixed;
+        .small-loader-container {
             display: none;
-            /* Hidden by default */
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
-            /* Black with opacity */
-            z-index: 999;
-            /* Ensure it's on top */
-            cursor: not-allowed;
-        }
-
-        /* Show the loader and overlay */
-        .show {
-            display: block;
-        }
-
-        .loader {
-            border: 16px solid #f3f3f3;
-            /* Light grey */
-            border-top: 16px solid #3498db;
-            /* Blue */
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            animation: spin 2s linear infinite;
-            display: none;
-            /* Hidden by default */
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            align-items: center;
+            /* Center items vertically */
+            justify-content: center;
+            /* Center items horizontally */
+            background-color: #a6caff;
+            /* Light blue background */
+            padding: 10px;
+            /* Padding around the content */
+            border-radius: 8px;
+            /* Rounded corners */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            /* Subtle shadow for depth */
+            width: fit-content;
+            /* Adjust width to content size */
+            margin: auto;
+            position: relative;
+            margin-bottom: 10px;
+            right: 6vh;
         }
 
         .small-loader {
-            display: none;
-            /* Hidden by default */
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(58, 20, 226, 0.3);
+            border: 3px solid rgba(0, 0, 0, 0.3);
             border-radius: 50%;
             border-top-color: #fff;
+            /* White color for the top border */
             animation: spin2 1s ease-in-out infinite;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            margin-top: 5px;
-            /* Adjust spacing between button and loader */
+        }
+
+        .loader-label {
+            margin-left: 10px;
+            /* Space between loader and label */
+            font-size: 16px;
+            color: #31333f;
+            /* Dark grey color for text */
         }
 
         @keyframes spin2 {
@@ -136,6 +208,33 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+
+        ul#chat-history {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        ul#chat-history li {
+            display: inline-flex;
+            -webkit-box-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            justify-content: center;
+            font-weight: 400;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            min-height: 38.4px;
+            margin: 0px;
+            line-height: 1.6;
+            user-select: none;
+            background-color: rgb(249, 249, 251);
+            border: 1px solid rgba(49, 51, 63, 0.2);
+            width: max-content;
         }
 
         .chat-message {
@@ -169,43 +268,319 @@
             padding: 0 1.5rem;
             color: #fff;
         }
+
+        .sidebar-content .sidebar-heading h5 {
+            font-weight: 600;
+            font-size: 18px;
+            margin-top: 8px;
+            margin-bottom: 16px;
+        }
+
+        .sidebar-content .sidebar-heading h6 {
+            font-weight: 400;
+            font-size: 14px;
+            margin-bottom: 4px;
+            margin-top: 0;
+        }
+
+        .file-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            padding: 1rem;
+            background-color: #fff;
+            border-radius: 0.5rem;
+            color: #31333f;
+        }
+
+        .file-box-span {
+            font-size: 14px;
+            font-weight: 600;
+            color: #31333f;
+            font-family: "Source Sans Pro", sans-serif;
+        }
+
+        .file-box small {
+            color: rgba(49, 51, 63, 0.6);
+            font-size: 13px;
+            line-height: 1.25;
+            margin-bottom: 8px;
+        }
+
+        .file-box label {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 400;
+            padding: 4px 0.75rem;
+            border-radius: 0.5rem;
+            min-height: 38.4px;
+            margin: 0px;
+            line-height: 1.6;
+            width: auto;
+            user-select: none;
+            background-color: rgb(249, 249, 251);
+            border: 1px solid rgba(49, 51, 63, 0.2);
+            margin-top: 10px;
+            font-size: 14px;
+            height: 38px;
+            font-family: "Source Sans Pro", sans-serif;
+        }
+
+        .margin-bottom-custom {
+            margin-bottom: 16px;
+        }
+
+        .sidebar-overflow {
+            position: relative;
+            height: 100%;
+            width: 100%;
+            overflow: overlay;
+            overflow-x: hidden;
+        }
+
+        /* Style the scrollbar itself (width, background) */
+        .sidebar-overflow::-webkit-scrollbar {
+            width: 10px;
+            /* Width of the scrollbar */
+            background-color: #f1f1f1;
+            /* Background color of the scrollbar */
+        }
+
+        /* Style the draggable part of the scrollbar */
+        .sidebar-overflow::-webkit-scrollbar-thumb {
+            background-color: #888;
+            /* Color of the draggable part */
+            border-radius: 10px;
+            /* Rounded corners of the draggable part */
+            border: 2px solid #f1f1f1;
+            /* Creates padding around the draggable part */
+        }
+
+        /* Hover effects for the draggable part */
+        .sidebar-overflow::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+            /* Darker color on hover */
+        }
+
+        .content-wrap {
+            width: 100%;
+            padding: 6rem 1rem 10rem;
+            max-width: 46rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        .content-wrap h1 {
+            font-family: "Source Sans Pro", sans-serif;
+            font-weight: 600;
+            color: rgb(49, 51, 63);
+            letter-spacing: -0.005em;
+            padding: 1rem 0px;
+            margin: 0px;
+            line-height: 1.2;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            border: 0;
+            border-radius: 4px;
+            background: #f0f2f6;
+            height: 40px;
+        }
+
+        button#ask-btn {
+            margin: 1rem 0;
+        }
+
+        .input-group input::placeholder {
+            background: #f0f2f6;
+        }
+
+        .label-type {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 4px;
+            display: block;
+            color: #31333f;
+        }
+
+        .btn:hover {
+            border-color: rgb(255, 75, 75);
+            color: rgb(255, 75, 75);
+            transition: 0.3s;
+        }
+
+        ul#chat-history li:hover {
+            border-color: rgb(255, 75, 75);
+            color: rgb(255, 75, 75);
+            transition: 0.3s;
+        }
+
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 52px;
+            left: 220px;
+            -webkit-box-align: center;
+            align-items: center;
+            -webkit-box-pack: center;
+            justify-content: center;
+            font-weight: 400;
+            border-radius: 0.5rem;
+            margin: 0px 0.125rem;
+            color: inherit;
+            width: auto;
+            user-select: none;
+            background-color: #d1d1d100;
+            border: none;
+            padding: 0.5rem;
+            font-size: 14px;
+            line-height: 1;
+            z-index: 1010;
+            min-width: 2rem;
+            min-height: 2rem;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background-color: #d1d1d1;
+            transition: 0.3s;
+        }
+
+        .success-message-container {
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            justify-content: center;
+            background-color: #4CAF50;
+            /* Green background */
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            /* Take full width to center content */
+            position: relative;
+            margin-bottom: 10px;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .success-message {
+            font-size: 16px;
+            color: #fff;
+            /* White text color */
+            text-align: center;
+            /* Center the text */
+            width: fit-content;
+            /* Fit the content's width */
+            margin: auto;
+            /* Auto margins for horizontal centering */
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Loader */
+        .loader {
+            border: 6px solid #f3f3f3;
+            /* Light grey */
+            border-top: 6px solid #3498db;
+            /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 
 <body>
-
+    <div class="overlay" id="overlay">
+        <div class="loader"></div>
+    </div>
     <div class="navbar">
-        <span>Logo</span>
-        <button class="btn" onclick="location.href='{{ 'logout' if session.get('user_id') else 'login' }}'">
+        <span>Your Best Candidate AI</span>
+        <button class="nav-btn" onclick="location.href='{{ 'logout' if session.get('user_id') else 'login' }}'"
+            style="margin-right: 20px;">
             {{ 'Logout' if session.get('user_id') else 'Login' }}
         </button>
     </div>
-    <div class="loader" id="loader"></div> <!-- Loader element -->
-    <div class="sidebar">
-        <input type="file" id="pdf-upload" accept="application/pdf"><label for="pdf-upload">Upload PDF</label><br>
-        <input type="file" id="csv-upload" accept=".csv"><label for="csv-upload">Upload CSV</label><br>
-        <input type="checkbox" id="recruitly-data"><label for="recruitly-data">Use recruitly.io data</label><br>
-        <button class="btn" id="process-btn">Process</button><br>
-        <div class="small-loader" id="small-loader"></div>
-        <button class="btn" id="new-chat-btn" onclick="location.href='{{ url_for('new_chat') }}'">New Chat</button>
-        <h3>Chat History</h3>
-        <ul id="chat-history"></ul>
-    </div>
-
-    <div class="content">
-        <h1>Your Best Candidate AI</h1>
-        <span>Type your question about your documents here:</span>
-        <div class="input-group">
-            <input type="text" id="question-input" placeholder="Ask a question...">
-            <button class="btn" id="ask-btn">Ask</button>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="sidebar-overflow">
+                <div class="sidebar-content">
+                    <div class="sidebar-heading">
+                        <h5>Your documents</h5>
+                        <h6>Upload your PDFs here and click on 'Process'</h6>
+                    </div>
+                    <div class="file-box margin-bottom-custom">
+                        <span class="file-box-span">Drag and drop files here</span>
+                        <small>Limit 200MB per file • PDF</small>
+                        <input type="file" id="pdf-upload" accept="application/pdf" style="display: none;">
+                        <label for="pdf-upload" class="browse-btn btn">Browse files</label>
+                    </div>
+                    <div class="file-box margin-bottom-custom">
+                        <span class="file-box-span">Drag and drop files here</span>
+                        <small>Limit 200MB per file • CSV</small>
+                        <input type="file" id="csv-upload" accept=".csv" style="display: none;">
+                        <label for="csv-upload" class="browse-btn btn">Upload CSV</label>
+                    </div>
+                    <input type="checkbox" id="recruitly-data"><label for="recruitly-data">Use SES data</label><br>
+                    <button class="btn" id="process-btn">Process</button><br>
+                    <div class="small-loader-container" id="small-loader-container">
+                        <div class="small-loader" id="small-loader"></div>
+                        <span class="loader-label">Processing...</span>
+                    </div>
+                    <div class="success-message-container" id="success-message-container">
+                        <span class="success-message" id="success-message">File Proceed</span>
+                    </div>
+                    <button class="btn" id="new-chat-btn" onclick="location.href='{{ url_for('new_chat') }}'">New
+                        Chat</button>
+                    <h3>Chat History</h3>
+                    <ul id="chat-history"></ul>
+                </div>
+            </div>
         </div>
-        <div id="messages"></div>
+
+        <div class="content">
+            <div class="content-wrap">
+                <h1>Your Best Candidate AI</h1>
+                <span class="label-type">Type your question about your documents here:</span>
+                <div class="input-group">
+                    <input type="text" id="question-input" placeholder="Ask a question...">
+                    <button class="btn" id="ask-btn">Ask</button>
+                </div>
+                <div id="messages"></div>
+            </div>
+        </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('process-btn').addEventListener('click', function () {
-                var loader = document.getElementById('small-loader');
+                var loader = document.getElementById('small-loader-container');
+                console.log(loader)
                 var pdfInput = document.getElementById('pdf-upload');
                 var csvInput = document.getElementById('csv-upload');
                 var recruitlyDataCheckbox = document.getElementById('recruitly-data'); // Get the checkbox for recruitly.io data
@@ -239,7 +614,7 @@
                     formData.append('type', type);
 
                     // Show the loader
-                    if (loader) loader.style.display = 'block';
+                    if (loader) loader.style.display = 'flex';
 
                     // Make the AJAX request
                     fetch('/load_data', {
@@ -251,6 +626,17 @@
                             console.log(data);
                             // Hide the loader
                             if (loader) loader.style.display = 'none';
+
+                            // Display the success message
+                            var successContainer = document.getElementById('success-message-container');
+                            var successMessage = document.getElementById('success-message');
+                            successMessage.textContent = data.message; // Set the message text
+                            successContainer.style.display = 'flex'; // Show the success message container
+
+                            // Optionally, hide the success message after a delay
+                            setTimeout(() => {
+                                successContainer.style.display = 'none';
+                            }, 3000); // Hide after 3000 ms (3 seconds)
                         })
                         .catch(error => {
                             console.error('Error:', error);
@@ -284,20 +670,18 @@
             document.getElementById('ask-btn').addEventListener('click', function () {
                 var questionInput = document.getElementById('question-input');
                 var question = questionInput.value.trim(); // Trim whitespace
+                var overlay = document.getElementById('overlay'); // Get the overlay element
 
                 if (question === '') {
                     console.log('Please enter a question.');
                     return;
                 }
 
+                // Display the overlay and loader
+                overlay.style.display = 'flex';
+
                 var formData = new FormData();
                 formData.append('question', question);
-
-                // Show loader and overlay
-                var loader = document.getElementById('loader');
-                var overlay = document.querySelector('.overlay');
-                loader.style.display = 'block';
-                overlay.style.display = 'block';
 
                 // Make a request to /ask
                 fetch('/ask', {
@@ -315,27 +699,30 @@
                         console.error('Error:', error);
                     })
                     .finally(() => {
-                        // Hide loader and overlay regardless of success or failure
-                        loader.style.display = 'none';
+                        // Hide the overlay and loader regardless of the result
                         overlay.style.display = 'none';
                     });
             });
 
-            const sidebarToggle = document.createElement('span');
-            sidebarToggle.classList.add('material-icons', 'sidebar-toggle');
-            sidebarToggle.textContent = 'menu';
-            document.body.appendChild(sidebarToggle);
+            const sidebarToggleButton = document.createElement('button');
+            sidebarToggleButton.setAttribute('type', 'button');
+            sidebarToggleButton.classList.add('sidebar-toggle-btn');
+            sidebarToggleButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor" xmlns="http://www.w3.org/2000/svg" color="inherit"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>';
+            document.body.appendChild(sidebarToggleButton);
 
-            sidebarToggle.addEventListener('click', function () {
-                document.querySelector('.sidebar').classList.toggle('sidebar-hidden');
-                // Adjust toggle button position based on sidebar state
-                this.style.left = document.querySelector('.sidebar').classList.contains('sidebar-hidden') ? '20px' : '220px';
+            // Add click event listener to toggle the sidebar visibility
+            sidebarToggleButton.addEventListener('click', function () {
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.toggle('sidebar-hidden');
+                // Adjust button position based on sidebar state
+                const isSidebarHidden = sidebar.classList.contains('sidebar-hidden');
+                this.style.left = isSidebarHidden ? '5px' : '220px';
+
+                // Update the SVG icon based on the sidebar state
+                this.innerHTML = isSidebarHidden ?
+                    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor" xmlns="http://www.w3.org/2000/svg" color="inherit" class="eyeqlp51 st-emotion-cache-1pbsqtx ex0cdmw0"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"></path></svg>' :
+                    '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor" xmlns="http://www.w3.org/2000/svg" color="inherit"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>';
             });
-
-            // Overlay for loader
-            const overlay = document.createElement('div');
-            overlay.classList.add('overlay');
-            document.body.appendChild(overlay);
 
             // Function to fetch chat history and display it
             function fetchChatHistory() {
@@ -416,6 +803,25 @@
             }
             // Initial call to fetch and display chat history
             fetchChatHistory();
+
+            var recruitlyDataCheckbox = document.getElementById('recruitly-data');
+            recruitlyDataCheckbox.addEventListener('change', function () {
+                var recruitlyData = this.checked;
+                fetch('/set_recruitly_data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ recruitlyData: recruitlyData })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Session updated:', data);
+                    })
+                    .catch(error => {
+                        console.error('Error updating session:', error);
+                    });
+            });
         });
     </script>
 

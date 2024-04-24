@@ -241,7 +241,7 @@ def execute_query(query, user_id, temp=False):
 
     print(prompt)
     messages = [
-        {"role": "system", "content": "You answer questions BestCandidate AI Bot."},
+        {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format"},
         {"role": "user", "content": prompt}
     ]
     try:
