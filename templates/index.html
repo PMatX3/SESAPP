@@ -7,6 +7,7 @@
     <title>Document</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4da.png">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
         rel="stylesheet">
@@ -224,7 +225,7 @@
             -webkit-box-align: center;
             align-items: center;
             -webkit-box-pack: center;
-            justify-content: center;
+            justify-content: left;
             font-weight: 400;
             padding: 0.25rem 0.75rem;
             border-radius: 0.5rem;
@@ -232,9 +233,28 @@
             margin: 0px;
             line-height: 1.6;
             user-select: none;
-            background-color: rgb(249, 249, 251);
+            background-color: rgb(255, 255, 255);
             border: 1px solid rgba(49, 51, 63, 0.2);
-            width: max-content;
+            width: 200px;
+            /* Fixed width */
+            overflow: hidden;
+            /* Hide overflow */
+            white-space: nowrap;
+            /* Keep text on a single line */
+            text-overflow: ellipsis;
+            /* Add ellipsis when text overflows */
+            position: relative;
+            /* Needed for absolute positioning of the gradient */
+        }
+
+        ul#chat-history li::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 20px;
+            background: linear-gradient(to right, rgba(249, 249, 251, 0), rgba(249, 249, 251, 1));
         }
 
         .chat-message {
@@ -511,6 +531,68 @@
                 transform: rotate(360deg);
             }
         }
+
+        .file-name-container {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #f0f2f6;
+            border-radius: 4px;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #31333f;
+            width: 168px;
+            /* Set the width of the box */
+            overflow: hidden;
+            /* Ensure the content does not overflow */
+        }
+
+        .file-name-container span {
+            white-space: nowrap;
+            /* Prevent the file name from wrapping */
+            overflow: hidden;
+            /* Hide overflow */
+            text-overflow: ellipsis;
+            /* Add ellipsis for overflow text */
+            display: block;
+            max-width: calc(100% - 30px);
+            /* Adjust width to leave space for the 'X' button */
+        }
+
+        .file-name-container button {
+            background-color: #ff4d4f;
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 5px;
+            /* Add some space between the file name and the button */
+        }
+
+        .file-name-container button:hover {
+            background-color: #ff7875;
+        }
+
+        .trial-ending-soon {
+            background-color: #ff4d4f;
+            /* Red background */
+            color: white;
+            /* White text */
+            text-align: center;
+            /* Center the text */
+            padding: 10px 0;
+            /* Padding for some space */
+            font-size: 16px;
+            /* Suitable font size */
+            display: block;
+            /* Hidden by default */
+        }
+
+        .trial-active {
+            display: none;
+        }
     </style>
 </head>
 
@@ -525,6 +607,10 @@
             {{ 'Logout' if session.get('user_id') else 'Login' }}
         </button>
     </div>
+    <!-- add this class when needed trial-ending-soon -->
+    <div class="{{ 'trial-active' if session.get('days', 30) <= 5 else 'trial-active' }}">
+        You have now <span id="days-left">{{ session.get('days') }}</span> days left in your free trial.
+    </div>
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-overflow">
@@ -538,14 +624,25 @@
                         <small>Limit 200MB per file • PDF</small>
                         <input type="file" id="pdf-upload" accept="application/pdf" style="display: none;">
                         <label for="pdf-upload" class="browse-btn btn">Browse files</label>
+                        <div id="pdf-upload-name" class="file-name-container"></div>
                     </div>
                     <div class="file-box margin-bottom-custom">
                         <span class="file-box-span">Drag and drop files here</span>
                         <small>Limit 200MB per file • CSV</small>
                         <input type="file" id="csv-upload" accept=".csv" style="display: none;">
                         <label for="csv-upload" class="browse-btn btn">Upload CSV</label>
+                        <div id="csv-upload-name" class="file-name-container"></div>
                     </div>
+                    <div class="file-box margin-bottom-custom">
+                        <span class="file-box-span">Drag and drop files here</span>
+                        <small>Limit 200MB per file • JSON</small>
+                        <input type="file" id="json-upload" accept=".json" style="display: none;">
+                        <label for="json-upload" class="browse-btn btn">Upload JSON</label>
+                        <div id="json-upload-name" class="file-name-container"></div>
+                    </div>
+                    {% if session.get('ses', False) %}
                     <input type="checkbox" id="recruitly-data"><label for="recruitly-data">Use SES data</label><br>
+                    {% endif %}
                     <button class="btn" id="process-btn">Process</button><br>
                     <div class="small-loader-container" id="small-loader-container">
                         <div class="small-loader" id="small-loader"></div>
@@ -583,29 +680,35 @@
                 console.log(loader)
                 var pdfInput = document.getElementById('pdf-upload');
                 var csvInput = document.getElementById('csv-upload');
+                var jsonInput = document.getElementById('json-upload');
                 var recruitlyDataCheckbox = document.getElementById('recruitly-data'); // Get the checkbox for recruitly.io data
                 var formData = new FormData();
                 var file;
                 var type;
 
+                console.log(jsonInput.files.length)
+
                 // Check if the recruitly.io data checkbox is checked
-                if (recruitlyDataCheckbox.checked) {
-                    file = null;
-                    type = 'json'; // Set type to 'json' if recruitly data is to be used
-                } else {
-                    // Determine which file input has a file and set the type accordingly
-                    if (pdfInput.files.length > 0) {
-                        file = pdfInput.files[0];
-                        type = 'pdf';
-                    } else if (csvInput.files.length > 0) {
-                        file = csvInput.files[0];
-                        type = 'csv';
-                    } else {
+                if (recruitlyDataCheckbox) {
+                    if (recruitlyDataCheckbox.checked) {
                         file = null;
-                        type = null; // No file selected and recruitly data not used
+                        type = 'json'; // Set type to 'json' if recruitly data is to be used
                     }
                 }
-
+                // Determine which file input has a file and set the type accordingly
+                if (pdfInput.files.length > 0) {
+                    file = pdfInput.files[0];
+                    type = 'pdf';
+                } else if (csvInput.files.length > 0) {
+                    file = csvInput.files[0];
+                    type = 'csv';
+                } else if (jsonInput.files.length > 0) {
+                    file = jsonInput.files[0];
+                    type = 'jsonfile';
+                } else {
+                    file = null;
+                    type = null; // No file selected and recruitly data not used
+                }
                 // If a file was selected or recruitly data is used, append it to formData
                 if (file || type === 'json') {
                     if (file) {
@@ -805,23 +908,79 @@
             fetchChatHistory();
 
             var recruitlyDataCheckbox = document.getElementById('recruitly-data');
-            recruitlyDataCheckbox.addEventListener('change', function () {
-                var recruitlyData = this.checked;
-                fetch('/set_recruitly_data', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ recruitlyData: recruitlyData })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Session updated:', data);
+            if (recruitlyDataCheckbox) {
+                recruitlyDataCheckbox.addEventListener('change', function () {
+                    var recruitlyData = this.checked;
+                    fetch('/set_recruitly_data', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ recruitlyData: recruitlyData })
                     })
-                    .catch(error => {
-                        console.error('Error updating session:', error);
-                    });
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Session updated:', data);
+                        })
+                        .catch(error => {
+                            console.error('Error updating session:', error);
+                        });
+                });
+            }
+
+            document.getElementById('pdf-upload').addEventListener('change', function () {
+                updateFileNameDisplay(this, 'pdf-upload-name');
             });
+
+            document.getElementById('csv-upload').addEventListener('change', function () {
+                updateFileNameDisplay(this, 'csv-upload-name');
+            });
+
+            document.getElementById('json-upload').addEventListener('change', function () {
+                updateFileNameDisplay(this, 'json-upload-name');
+            });
+
+            window.updateFileNameDisplay = function (inputElement, displayElementId) {
+                const file = inputElement.files[0];
+                const displayElement = document.getElementById(displayElementId);
+                if (file) {
+                    // Show the container and display the file name and 'X' button
+                    displayElement.style.display = 'flex'; // Ensure the container is visible
+                    displayElement.innerHTML = `<span>${file.name}</span> <button onclick="window.removeFileSelection('${inputElement.id}', '${displayElementId}');">X</button>`;
+                } else {
+                    // Hide the container if no file is selected
+                    displayElement.style.display = 'none';
+                    displayElement.innerHTML = '';
+                }
+            };
+
+            window.removeFileSelection = function (inputId, displayElementId) {
+                const inputElement = document.getElementById(inputId);
+                const displayElement = document.getElementById(displayElementId);
+                inputElement.value = ''; // Clear the input
+                displayElement.style.display = 'none'; // Hide the container
+                displayElement.innerHTML = ''; // Clear the display
+                inputElement.dispatchEvent(new Event('change')); // Trigger change event to handle any additional logic
+            };
+
+            //handle logout
+            let logoutTimer;
+            const logoutAfterInactivity = () => {
+                window.location.href = '{{ url_for("logout") }}'; // Adjust this to your logout URL
+            };
+
+            const resetLogoutTimer = () => {
+                clearTimeout(logoutTimer);
+                logoutTimer = setTimeout(logoutAfterInactivity, 1200000); // 1200000 ms = 20 minutes
+            };
+
+            // Events that should reset the timer
+            ['click', 'mousemove', 'keypress'].forEach(event => {
+                document.addEventListener(event, resetLogoutTimer);
+            });
+
+            // Initialize the timer when the page loads
+            resetLogoutTimer();
         });
     </script>
 

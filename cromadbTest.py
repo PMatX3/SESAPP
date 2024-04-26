@@ -172,12 +172,12 @@ def load_data(file_name, temp=False):
     # )    
 
     df['text'] = df.apply(lambda row: '\n'.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
-
+    
     docs=df["text"].tolist() 
     ids= [str(x) for x in df.index.tolist()]
     # Define maximum batch size
     max_batch_size = 20
-
+    
     # Splitting the documents and ids into batches and adding them to the collection
     for i in range(0, len(docs), max_batch_size):
         batch_docs = docs[i:i + max_batch_size]
@@ -194,7 +194,7 @@ def load_data(file_name, temp=False):
             )
 
 
-def load_json_data(json_data):
+def load_json_data(json_data, file=False):
     """
     Converts JSON data to a DataFrame, then generates a new DataFrame with a 'text' column
     that concatenates all column names and data, and finally stores this data into Cromadb.
@@ -211,8 +211,11 @@ def load_json_data(json_data):
     os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)  # Ensure the directory exists
     df.to_csv(csv_file_path, index=False, escapechar='\\')
     print(f"JSON data saved to {csv_file_path} successfully.")
-
-    load_data(csv_file_path, temp=True)
+    
+    if not file:
+        load_data(csv_file_path, temp=True)
+    else:
+        load_data(csv_file_path, temp=False)
     print("JSON data loaded into Cromadb successfully.")
 
 def execute_query(query, user_id, temp=False):
@@ -241,7 +244,8 @@ def execute_query(query, user_id, temp=False):
 
     print(prompt)
     messages = [
-        {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format"},
+        # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
+        {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
         {"role": "user", "content": prompt}
     ]
     try:

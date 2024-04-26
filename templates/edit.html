@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .navbar {
+            background-color: #29313d;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .btn-logout {
+            padding: 6px 12px;
+            color: white;
+            background-color: #475063;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: min-content;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background-color: #29313d;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            margin: auto;
+            padding-right: 43px;
+            margin-top: 22px;
+        }
+
+        input,
+        button,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #475063;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #29313d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <h1><a href="/admin" style="color: white; text-decoration: none;">Dashboard</a></h1>
+        <button class="btn-logout" onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+    </div>
+    <div class="container">
+        <h1>Edit User</h1>
+        <form action="{{ url_for('edit', app_name=app_data.app_name) }}" method="post">
+            <label for="new_data">Email</label>
+            <input type="text" id="new_data" name="new_data" value="{{ app_data.app_name }}" required>
+
+            <label for="new_password">Password</label>
+            <input type="text" id="new_password" name="new_password" value="{{ app_data.password }}" required>
+
+            <label for="new_days">Days</label>
+            <input type="number" id="new_days" name="new_days" value="{{ app_data.days }}" required>
+
+            <label for="new_login_attempts">Login Attempts</label>
+            <input type="number" id="new_login_attempts" name="new_login_attempts" value="{{ app_data.login_attempts }}"
+                required>
+            <label for="user_type">User Type</label>
+            <select name="user_type" id="user_type" required>
+                <option value="">Select User Type</option>
+                <option value="admin" {% if app_data.type=='admin' %}selected{% endif %}>Admin</option>
+                <option value="user" {% if app_data.type=='user' %}selected{% endif %}>User</option>
+            </select>
+            <button type="submit">Update User</button>
+        </form>
+    </div>
+    <script>
+        document.querySelector('form').onsubmit = async function (event) {
+            event.preventDefault(); // Prevent the default form submission
+            const form = event.target;
+            const data = new FormData(form);
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: data
+            });
+            const result = await response.json(); // Assuming the server responds with JSON
+
+            if (result.success) { // Check if the response indicates success
+                window.location.href = '/admin'; // Redirect to the /admin page
+            } else {
+                alert(result.message); // Show the message from the server response
+            }
+
+            console.log(result); // Log the response data
+        };
+    </script>
+</body>
+
+</html>

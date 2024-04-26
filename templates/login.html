@@ -123,16 +123,16 @@
                 console.log('submit')
                 e.preventDefault();  // Prevent default form submission
                 var formData = $(this).serialize();  // Serialize form data
-
+                var sessionDays = parseInt($('#sessionData').data('days'));
                 $.ajax({
                     type: 'POST',
                     url: '/login',
                     data: formData,
                     success: function (response) {
-                        console.log(response.login_attempt);
                         if (response.login_attempt === 0) {
-                            alert(response.login_attempt)
                             window.location.href = '/change_password';  // Redirect to change password if login_attempt is 0
+                        } else if (response.user === 'admin') {
+                            window.location.href = '/admin';  // Redirect to home if login_attempt is not 0
                         } else {
                             window.location.href = '/';  // Redirect to home if login_attempt is not 0
                         }
