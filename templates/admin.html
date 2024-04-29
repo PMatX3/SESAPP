@@ -112,12 +112,14 @@
         <table>
             <thead>
                 <tr>
-                    <th>App Name</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Email</th>
                     <th>Password</th>
                     <th>Days</th>
                     <th>User Type</th>
                     <th>Login Attempts</th>
-                    <th>SES</th>
+                    <th>Company</th>
                     <th>Created At</th>
                     <th>Actions</th>
                 </tr>
@@ -125,14 +127,15 @@
             <tbody>
                 {% for user in users %}
                 <tr>
+                    <td>{{ user.first_name }}</td>
+                    <td>{{ user.last_name }}</td>
                     <td>{{ user.app_name }}</td>
                     <td>{{ user.password }}</td>
                     <td>{{ user.days }}</td>
                     <td>{{ user.type }}</td>
                     <td>{{ user.login_attempts }}</td>
                     <td>
-                        <input type="checkbox" onchange="updateCmp('{{ user.app_name }}', this.checked)" {{ 'checked' if
-                            user.ses else '' }}>
+                        {{user.company}}
                     </td>
                     <td>{{ user.join_date }}</td>
                     <td>

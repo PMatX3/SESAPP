@@ -3,18 +3,26 @@ from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 import os,json
 from cromadbTest import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
-from utils import get_pdf_text, get_text_chunks
+from utils import get_pdf_text, get_text_chunks, send_reset_password_mail
 import pandas as pd
 import uuid
 import threading
-import requests
-from config import BASE_URL
-from datetime import datetime
+from datetime import datetime,timedelta
 import markdown
+import jwt
+import stripe
+import time
 from htmlTemplates import css, bot_template, user_template
 
 app = Flask(__name__)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/user_db"
+
+stripe_keys = {
+    "secret_key": os.environ["STRIPE_SECRET_KEY"],
+    "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
+}
+
+stripe.api_key = stripe_keys["secret_key"]
 
 client = MongoClient(app.config["MONGO_URI"])
 mongo = client['user_db']
@@ -57,10 +65,41 @@ def index():
             return render_template('index.html')
     else:
         return redirect(url_for('login'))
-    
+
+#PAYMENT PART    
 @app.route('/pricing')
 def pricing():
     return render_template('pricing.html')
+
+@app.route("/charge", methods=["POST"])
+def charge():
+    amount = 1000  # amount in cents
+    currency = "usd"
+    description = "A Flask Charge"
+
+    stripe.api_key = stripe_keys["secret_key"]
+
+    create_checkout_session = stripe.checkout.Session.create(
+        line_items=[
+            {
+                'price':'price_1PAm40DJlqPYNFXOr648BpiK',
+                'quantity':1
+            }
+        ],
+        mode='subscription',
+        success_url='http://127.0.0.1:5050/',
+        cancel_url='http://127.0.0.1:5050/pricing'
+    )
+
+    if create_checkout_session['payment_status'] == 'unpaid':
+        with app.test_client() as client:
+            response = client.post('/edit/' + session['user_id'], data={'new_days': 100, 'new_join_date': datetime.now().date().isoformat()})
+            if response.status_code == 200:
+                print('Days updated to 100 for unpaid session.')
+            else:
+                print('Failed to update days for unpaid session.')
+
+    return redirect(create_checkout_session.url,303)
 
 # admin part
 @app.route('/admin')
@@ -88,10 +127,17 @@ def insert_user():
             login_attempts = user_data.get('login_attempts')
             days = user_data.get('days')
             user_type = user_data.get('user_type')
+            first_name = user_data.get('first_name')
+            last_name = user_data.get('last_name')
+            company = user_data.get('company')
 
-            if not app_name or not password:
-                flash('Missing required user data', 'error')
-                return render_template('insert.html'), 400
+            if not app_name or not password or not first_name or not last_name:
+                return jsonify({'message': 'Please fill out all required fields.'}), 500
+            
+            # Check if user already exists
+            existing_user = mongo.users.find_one({'app_name': app_name})
+            if existing_user:
+                return jsonify({'message': 'Email already registered.'}), 500
 
             # Get the current date and convert to string
             join_date = datetime.now().date().isoformat()
@@ -102,9 +148,11 @@ def insert_user():
                 'password': password,
                 'login_attempts': int(login_attempts),
                 'days': int(days),
-                'ses': True,
-                'type': user_type,  # Store the user type
-                'join_date': join_date  # Store the join date as string
+                'company': company,
+                'type': user_type,
+                'join_date': join_date,
+                'first_name': first_name,
+                'last_name': last_name
             })
             return jsonify({'success':True, 'message': 'Data inserted successfully!'}), 200
 
@@ -120,16 +168,22 @@ def edit(app_name):
         new_password = request.form.get('new_password')
         new_days = request.form.get('new_days', type=int)
         new_login_attempts = request.form.get('new_login_attempts', type=int)
-        new_ses = request.form.get('new_ses', type=bool)
+        new_company = request.form.get('new_company', type=bool)
         new_usertype = request.form.get('user_type')
+        new_join_date = request.form.get('new_join_date', None)
+        new_first_name = request.form.get('new_first_name')
+        new_last_name = request.form.get('new_last_name')
 
         update_fields = {
             'app_name': new_data,
             'password': new_password,
             'days': new_days,
             'login_attempts': new_login_attempts,
-            'ses': new_ses,
-            'type': new_usertype
+            'company': new_company,
+            'type': new_usertype,
+            'join_date': new_join_date,
+            'first_name': new_first_name,
+            'last_name': new_last_name
         }
 
         # Remove keys where values are None to avoid overwriting with None
@@ -158,14 +212,14 @@ def delete(app_name):
 def updated_cmp():
     data = request.json
     app_name = data.get('app_name')
-    ses = data.get('ses')
+    ses = data.get('comapany')
     
     if not app_name or ses is None:
         return jsonify({'error': 'Missing app_name or ses'}), 400
 
     update_result = mongo.users.update_one(
         {'app_name': app_name},
-        {'$set': {'ses': ses}}
+        {'$set': {'comapany': ses}}
     )
 
     if update_result.modified_count > 0:
@@ -174,21 +228,61 @@ def updated_cmp():
         return jsonify({'error': 'No record found with the specified app_name or update failed'}), 404
 
 # user part
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        # Extract data from form
+        first_name = request.form.get('firstName')
+        last_name = request.form.get('lastName')
+        company = request.form.get('company')
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        # Basic validation
+        if not first_name or not last_name or not email or not password:
+            return jsonify({'message': 'Please fill out all required fields.'}), 500
+
+        # Check if user already exists
+        existing_user = mongo.users.find_one({'app_name': email})
+        if existing_user:
+            return jsonify({'message': 'Email already registered.'}), 500
+
+        # Get the current date and convert to string
+        join_date = datetime.now().date().isoformat()
+
+        # Insert new user into the database with default values for new fields
+        mongo.users.insert_one({
+            'first_name': first_name,
+            'last_name': last_name,
+            'company': company,
+            'app_name': email,
+            'password': password,
+            'days': 14,  
+            'login_attempts': 0,  
+            'type': 'user',  
+            'join_date': join_date  
+        })
+
+        return redirect(url_for('login'))
+    else:
+        return render_template('signup.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         with app.app_context():
             app_name = request.form.get('app_name')
             password = request.form.get('password')
-            response = requests.get(f'{BASE_URL}/get_password?app_name={app_name}')
+            with app.test_client() as client:
+                response = client.get(f'/get_password?app_name={app_name}')
             if response.status_code == 200:
-                data = response.json()
+                data = response.json
                 password_from_api = data['password']
                 login_attempt = data['login_attempts']
                 days = data['days']
                 join_date = data['join_date']
                 user_type = data['type']
-                ses = data['ses']
+                company = data['company']
                 days_since_join = calculate_days_since_join(join_date)
                 print('days since ---- >>>> ',days_since_join)
             else:
@@ -197,13 +291,13 @@ def login():
                 days = None
                 user_type = None
                 days_since_join = 0
-                ses = None
+                company = None
             session['days_since_join'] = days_since_join
             session['days'] = days
-            session['ses'] = ses
+            session['company'] = company
             session['user_type'] = user_type
             if login_attempt == 0:
-                print('herer')
+                session['user_id'] = app_name
                 return jsonify({'login_attempt':login_attempt,'days_since_join':days_since_join})
             
             if password_from_api:
@@ -276,7 +370,46 @@ def new_chat():
 
 @app.route('/change_password')
 def change_password():
-    return render_template('change_password.html')
+    token = request.args.get('token', None)
+    if token:
+        try:
+            decoded_token = jwt.decode(token, app.secret_key, algorithms=['HS256'])
+            user_id = decoded_token.get('user_id')
+            user = mongo.users.find_one({'app_name': user_id})
+            if user:
+                join_date = user['join_date'] 
+                days = user['days'] 
+                company = user['company'] 
+                days_since_join = calculate_days_since_join(join_date)
+                session['days_since_join'] = days_since_join
+                session['days'] = days
+                session['company'] = company
+            return render_template('change_password.html', user_id=user_id)
+        except jwt.ExpiredSignatureError:
+            return 'Token has expired', 401
+        except jwt.InvalidTokenError:
+            return 'Invalid token', 401
+    user_id = session.get('user_id')
+    return render_template('change_password.html', user_id=user_id)
+
+@app.route('/reset_password', methods=['GET','POST'])
+def reset_password():
+    if request.method == 'POST':
+        user_data = request.form
+        user_id = user_data.get('userEmail')
+        user = mongo.users.find_one({'app_name': user_id})
+        firstname = user['first_name']
+
+        # Generate JWT token
+        exp = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+        reset_token = jwt.encode({'user_id': user_id, 'exp': exp}, app.secret_key, algorithm='HS256')
+        domain = 'https://www.yourbestcandidate.ai'
+        path = url_for('change_password', token=reset_token)
+        reset_link = f"{domain}{path}"
+        send_reset_password_mail(user_id,'Reset Password link', firstname, reset_link)
+        return jsonify({'message':'email sent!'})
+    else:
+        return render_template('reset_password.html')
 
 @app.route('/load_data', methods=['POST'])
 def load_new_data():
@@ -301,7 +434,7 @@ def load_new_data():
             # Assuming load_pdf_data function exists and is intended to process the raw text or chunks
             load_pdf_data(raw_text)  # Process the extracted text as needed
             # Further processing can be done here, similar to app.py, if necessary
-            return jsonify({'message': 'File Proceed', 'type': data_type}), 200
+            return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
         elif data_type == 'csv':
             # CSV processing logic
             df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
@@ -309,7 +442,7 @@ def load_new_data():
             print(file_path)
             load_data(file_path)  # Process the DataFrame as needed
             # Further processing can be done here, similar to app.py, if necessary
-            return jsonify({'message': 'File Proceed', 'type': data_type}), 200
+            return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
         elif data_type == 'jsonfile':
             #firstly save file in uploads 
             # with open(file_path, 'r') as file:
@@ -321,13 +454,18 @@ def load_new_data():
             endtime = datetime.now()
             print(f"Time taken: {endtime - starttime}")
             # load_json_data(json_data, True)
-            return jsonify({'message': 'File Proceed', 'type': data_type}), 200
+            return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
         session['recrutly_id'] = False
-        return jsonify({'message': 'File Proceed', 'type': data_type}), 200
+        return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
     else:
         load_and_cache_json_data()
+        time.sleep(10)
+        user_id = session.get('user_id')
         session['recrutly_id'] = True
-        return jsonify({'message': 'SES data processed.', 'type': data_type}), 200
+        user = mongo.users.find_one({'app_name': user_id})
+        if user:
+            company_name = user.get('company', 'No company associated')
+        return jsonify({'message': f'{company_name} data processed.', 'type': data_type}), 200
 
 
 @app.route('/ask', methods=['POST'])
@@ -346,7 +484,7 @@ def ask():
         else:
             response = execute_query(user_question, 'test1')
 
-        add_chat_message(user_id, user_question, markdown.markdown(response), chat_id)
+        add_chat_message(user_id, user_question, markdown.markdown(response).replace('ol','ul'), chat_id)
         data = {
             "user": user_question,
             "ai": response

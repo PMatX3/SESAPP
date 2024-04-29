@@ -5,7 +5,6 @@ import openai
 import chromadb
 from chromadb.utils import embedding_functions
 import os
-import openai
 import chromadb
 from chromadb.utils import embedding_functions
 from datetime import datetime
@@ -219,7 +218,7 @@ def load_json_data(json_data, file=False):
     print("JSON data loaded into Cromadb successfully.")
 
 def execute_query(query, user_id, temp=False):
-    # Your existing code to process the query...
+    
     if temp:
         vector = text_embedding("")
         results = collection2.query(    

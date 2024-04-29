@@ -16,16 +16,64 @@
             box-sizing: border-box;
         }
 
+        .navbar {
+            background-color: #29313d;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            /* Change to fixed if you want it always visible at the top */
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .navbar div {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            color: white;
+            background-color: #475063;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            display: inline-block;
+            width: 100px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #29313d;
+        }
+
         body {
             font-family: "Source Sans 3", sans-serif;
             background-color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
             margin: 0;
             color: #31333f;
             font-weight: 400;
+            height: 100vh;
+        }
+
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: calc(100vh - 60px);
+            /* Adjust the height to subtract the navbar height */
         }
 
         .login-container {
@@ -102,19 +150,29 @@
 </head>
 
 <body>
-    <div class="login-container">
-        <form id="loginForm" action="/login" method="POST">
-            <h2>Your Best Candidate AI</h2>
-            <div class="input-group">
-                <label for="userEmail">User Email</label>
-                <input type="text" id="userEmail" name="app_name" required>
-            </div>
-            <div class="input-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit">Login</button>
-        </form>
+    <div class="navbar">
+        <h1>Login Page</h1>
+        <div>
+            <button class="btn" onclick="location.href='/signup'">Signup</button>
+        </div>
+    </div>
+    <div class="center-container">
+        <div class="login-container">
+            <form id="loginForm" action="/login" method="POST">
+                <h2>Your Best Candidate AI</h2>
+                <div class="input-group">
+                    <label for="userEmail">User Email</label>
+                    <input type="text" id="userEmail" name="app_name" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+                <a href="/reset_password" style="display: block; text-align: center; margin-top: 20px;">Forgot
+                    Password?</a>
+            </form>
+        </div>
     </div>
 
     <script>

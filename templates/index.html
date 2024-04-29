@@ -640,8 +640,9 @@
                         <label for="json-upload" class="browse-btn btn">Upload JSON</label>
                         <div id="json-upload-name" class="file-name-container"></div>
                     </div>
-                    {% if session.get('ses', False) %}
-                    <input type="checkbox" id="recruitly-data"><label for="recruitly-data">Use SES data</label><br>
+                    {% if session.get('company') is not none %}
+                    <input type="checkbox" id="recruitly-data" required><label for="recruitly-data">Use
+                        {{ session.get('company') }} data</label><br>
                     {% endif %}
                     <button class="btn" id="process-btn">Process</button><br>
                     <div class="small-loader-container" id="small-loader-container">
@@ -675,6 +676,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            var isProcessed = false;
             document.getElementById('process-btn').addEventListener('click', function () {
                 var loader = document.getElementById('small-loader-container');
                 console.log(loader)
@@ -725,7 +727,7 @@
                             console.log(data);
                             // Hide the loader
                             if (loader) loader.style.display = 'none';
-
+                            isProcessed = true;
                             // Display the success message
                             var successContainer = document.getElementById('success-message-container');
                             var successMessage = document.getElementById('success-message');
@@ -767,12 +769,24 @@
             getChatHistory();
 
             document.getElementById('ask-btn').addEventListener('click', function () {
+                var csvInput = document.getElementById('csv-upload');
+                var recruitlyDataCheckbox = document.getElementById('recruitly-data');
                 var questionInput = document.getElementById('question-input');
                 var question = questionInput.value.trim(); // Trim whitespace
                 var overlay = document.getElementById('overlay'); // Get the overlay element
 
+                if (!(csvInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
+                    alert('Please upload a CSV file or check the company data checkbox.');
+                    return; // Stop the function if validation fails
+                }
+
+                if ((csvInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked)) && !isProcessed) {
+                    alert('Please click the "Process" button before asking a question.');
+                    return; // Stop the function if validation fails
+                }
+
                 if (question === '') {
-                    console.log('Please enter a question.');
+                    alert('Please enter a question.');
                     return;
                 }
 
@@ -907,6 +921,7 @@
             if (recruitlyDataCheckbox) {
                 recruitlyDataCheckbox.addEventListener('change', function () {
                     var recruitlyData = this.checked;
+                    isProcessed = false;
                     fetch('/set_recruitly_data', {
                         method: 'POST',
                         headers: {
@@ -929,6 +944,7 @@
             });
 
             document.getElementById('csv-upload').addEventListener('change', function () {
+                isProcessed = false;
                 updateFileNameDisplay(this, 'csv-upload-name');
             });
 

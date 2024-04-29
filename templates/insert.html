@@ -82,41 +82,54 @@
 
     <div class="container">
         <h1>Insert User</h1>
-        <form action="{{ url_for('insert_user') }}" method="post">
-            <label for="app_name">Email</label>
-            <input type="text" name="app_name" placeholder="Enter email" required>
+        <form id="userForm" action="{{ url_for('insert_user') }}" method="post">
+            <label for="email">Email</label>
+            <input type="email" name="app_name" placeholder="Enter email" required><br>
 
             <label for="password">Password</label>
-            <input type="text" name="password" placeholder="Enter password" required oninput="validatePassword()">
-            <div id="password_error" style="color: red;"></div>
+            <input type="password" name="password" placeholder="Enter password" required oninput="validatePassword()">
+            <span id="password_error" style="color: red;"></span><br>
+
+            <label for="first_name">First Name</label>
+            <input type="text" name="first_name" placeholder="Enter first name" required><br>
+
+            <label for="last_name">Last Name</label>
+            <input type="text" name="last_name" placeholder="Enter last name" required><br>
+
+            <label for="company">Company (Optional)</label>
+            <input type="text" name="company" placeholder="Enter company name" required><br>
 
             <label for="days">Days</label>
-            <input type="number" name="days" placeholder="Enter number of days" required>
+            <input type="number" name="days" placeholder="Enter number of days" required><br>
 
             <label for="login_attempts">Login Attempts</label>
-            <input type="number" name="login_attempts" placeholder="Enter number of login attempts" required>
+            <input type="number" name="login_attempts" placeholder="Enter number of login attempts" required><br>
+
             <label for="user_type">User Type</label>
             <select name="user_type" required>
                 <option value="">Select User Type</option>
                 <option value="admin">Admin</option>
                 <option value="user">User</option>
-            </select>
+            </select><br>
 
             <button type="submit">Insert User</button>
         </form>
     </div>
+
     <script>
-        document.querySelector('form').onsubmit = async function (event) {
+        document.getElementById('userForm').onsubmit = async function (event) {
             event.preventDefault(); // Prevent the default form submission
             const form = event.target;
-            const data = new FormData(form);
+            const formData = new FormData(form);
             const response = await fetch(form.action, {
                 method: 'POST',
-                body: data
+                body: formData
             });
             const result = await response.json();
-            alert(result.message);
-            console.log(result);
+            alert(result.message)
+            if (result.success) {
+                form.reset(); // Reset form if successful
+            }
         };
 
         function validatePassword() {

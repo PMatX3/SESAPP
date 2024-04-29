@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
+        rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Source Sans 3", sans-serif;
+            background-color: #fff;
+            height: 100vh;
+            margin: 0;
+            color: #31333f;
+            font-weight: 400;
+        }
+
+        .signup-container {
+            background: transparent;
+            border-radius: 5px;
+            box-shadow: none;
+            width: 100%;
+            padding: 6rem 1rem 10rem;
+            max-width: 46rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .signup-container h2 {
+            text-align: center;
+            margin-top: 0;
+            font-size: 44px;
+            margin-bottom: 0;
+            padding-top: 20px;
+            padding-bottom: 16px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 0;
+            border-radius: 4px;
+            background: #f0f2f6;
+            height: 40px;
+        }
+
+        .input-group label {
+            font-size: 14px;
+            font-weight: 400;
+            margin-bottom: 4px;
+            display: block;
+            color: #31333f;
+        }
+
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 400;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.5rem;
+            min-height: 38.4px;
+            background-color: rgb(255, 255, 255);
+            border: 1px solid rgba(49, 51, 63, 0.2);
+            cursor: pointer;
+        }
+
+        button:hover {
+            border-color: rgb(255, 75, 75);
+            color: rgb(255, 75, 75);
+        }
+
+        .navbar {
+            background-color: #29313d;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            /* Change to fixed if you want it always visible at the top */
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .navbar h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .navbar div {
+            display: flex;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            color: white;
+            background-color: #475063;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            margin-left: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+            display: inline-block;
+            width: 100px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #29313d;
+        }
+
+        .center-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <h1>Signup Page</h1>
+        <div>
+            <button class="btn" onclick="location.href='/login'">Login</button>
+        </div>
+    </div>
+    <div class="center-container">
+        <div class="signup-container">
+            <form id="signupForm" action="/signup" method="POST">
+                <h2>Sign Up</h2>
+                <div class="input-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                </div>
+                <div class="input-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
+                <div class="input-group">
+                    <label for="company">Company (optional)</label>
+                    <input type="text" id="company" name="company">
+                </div>
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" oninput="validateEmail(this.value)" name="email" required>
+                    <span id="email_error" style="color: red;"></span>
+                </div>
+                <div class="input-group">
+                    <label for="password">Password</label>
+                    <input type="password" oninput="validatePassword(this.value)" id="password" name="password"
+                        required>
+                    <span id="password_error" style="color: red;"></span>
+                </div>
+                <button type="submit">Sign Up</button>
+            </form>
+        </div>
+    </div>
+    <script>
+        function validatePassword(password) {
+            const passwordError = document.getElementById('password_error');
+            const submitButton = document.querySelector('button[type="submit"]');
+            let isValid = true;
+
+            if (password.length < 8) {
+                passwordError.textContent = "Password must be at least 8 characters long.";
+                isValid = false;
+            } else if (!/[A-Z]/.test(password)) {
+                passwordError.textContent = "Password must include at least one uppercase letter.";
+                isValid = false;
+            } else if (!/[0-9]/.test(password)) {
+                passwordError.textContent = "Password must include at least one number.";
+                isValid = false;
+            } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+                passwordError.textContent = "Password must include at least one special character.";
+                isValid = false;
+            } else {
+                passwordError.textContent = "Password is valid!";
+                passwordError.style.color = "green"; // Set text color to green on success
+            }
+
+            passwordError.style.color = isValid ? "green" : "red";
+            submitButton.disabled = !isValid;
+        }
+
+        function validateEmail(email) {
+            const emailError = document.getElementById('email_error');
+            const submitButton = document.querySelector('button[type="submit"]');
+            const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+            let isValid = emailRegex.test(email);
+
+            if (!isValid) {
+                emailError.textContent = "Please enter a valid email address.";
+                emailError.style.color = "red";
+            } else {
+                emailError.textContent = "Email is valid!";
+                emailError.style.color = "green";
+            }
+
+            submitButton.disabled = !isValid;
+        }
+    </script>
+</body>
+
+</html>

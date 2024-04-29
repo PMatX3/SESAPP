@@ -53,6 +53,7 @@ langchain-core==0.1.45
 langchain-text-splitters==0.0.1
 langsmith==0.1.49
 markdown-it-py==3.0.0
+markdown
 MarkupSafe==2.1.5
 marshmallow==3.21.1
 mdurl==0.1.2
@@ -94,6 +95,7 @@ pyproject_hooks==1.0.0
 pyreadline3==3.4.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
+PyJWT
 pytz==2024.1
 PyYAML==6.0.1
 requests==2.31.0

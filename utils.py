@@ -6,6 +6,9 @@ from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 import requests
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -57,3 +60,90 @@ def get_password(application_id):
             return None, 0  # Return None for password and 0 for login_attempt in case of error
     except requests.exceptions.JSONDecodeError:
         return "😕 Invalid Email!"
+
+def send_reset_password_mail(to_email, subject, username, reset_link):
+    from_email = "vaibhavsharma3070@gmail.com"
+    password = "dariqpkhrhjldxpb"
+
+    html_message = f"""
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reset Your Password</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }}
+            .container {{
+                margin-top: 50px;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 40px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+                margin: 0 auto;
+            }}
+            h1 {{
+                color: #333;
+                margin-bottom: 20px;
+            }}
+            p {{
+                color: #666;
+                margin-bottom: 30px;
+            }}
+            .btn {{
+                display: inline-block;
+                background-color: #007bff;
+                color: #fff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                text-decoration: none;
+                margin-top: 20px;
+                transition: background-color 0.3s ease;
+            }}
+            .btn:hover {{
+                background-color: #0056b3;
+            }}
+            .footer {{
+                margin-top: 30px;
+                color: #999;
+                font-size: 14px;
+            }}
+            .username {{
+                color: #007bff;
+                font-weight: bold;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Reset Your Password, <span class="username">{username}</span>!</h1>
+            <p>You recently requested to reset your password. Click the button below to reset it:</p>
+            <a href="{reset_link}" class="btn">Reset Password</a>
+            <p>If you didn't request a password reset, you can ignore this email.</p>
+            <div class="footer">
+                <p>If you encounter any issues, please contact support at <a href="mailto:support@example.com">support@example.com</a>.</p>
+                <p>This email was sent automatically. Please do not reply to this email.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+
+    msg.attach(MIMEText(html_message, 'html'))
+
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(from_email, password)
+    server.send_message(msg)
+    server.quit()

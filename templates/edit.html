@@ -94,12 +94,23 @@
             <label for="new_login_attempts">Login Attempts</label>
             <input type="number" id="new_login_attempts" name="new_login_attempts" value="{{ app_data.login_attempts }}"
                 required>
+
+            <label for="new_company">Company (Optional)</label>
+            <input type="text" id="new_company" name="new_company">
+
             <label for="user_type">User Type</label>
             <select name="user_type" id="user_type" required>
                 <option value="">Select User Type</option>
                 <option value="admin" {% if app_data.type=='admin' %}selected{% endif %}>Admin</option>
                 <option value="user" {% if app_data.type=='user' %}selected{% endif %}>User</option>
             </select>
+
+            <label for="new_first_name">First Name</label>
+            <input type="text" id="new_first_name" name="new_first_name" value="{{ app_data.first_name }}" required>
+
+            <label for="new_last_name">Last Name</label>
+            <input type="text" id="new_last_name" name="new_last_name" value="{{ app_data.last_name }}" required>
+
             <button type="submit">Update User</button>
         </form>
     </div>
