@@ -686,8 +686,6 @@
                 var file;
                 var type;
 
-                console.log(jsonInput.files.length)
-
                 // Check if the recruitly.io data checkbox is checked
                 if (recruitlyDataCheckbox) {
                     if (recruitlyDataCheckbox.checked) {
@@ -705,10 +703,8 @@
                 } else if (jsonInput.files.length > 0) {
                     file = jsonInput.files[0];
                     type = 'jsonfile';
-                } else {
-                    file = null;
-                    type = null; // No file selected and recruitly data not used
                 }
+
                 // If a file was selected or recruitly data is used, append it to formData
                 if (file || type === 'json') {
                     if (file) {
