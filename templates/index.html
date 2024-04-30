@@ -808,11 +808,6 @@
                     return; // Stop the function if validation fails
                 }
 
-                if ((csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked)) && !isProcessed) {
-                    alert('Please click the "Process" button before asking a question.');
-                    return; // Stop the function if validation fails
-                }
-
                 if (question === '') {
                     alert('Please enter a question.');
                     return;
