@@ -41,8 +41,8 @@ def fetch_and_store_data(sort='DESC', sort_field='createdOn', page_size=100):
     # df.to_csv('candidates_data.csv', index=False)
     # print("Filtered data has been saved to 'candidates_data.csv'.")
 
-    df.to_json('candidates_data.json', orient='records')
-    print("Filtered data has been saved to 'candidates_data.json'.")
+    df.to_json('compant_data/SES.json', orient='records')
+    print("Filtered data has been saved to 'SES.json'.")
 
 if __name__ == "__main__":
     # Example usage

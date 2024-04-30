@@ -31,6 +31,7 @@ db = m_client['user_db']
 
 collection = client.get_or_create_collection("candidates",embedding_function=openai_ef)
 collection2 = client.get_or_create_collection("candidates2",embedding_function=openai_ef)
+job_query = client.get_or_create_collection("job_query",embedding_function=openai_ef)
 chat_history_collection = db['chat_history']
 
 def add_chat_message(user_id, message, response, chat_id):
@@ -80,7 +81,7 @@ def get_chat_list(user_id):
 def load_pdf_data(text):
     
     # Add code here to load the extracted text into the collection
-    collection.add(
+    job_query.add(
         documents=[text],
         # metadatas=["job_profiles"],
         ids=["job_profile"]
@@ -218,16 +219,22 @@ def load_json_data(json_data, file=False):
     print("JSON data loaded into Cromadb successfully.")
 
 def execute_query(query, user_id, temp=False):
+    job_desc = job_query.get('job_profile')
+    
+    if job_desc['documents'] != []:
+        embeding_query = ''.join(job_desc['documents'])
+    else:
+        embeding_query = 'give me top 3 candidates'
     
     if temp:
-        vector = text_embedding("")
+        vector = text_embedding(embeding_query)
         results = collection2.query(    
             query_embeddings=vector,
             n_results=10,
             include=["documents"]
         )
     else:
-        vector = text_embedding("give me top 5 candidate list")
+        vector = text_embedding(embeding_query)
         results = collection.query(    
             query_embeddings=vector,
             n_results=15,

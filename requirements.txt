@@ -57,6 +57,7 @@ markdown
 MarkupSafe==2.1.5
 marshmallow==3.21.1
 mdurl==0.1.2
+mdit-py-plugins
 mmh3==4.1.0
 monotonic==1.6
 mpmath==1.3.0
@@ -102,6 +103,7 @@ requests==2.31.0
 requests-oauthlib==2.0.0
 rich==13.7.1
 rsa==4.9
+schedule
 shellingham==1.5.4
 six==1.16.0
 sniffio==1.3.1

@@ -9,6 +9,9 @@ import uuid
 import threading
 from datetime import datetime,timedelta
 import markdown
+from markdown_it import MarkdownIt
+from mdit_py_plugins.front_matter import front_matter_plugin
+from mdit_py_plugins.footnote import footnote_plugin
 import jwt
 import stripe
 import time
@@ -31,15 +34,23 @@ app.secret_key = '31dee9b85d3be7513eda6e3bb1b2e22edd923194d18b3cf8'
 
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+DOMAIN = 'https://www.yourbestcandidate.ai'
 
-def load_and_cache_json_data(filename=None):
+md = (
+    MarkdownIt('commonmark' ,{'breaks':True,'html':True})
+    .use(front_matter_plugin)
+    .use(footnote_plugin)
+    .enable('table')
+)
+
+def load_and_cache_json_data(filename=None, temp=False):
     def load_json():
-        if filename:
+        if filename and temp:
             with open(filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)
                 load_json_data(data, True)
         else:
-            with open('candidates_data.json', 'r', encoding='utf-8') as file:
+            with open(filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)
                 load_json_data(data)
         
@@ -47,6 +58,36 @@ def load_and_cache_json_data(filename=None):
     # Start a new thread for loading JSON data
     thread = threading.Thread(target=load_json)
     thread.start()
+
+def load_and_cache_file_data(filename=None):
+    def load_file():
+        load_data(filename)
+        
+
+    # Start a new thread for loading JSON data
+    thread = threading.Thread(target=load_file)
+    thread.start()
+
+def check_for_file(company_name):
+    root_dir = 'company_data'  # Start from the root of the filesystem
+    file_found = None
+    allowed_extensions = {'.pdf', '.csv', '.json'}  # Set of allowed file extensions
+
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        for filename in filenames:
+            print(filename)
+            if company_name in filename and os.path.splitext(filename)[1] in allowed_extensions:
+                file_found = os.path.join(dirpath, filename)
+                break
+        if file_found:
+            break
+
+    if file_found:
+        load_and_cache_json_data(file_found)
+        return 200
+    else:
+        print("No file found containing the company name in the filename.")
+        return 'You don\'t have any data loaded into the database'
 
 def calculate_days_since_join(join_date_str):
     join_date = datetime.strptime(join_date_str, "%Y-%m-%d")
@@ -57,12 +98,20 @@ def calculate_days_since_join(join_date_str):
 @app.route('/')
 def index():
     if 'user_id' in session:
-        days_since_join = session['days_since_join'] 
-        days = session['days']
-        if days_since_join >= days:
-            return redirect(url_for('pricing'))
+        user_id = session['user_id']
+        user_data = mongo.users.find_one({'app_name': user_id})
+        if user_data:
+            days_since_join = calculate_days_since_join(user_data['join_date'])
+            days = user_data.get('days', 0)
+            session['days_since_join'] = days_since_join
+            session['days'] = days
+
+            if days_since_join >= days:
+                return redirect(url_for('pricing'))
+            else:
+                return render_template('index.html')
         else:
-            return render_template('index.html')
+            return redirect(url_for('login'))
     else:
         return redirect(url_for('login'))
 
@@ -87,8 +136,8 @@ def charge():
             }
         ],
         mode='subscription',
-        success_url='http://127.0.0.1:5050/',
-        cancel_url='http://127.0.0.1:5050/pricing'
+        success_url=f'{DOMAIN}/',
+        cancel_url=f'{DOMAIN}/pricing'
     )
 
     if create_checkout_session['payment_status'] == 'unpaid':
@@ -111,7 +160,7 @@ def admin():
         current_user_id = session['user_id']
         users = mongo.users.find()
         user_list = [user for user in users if user['app_name'] != current_user_id]  
-        print("Rendering admin with users:", session['user_type'])
+
         return render_template('admin.html', users=user_list)
     else:
         print("Redirecting to login from admin due to missing user_id in session")
@@ -168,7 +217,7 @@ def edit(app_name):
         new_password = request.form.get('new_password')
         new_days = request.form.get('new_days', type=int)
         new_login_attempts = request.form.get('new_login_attempts', type=int)
-        new_company = request.form.get('new_company', type=bool)
+        new_company = request.form.get('new_company')
         new_usertype = request.form.get('user_type')
         new_join_date = request.form.get('new_join_date', None)
         new_first_name = request.form.get('new_first_name')
@@ -292,6 +341,7 @@ def login():
                 user_type = None
                 days_since_join = 0
                 company = None
+
             session['days_since_join'] = days_since_join
             session['days'] = days
             session['company'] = company
@@ -403,69 +453,67 @@ def reset_password():
         # Generate JWT token
         exp = datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
         reset_token = jwt.encode({'user_id': user_id, 'exp': exp}, app.secret_key, algorithm='HS256')
-        domain = 'https://www.yourbestcandidate.ai'
         path = url_for('change_password', token=reset_token)
-        reset_link = f"{domain}{path}"
+        reset_link = f"{DOMAIN}{path}"
         send_reset_password_mail(user_id,'Reset Password link', firstname, reset_link)
         return jsonify({'message':'email sent!'})
     else:
         return render_template('reset_password.html')
 
+#AI Part
 @app.route('/load_data', methods=['POST'])
 def load_new_data():
     try:
-        file = request.files['file']
+        files = request.files
     except:
-        file = None
-    data_type = request.form.get('type')
-    if data_type != 'json':
-        if file.filename == '':
-            return jsonify({'message': 'No selected file'}), 400
-    if file:
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(file_path)
-        
-        if data_type == 'pdf':
-            # Assuming get_pdf_text and get_text_chunks functions are defined similarly to those in app.py
-            pdf_docs = [file_path]  # Adjusted to work with a single file
-            raw_text = get_pdf_text(pdf_docs)  # Extract text from the PDF
-            text_chunks = get_text_chunks(raw_text)  # Split the text into chunks
-            # Assuming load_pdf_data function exists and is intended to process the raw text or chunks
-            load_pdf_data(raw_text)  # Process the extracted text as needed
-            # Further processing can be done here, similar to app.py, if necessary
-            return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
-        elif data_type == 'csv':
-            # CSV processing logic
-            df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
-            # Assuming load_data function exists and is intended to process the DataFrame
-            print(file_path)
-            load_data(file_path)  # Process the DataFrame as needed
-            # Further processing can be done here, similar to app.py, if necessary
-            return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
-        elif data_type == 'jsonfile':
-            #firstly save file in uploads 
-            # with open(file_path, 'r') as file:
-            #     data = file.read()
-            
-            # json_data = json.loads(data)
-            starttime = datetime.now()
-            load_and_cache_json_data(file_path)
-            endtime = datetime.now()
-            print(f"Time taken: {endtime - starttime}")
-            # load_json_data(json_data, True)
-            return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
+        files = None
+    data_types = request.form
+    data_types = data_types.getlist('type')
+    print(files)
+    message = None
+    if files:
+        files_list = files.getlist('file')
+        for i,file in enumerate(files_list):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            _, file_ext = os.path.splitext(filename)  # Extract the file extension
+            if file_ext == '.pdf':
+                pdf_docs = [file_path]  # Adjusted to work with a single file
+                raw_text = get_pdf_text(pdf_docs)  # Extract text from the PDF
+                text_chunks = get_text_chunks(raw_text)  # Split the text into chunks
+                load_pdf_data(raw_text)  # Process the extracted text as needed
+            elif file_ext == '.csv':
+                # CSV processing logic
+                df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
+                load_and_cache_file_data(file_path)
+            elif file_ext == '.json':
+                starttime = datetime.now()
+                load_and_cache_json_data(file_path, True)
+                endtime = datetime.now()
+                print(f"Time taken: {endtime - starttime}")
         session['recrutly_id'] = False
-        return jsonify({'message': 'File Successfully Processed', 'type': data_type}), 200
-    else:
-        load_and_cache_json_data()
-        time.sleep(10)
+        message = "File Successfully Processed"
+
+    if 'json' in data_types:
         user_id = session.get('user_id')
         session['recrutly_id'] = True
         user = mongo.users.find_one({'app_name': user_id})
         if user:
             company_name = user.get('company', 'No company associated')
-        return jsonify({'message': f'{company_name} data processed.', 'type': data_type}), 200
+        
+        res = check_for_file(company_name)
+        
+        time.sleep(10)
+        if message is not None:
+            message += 'and '+f'{company_name} data processed.'
+        else:
+            message = f'{company_name} data processed.'
+        if res != 200:
+           message = res 
+           return message, 404
+    return jsonify({'message':message}), 200
+
 
 
 @app.route('/ask', methods=['POST'])
@@ -475,16 +523,16 @@ def ask():
         # Retrieve user_id and chat_id from the session
         user_id = session.get('user_id')
         chat_id = session.get('chat_id')
-        recruitly_data = session.get('recruitly-data')
+        recruitly_data = request.form.get('recruitly_data')
         # Ensure user_id and chat_id are available
         if not user_id or not chat_id:
             return jsonify({'error': 'User ID or Chat ID missing from session'}), 400
         if recruitly_data:
-            response = execute_query(user_question, 'test1', True)
+            response = execute_query(user_question, user_id, True)
         else:
-            response = execute_query(user_question, 'test1')
-
-        add_chat_message(user_id, user_question, markdown.markdown(response).replace('ol','ul'), chat_id)
+            response = execute_query(user_question, user_id)
+        html_text = md.render(response)
+        add_chat_message(user_id, user_question, html_text, chat_id)
         data = {
             "user": user_question,
             "ai": response
@@ -509,6 +557,17 @@ def api_get_chat_history():
             return jsonify(formatted_history), 200
         else:
             return jsonify({'error': 'Chat history not found'}), 404
+
+@app.route('/delete_chat/<chat_id>', methods=['DELETE','POST'])
+def delete_chat(chat_id):
+    if not chat_id:
+        return jsonify({'error': 'Chat ID is required'}), 400
+
+    delete_result = mongo.chat_history.delete_one({'chat_id': chat_id})
+    if delete_result.deleted_count > 0:
+        return jsonify({'message': 'Chat deleted successfully', 'success':True}), 200
+    else:
+        return jsonify({'error': 'No chat found with the specified chat ID', 'success':False}), 404
 
 @app.route('/set_recruitly_data', methods=['POST'])
 def set_recruitly_data():
