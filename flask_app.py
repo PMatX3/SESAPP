@@ -103,8 +103,10 @@ def index():
         if user_data:
             days_since_join = calculate_days_since_join(user_data['join_date'])
             days = user_data.get('days', 0)
+            login_attempts = user_data.get('login_attempts')
             session['days_since_join'] = days_since_join
             session['days'] = days
+            session['login_attempt'] = login_attempts
 
             if days_since_join >= days:
                 return redirect(url_for('pricing'))
@@ -346,6 +348,7 @@ def login():
             session['days'] = days
             session['company'] = company
             session['user_type'] = user_type
+            session['login_attempt'] = login_attempt
             if login_attempt == 0:
                 session['user_id'] = app_name
                 return jsonify({'login_attempt':login_attempt,'days_since_join':days_since_join})
@@ -356,6 +359,8 @@ def login():
                     chat_id = str(uuid.uuid4())
                     session['user_id'] = app_name
                     session['chat_id'] = chat_id  
+                    with app.test_client() as client:
+                        client.post(url_for('update_login_attempts'), data={'app_name': app_name})
                     if user_type == 'admin':
                         return jsonify({'user':'admin'})
                     else:
@@ -506,7 +511,7 @@ def load_new_data():
         
         time.sleep(10)
         if message is not None:
-            message += 'and '+f'{company_name} data processed.'
+            message += ' and '+f'{company_name} data processed.'
         else:
             message = f'{company_name} data processed.'
         if res != 200:
@@ -563,7 +568,7 @@ def delete_chat(chat_id):
     if not chat_id:
         return jsonify({'error': 'Chat ID is required'}), 400
 
-    delete_result = mongo.chat_history.delete_one({'chat_id': chat_id})
+    delete_result = mongo.chat_history.delete_many({'chat_id': chat_id})
     if delete_result.deleted_count > 0:
         return jsonify({'message': 'Chat deleted successfully', 'success':True}), 200
     else:

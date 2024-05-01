@@ -230,23 +230,25 @@ def execute_query(query, user_id, temp=False):
         vector = text_embedding(embeding_query)
         results = collection2.query(    
             query_embeddings=vector,
-            n_results=10,
+            n_results=5000,
             include=["documents"]
         )
     else:
         vector = text_embedding(embeding_query)
         results = collection.query(    
             query_embeddings=vector,
-            n_results=15,
+            n_results=5000,
             include=["documents"]
         )
-    res = "\n".join(str(item) for item in results['documents'][0])
-    prompt = f'```{res}```Based on the data in ```, answer {query}'
+        
+    available_tokens_for_results = 450000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
 
-    # Truncate the prompt if it exceeds a certain length to avoid exceeding token limits
-    MAX_LENGTH = 16000  # Adjust based on experimentation
-    if len(prompt) > MAX_LENGTH:
-        prompt = prompt[:MAX_LENGTH] + f'... Answer the question {query}'
+    # Convert results to string and truncate if necessary
+    results_str = "\n".join(str(item) for item in results['documents'][0])
+    if len(results_str) > available_tokens_for_results:
+        results_str = results_str[:available_tokens_for_results]  # Truncate results to fit within token limits
+
+    prompt = f'```{results_str}```Based on the data in ```, answer {query}'
 
     print(prompt)
     messages = [
@@ -256,7 +258,7 @@ def execute_query(query, user_id, temp=False):
     ]
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4-turbo",
             messages=messages,
             temperature=0
         )
