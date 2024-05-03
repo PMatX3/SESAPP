@@ -29,8 +29,8 @@ openai_ef = embedding_functions.OpenAIEmbeddingFunction(
 
 db = m_client['user_db']
 
-collection = client.get_or_create_collection("candidates",embedding_function=openai_ef)
-collection2 = client.get_or_create_collection("candidates2",embedding_function=openai_ef)
+collection = client.get_or_create_collection("candidates",embedding_function=openai_ef, metadata={"hnsw:space": "cosine"})
+collection2 = client.get_or_create_collection("candidates2",embedding_function=openai_ef, metadata={"hnsw:space": "cosine"})
 job_query = client.get_or_create_collection("job_query",embedding_function=openai_ef)
 chat_history_collection = db['chat_history']
 
@@ -241,7 +241,7 @@ def execute_query(query, user_id, temp=False):
             include=["documents"]
         )
         
-    available_tokens_for_results = 450000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
+    available_tokens_for_results = 128000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
 
     # Convert results to string and truncate if necessary
     results_str = "\n".join(str(item) for item in results['documents'][0])
@@ -264,7 +264,7 @@ def execute_query(query, user_id, temp=False):
         )
         response_message = response["choices"][0]["message"]["content"]
     except openai.error.InvalidRequestError as e:
-        response_message = "Error: The input is too long for the model to process."
+        response_message = "Error: The input is too long for the model to process."+e
     
     return response_message
 
