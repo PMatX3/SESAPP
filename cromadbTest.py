@@ -230,18 +230,18 @@ def execute_query(query, user_id, temp=False):
         vector = text_embedding(embeding_query)
         results = collection2.query(    
             query_embeddings=vector,
-            n_results=5000,
+            n_results=1000,
             include=["documents"]
         )
     else:
         vector = text_embedding(embeding_query)
         results = collection.query(    
             query_embeddings=vector,
-            n_results=5000,
+            n_results=1000,
             include=["documents"]
         )
         
-    available_tokens_for_results = 128000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
+    available_tokens_for_results = 300000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
 
     # Convert results to string and truncate if necessary
     results_str = "\n".join(str(item) for item in results['documents'][0])
@@ -264,7 +264,7 @@ def execute_query(query, user_id, temp=False):
         )
         response_message = response["choices"][0]["message"]["content"]
     except openai.error.InvalidRequestError as e:
-        response_message = "Error: The input is too long for the model to process."+e
+        response_message = "Error: The input is too long for the model to process."
     
     return response_message
 
