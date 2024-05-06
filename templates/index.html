@@ -695,7 +695,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/4.1.0/intro.min.js"></script>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var isProcessed = false;
@@ -806,9 +805,6 @@
             // Call getChatHistory when the page loads to fetch chat history immediately
             getChatHistory();
 
-            var socket = io();
-            var botResponseDiv; // Reference to the bot response div
-
             document.getElementById('ask-btn').addEventListener('click', function () {
                 var csvInput = document.getElementById('csv-upload');
                 var jsonInput = document.getElementById('json-upload');
@@ -817,7 +813,6 @@
                 var question = questionInput.value.trim(); // Trim whitespace
                 var messagesDiv = document.getElementById('messages'); // Get the messages div
                 questionInput.value = '';
-
                 if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
                     alert('Please upload a CSV or JSON file, or check the company data checkbox.');
                     return; // Stop the function if validation fails
@@ -828,20 +823,22 @@
                     return;
                 }
 
-                // Check if the bot response div already exists, if not create it
-                if (!botResponseDiv) {
-                    var botMessageTemplate = `
-<div class="chat-message bot">
-    <div class="avatar">
-        <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
-    </div>
-    <div class="message" id="bot-response">Generating response...</div>
-</div>
-`;
-                    messagesDiv.insertAdjacentHTML('afterbegin', botMessageTemplate);
-                    botResponseDiv = document.getElementById('bot-response');
+                var formData = new FormData();
+                formData.append('question', question);
+                if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked) {
+                    formData.append('recruitly_data', 'true');
                 }
 
+                // Prepare the bot message template
+                var botMessageTemplate = `
+                <div class="chat-message bot">
+                <div class="avatar">
+                <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
+                </div>
+                <div class="message" id="bot-response">Generating response...</div>
+                </div>
+                `;
+                messagesDiv.insertAdjacentHTML('afterbegin', botMessageTemplate);
                 // Display user message using the user template
                 var userMessageTemplate = `
 <div class="chat-message user">
@@ -853,23 +850,36 @@
 `;
                 messagesDiv.insertAdjacentHTML('afterbegin', userMessageTemplate);
 
-                // Send the question to the server using Socket.IO
-                socket.emit('ask', {
-                    question: question,
-                    recruitly_data: recruitlyDataCheckbox.checked
-                });
 
-                // Listen for the 'message' event to receive the response
-                socket.on('message', function (data) {
-                    if (botResponseDiv) {
-                        botResponseDiv.innerHTML = data.data; // Update the content of the bot response
-                    }
-                });
-
-                // Handle any errors
-                socket.on('error', function (error) {
-                    console.error('Error:', error.error);
-                });
+                // Fetch and display the bot response as a stream
+                fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `question=${encodeURIComponent(question)}&recruitly_data=${recruitlyDataCheckbox.checked}`
+                })
+                    .then(response => {
+                        const reader = response.body.getReader();
+                        let botResponseContent = '';
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    document.getElementById('bot-response').innerHTML = botResponseContent; // Final update
+                                    return;
+                                }
+                                // Convert the Uint8Array to text
+                                const text = new TextDecoder().decode(value);
+                                botResponseContent = text; // Accumulate the text
+                                document.getElementById('bot-response').innerHTML = botResponseContent; // Update the DOM in real-time
+                                push();
+                            }).catch(error => {
+                                console.error('Error:', error);
+                            });
+                        }
+                        push();
+                    })
+                    .catch(error => console.error('Error:', error));
             });
 
             const sidebarToggleButton = document.createElement('button');
