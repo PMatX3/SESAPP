@@ -698,6 +698,10 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             var isProcessed = false;
+            var csvTemp = false;
+            var jsonTemp = false;
+            var pdfTemp = false;
+            var recrutlyTemp = false;
             var loader = document.getElementById('small-loader-container');
             var pdfInput = document.getElementById('pdf-upload');
             var csvInput = document.getElementById('csv-upload');
@@ -711,19 +715,22 @@
                 var type;
 
                 // Check which input has a file and set the appropriate type
-                if (pdfInput.files.length > 0) {
+                if (pdfInput.files.length > 0 && pdfTemp == false) {
+                    pdfTemp = true;
                     file = pdfInput.files[0];
                     type = 'pdf';
                     formData.append('file', file);
                     formData.append('type', type);
                 }
-                if (csvInput.files.length > 0) {
+                if (csvInput.files.length > 0 && csvTemp == false) {
+                    csvTemp = true;
                     file = csvInput.files[0];
                     type = 'csv';
                     formData.append('file', file);
                     formData.append('type', type);
                 }
-                if (jsonInput.files.length > 0) {
+                if (jsonInput.files.length > 0 && jsonTemp == false) {
+                    jsonTemp = true;
                     file = jsonInput.files[0];
                     type = 'jsonfile';
                     formData.append('file', file);
@@ -731,7 +738,8 @@
                 }
 
                 // Append additional data if the checkbox is checked
-                if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked) {
+                if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked && recrutlyTemp == false) {
+                    recrutlyTemp = true;
                     formData.append('type', 'json');
                 }
 
@@ -803,8 +811,8 @@
                 var recruitlyDataCheckbox = document.getElementById('recruitly-data');
                 var questionInput = document.getElementById('question-input');
                 var question = questionInput.value.trim(); // Trim whitespace
-                var overlay = document.getElementById('overlay'); // Get the overlay element
-
+                var messagesDiv = document.getElementById('messages'); // Get the messages div
+                questionInput.value = '';
                 if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
                     alert('Please upload a CSV or JSON file, or check the company data checkbox.');
                     return; // Stop the function if validation fails
@@ -815,33 +823,63 @@
                     return;
                 }
 
-                // Display the overlay and loader
-                overlay.style.display = 'flex';
-
                 var formData = new FormData();
                 formData.append('question', question);
                 if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked) {
                     formData.append('recruitly_data', 'true');
                 }
-                // Make a request to /ask
+
+                // Prepare the bot message template
+                var botMessageTemplate = `
+                <div class="chat-message bot">
+                <div class="avatar">
+                <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
+                </div>
+                <div class="message" id="bot-response">Generating response...</div>
+                </div>
+                `;
+                messagesDiv.insertAdjacentHTML('afterbegin', botMessageTemplate);
+                // Display user message using the user template
+                var userMessageTemplate = `
+<div class="chat-message user">
+    <div class="avatar">
+        <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User-logo" border="0" width="400" height="400">
+    </div>    
+    <div class="message">${question}</div>
+</div>
+`;
+                messagesDiv.insertAdjacentHTML('afterbegin', userMessageTemplate);
+
+
+                // Fetch and display the bot response as a stream
                 fetch('/ask', {
                     method: 'POST',
-                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `question=${encodeURIComponent(question)}&recruitly_data=${recruitlyDataCheckbox.checked}`
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log(data); // Log the response from /ask
-
-                        // After processing /ask, request the updated chat history
-                        getChatHistory(); // Call getChatHistory to fetch and display the updated chat history
+                    .then(response => {
+                        const reader = response.body.getReader();
+                        let botResponseContent = '';
+                        function push() {
+                            reader.read().then(({ done, value }) => {
+                                if (done) {
+                                    document.getElementById('bot-response').innerHTML = botResponseContent; // Final update
+                                    return;
+                                }
+                                // Convert the Uint8Array to text
+                                const text = new TextDecoder().decode(value);
+                                botResponseContent = text; // Accumulate the text
+                                document.getElementById('bot-response').innerHTML = botResponseContent; // Update the DOM in real-time
+                                push();
+                            }).catch(error => {
+                                console.error('Error:', error);
+                            });
+                        }
+                        push();
                     })
-                    .catch(error => {
-                        console.error('Error:', error);
-                    })
-                    .finally(() => {
-                        // Hide the overlay and loader regardless of the result
-                        overlay.style.display = 'none';
-                    });
+                    .catch(error => console.error('Error:', error));
             });
 
             const sidebarToggleButton = document.createElement('button');
@@ -902,7 +940,7 @@
                         event.stopPropagation(); // Prevent triggering li's onclick
                         console.log(chat.chat_id)
                         deleteChat(chat.chat_id);
-                        window.location.reload();
+                        displayChatHistory();
                     };
 
                     listItem.appendChild(deleteButton);
@@ -1075,7 +1113,18 @@
                 inputElement.value = ''; // Clear the input
                 displayElement.style.display = 'none'; // Hide the container
                 displayElement.innerHTML = ''; // Clear the display
-                inputElement.dispatchEvent(new Event('change')); // Trigger change event to handle any additional logic
+                if (inputId == 'pdf-upload') {
+                    pdfTemp = false;
+                }
+                if (inputId == 'csv-upload') {
+                    csvTemp = false;
+                }
+                if (inputId == 'json-upload') {
+                    jsonTemp = false;
+                }
+                if (inputId == 'recruitly-data') {
+                    recrutlyTemp = false;
+                }
             };
 
             //handle logout

@@ -18,13 +18,13 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 m_client = MongoClient('localhost', 27017)
 
 def text_embedding(text):
-        response = openai.Embedding.create(model="text-embedding-ada-002", input=text)
+        response = openai.Embedding.create(model="text-embedding-3-small", input=text)
         return response["data"][0]["embedding"]
 
 client = chromadb.Client()
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=OPENAI_API_KEY,
-                model_name="text-embedding-ada-002"
+                model_name="text-embedding-3-small"
             )
 
 db = m_client['user_db']
@@ -176,7 +176,7 @@ def load_data(file_name, temp=False):
     docs=df["text"].tolist() 
     ids= [str(x) for x in df.index.tolist()]
     # Define maximum batch size
-    max_batch_size = 20
+    max_batch_size = 50
     
     # Splitting the documents and ids into batches and adding them to the collection
     for i in range(0, len(docs), max_batch_size):
@@ -218,55 +218,113 @@ def load_json_data(json_data, file=False):
         load_data(csv_file_path, temp=False)
     print("JSON data loaded into Cromadb successfully.")
 
+# def execute_query(query, user_id, temp=False):
+#     job_desc = job_query.get('job_profile')
+
+#     if job_desc['documents'] != []:
+#         embedding_query = ''.join(job_desc['documents'])
+#     else:
+#         embedding_query = 'give me top 3 candidates'
+    
+#     vector = text_embedding(embedding_query)
+#     if temp:
+#         results = collection2.query(    
+#             query_embeddings=vector,
+#             n_results=1000,
+#             include=["documents"]
+#         )
+#     else:
+#         results = collection.query(    
+#             query_embeddings=vector,
+#             n_results=1000,
+#             include=["documents"]
+#         )
+
+#     available_tokens_for_results = 100000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
+
+#     # Convert results to string and truncate if necessary
+#     results_str = "\n".join(str(item) for item in results['documents'][0])
+#     if len(results_str) > available_tokens_for_results:
+#         results_str = results_str[:available_tokens_for_results] 
+#     prompt = f'```{results_str}```Based on the data in ```, answer {query}'
+
+#     messages = [
+#         {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
+#         {"role": "user", "content": prompt}
+#     ]
+
+#     # Start streaming
+#     response = openai.ChatCompletion.create(
+#         model="gpt-4-turbo-2024-04-09",
+#         messages=messages,
+#         temperature=0,
+#         stream=True
+#     )
+
+#     # Collecting chunks
+#     collected_chunks = []
+#     collected_messages = []
+#     for chunk in response:
+#         collected_chunks.append(chunk)  # save the event response
+#         if 'choices' in chunk and len(chunk['choices']) > 0 and 'delta' in chunk['choices'][0]:
+#             chunk_message = chunk['choices'][0]['delta']['content']  # extract the message
+#             collected_messages.append(chunk_message)  # save the message
+
+#     # Combine collected messages into a single response
+#     final_response = ''.join(collected_messages)
+#     return final_response
+
 def execute_query(query, user_id, temp=False):
     job_desc = job_query.get('job_profile')
-    
+
     if job_desc['documents'] != []:
-        embeding_query = ''.join(job_desc['documents'])
+        embedding_query = ''.join(job_desc['documents'])
     else:
-        embeding_query = 'give me top 3 candidates'
+        embedding_query = 'give me top 3 candidates'
     
+    vector = text_embedding(embedding_query)
     if temp:
-        vector = text_embedding(embeding_query)
         results = collection2.query(    
             query_embeddings=vector,
             n_results=1000,
             include=["documents"]
         )
     else:
-        vector = text_embedding(embeding_query)
         results = collection.query(    
             query_embeddings=vector,
             n_results=1000,
             include=["documents"]
         )
-        
-    available_tokens_for_results = 300000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
+
+    available_tokens_for_results = 100000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
 
     # Convert results to string and truncate if necessary
     results_str = "\n".join(str(item) for item in results['documents'][0])
     if len(results_str) > available_tokens_for_results:
         results_str = results_str[:available_tokens_for_results]  # Truncate results to fit within token limits
 
-    prompt = f'```{results_str}```Based on the data in ```, answer {query}'
+    prompt = f'Based on the data in {results_str}, answer {query}'
 
-    print(prompt)
     messages = [
         # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
         {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
         {"role": "user", "content": prompt}
     ]
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4-turbo",
-            messages=messages,
-            temperature=0
-        )
-        response_message = response["choices"][0]["message"]["content"]
-    except openai.error.InvalidRequestError as e:
-        response_message = "Error: The input is too long for the model to process."
-    
-    return response_message
+    print(prompt)
+    # Start streaming
+    response = openai.ChatCompletion.create(
+        model="gpt-4-turbo",
+        messages=messages,
+        temperature=0.1,
+        stream=True
+    )
+
+    # Yield each chunk as it is received
+    for message in response:
+        if 'choices' in message and len(message['choices']) > 0:
+            chunk = message['choices'][0].get('delta', {}).get('content', '')
+            if chunk:
+                yield chunk
 
 def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)

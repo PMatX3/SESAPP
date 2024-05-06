@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for
+from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, Response
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 import os,json
@@ -492,6 +492,7 @@ def load_new_data():
                 # CSV processing logic
                 df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
                 load_and_cache_file_data(file_path)
+                time.sleep(20)
             elif file_ext == '.json':
                 starttime = datetime.now()
                 load_and_cache_json_data(file_path, True)
@@ -509,7 +510,7 @@ def load_new_data():
         
         res = check_for_file(company_name)
         
-        time.sleep(10)
+        time.sleep(20)
         if message is not None:
             message += ' and '+f'{company_name} data processed.'
         else:
@@ -520,29 +521,25 @@ def load_new_data():
     return jsonify({'message':message}), 200
 
 
-
 @app.route('/ask', methods=['POST'])
 def ask():
-    with app.app_context():
-        user_question = request.form.get('question')
-        # Retrieve user_id and chat_id from the session
-        user_id = session.get('user_id')
-        chat_id = session.get('chat_id')
-        recruitly_data = request.form.get('recruitly_data')
-        # Ensure user_id and chat_id are available
-        if not user_id or not chat_id:
-            return jsonify({'error': 'User ID or Chat ID missing from session'}), 400
-        if recruitly_data:
-            response = execute_query(user_question, user_id, True)
-        else:
-            response = execute_query(user_question, user_id)
-        html_text = md.render(response)
-        add_chat_message(user_id, user_question, html_text, chat_id)
-        data = {
-            "user": user_question,
-            "ai": response
-        }
-        return jsonify(data)
+    user_question = request.form.get('question')
+    user_id = session.get('user_id')
+    chat_id = session.get('chat_id')
+    recruitly_data = request.form.get('recruitly_data', False)
+
+    if not user_id or not chat_id:
+        return jsonify({'error': 'User ID or Chat ID missing from session'}), 400
+    print(recruitly_data)
+    # Call execute_query and stream the results, rendering them as HTML
+    def generate():
+        entire_response = ''
+        for chunk in execute_query(user_question, user_id, recruitly_data == 'true'):
+            entire_response += chunk
+            yield md.render(entire_response)
+        add_chat_message(user_id,user_question,md.render(entire_response),chat_id)
+
+    return Response(generate(), mimetype='text/html')
 
 @app.route('/get_chat_history', methods=['GET'])
 def api_get_chat_history():
