@@ -16,8 +16,10 @@ import jwt
 import stripe
 import time
 from htmlTemplates import css, bot_template, user_template
+from flask_socketio import SocketIO, emit
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/user_db"
 
 stripe_keys = {
@@ -521,25 +523,42 @@ def load_new_data():
     return jsonify({'message':message}), 200
 
 
-@app.route('/ask', methods=['POST'])
-def ask():
-    user_question = request.form.get('question')
+# @app.route('/ask', methods=['POST'])
+# def ask():
+#     user_question = request.form.get('question')
+#     user_id = session.get('user_id')
+#     chat_id = session.get('chat_id')
+#     recruitly_data = request.form.get('recruitly_data', False)
+
+#     if not user_id or not chat_id:
+#         return jsonify({'error': 'User ID or Chat ID missing from session'}), 400
+#     print(recruitly_data)
+#     # Call execute_query and stream the results, rendering them as HTML
+#     def generate():
+#         entire_response = ''
+#         for chunk in execute_query(user_question, user_id, recruitly_data == 'true'):
+#             entire_response += chunk
+#             yield md.render(entire_response)
+#         add_chat_message(user_id,user_question,md.render(entire_response),chat_id)
+
+#     return Response(generate(), mimetype='text/html')
+@socketio.on('ask')
+def handle_ask(json):
+    user_question = json['question']
     user_id = session.get('user_id')
     chat_id = session.get('chat_id')
-    recruitly_data = request.form.get('recruitly_data', False)
+    recruitly_data = json.get('recruitly_data', False)
 
     if not user_id or not chat_id:
-        return jsonify({'error': 'User ID or Chat ID missing from session'}), 400
-    print(recruitly_data)
-    # Call execute_query and stream the results, rendering them as HTML
-    def generate():
-        entire_response = ''
-        for chunk in execute_query(user_question, user_id, recruitly_data == 'true'):
-            entire_response += chunk
-            yield md.render(entire_response)
-        add_chat_message(user_id,user_question,md.render(entire_response),chat_id)
+        emit('error', {'error': 'User ID or Chat ID missing from session'})
+        return
 
-    return Response(generate(), mimetype='text/html')
+    entire_response = ''
+    for chunk in execute_query(user_question, user_id, recruitly_data):
+        entire_response += chunk
+        emit('message', {'data': md.render(entire_response)})
+
+    add_chat_message(user_id, user_question, md.render(entire_response), chat_id)
 
 @app.route('/get_chat_history', methods=['GET'])
 def api_get_chat_history():
@@ -645,4 +664,5 @@ def get_all_credentials():
     return jsonify(credentials)
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8501)
+    # app.run(host="0.0.0.0", port=8501)
+    socketio.run(app, host="0.0.0.0", port=8501)
