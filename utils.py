@@ -9,6 +9,7 @@ import requests
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import boto3
 
 def get_pdf_text(pdf_docs):
     text = ""
@@ -147,3 +148,97 @@ def send_reset_password_mail(to_email, subject, username, reset_link):
     server.login(from_email, password)
     server.send_message(msg)
     server.quit()
+
+def send_email(recipients, subject, username, reset_link):
+    ses = boto3.client(
+        'ses',
+        region_name="us-east-1",
+        aws_access_key_id="AKIAQ3EGVT7ALFGZHVAW",
+        aws_secret_access_key="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"
+    )
+
+    html_message = f"""
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reset Your Password</title>
+        <style>
+            body {{
+                font-family: Arial, sans-serif;
+                text-align: center;
+                margin: 0;
+                padding: 0;
+                background-color: #f5f5f5;
+            }}
+            .container {{
+                margin-top: 50px;
+                background-color: #fff;
+                border-radius: 10px;
+                padding: 40px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                max-width: 400px;
+                margin: 0 auto;
+            }}
+            h1 {{
+                color: #333;
+                margin-bottom: 20px;
+            }}
+            p {{
+                color: #666;
+                margin-bottom: 30px;
+            }}
+            .btn {{
+                display: inline-block;
+                background-color: #007bff;
+                color: #fff;
+                padding: 10px 20px;
+                border-radius: 5px;
+                text-decoration: none;
+                margin-top: 20px;
+                transition: background-color 0.3s ease;
+            }}
+            .btn:hover {{
+                background-color: #0056b3;
+            }}
+            .footer {{
+                margin-top: 30px;
+                color: #999;
+                font-size: 14px;
+            }}
+            .username {{
+                color: #007bff;
+                font-weight: bold;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Reset Your Password, <span class="username">{username}</span>!</h1>
+            <p>You recently requested to reset your password. Click the button below to reset it:</p>
+            <a href="{reset_link}" class="btn">Reset Password</a>
+            <p>If you didn't request a password reset, you can ignore this email.</p>
+            <div class="footer">
+                <p>If you encounter any issues, please contact support at <a href="mailto:support@example.com">support@example.com</a>.</p>
+                <p>This email was sent automatically. Please do not reply to this email.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+    sender = "support@yourbestcandidate.ai"
+
+    ses.verify_email_address(EmailAddress=sender)
+    ses.verify_email_address(EmailAddress=recipients[0])
+
+    ses.send_email(
+        Source=sender,
+        Destination={'ToAddresses': recipients},
+        Message={
+            'Subject': {'Data': subject},
+            'Body': {
+                'Html': {'Data': html_message}
+            }
+        }
+    )
