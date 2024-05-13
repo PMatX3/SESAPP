@@ -229,9 +229,6 @@ def send_email(recipients, subject, username, reset_link):
 
     sender = "support@yourbestcandidate.ai"
 
-    ses.verify_email_address(EmailAddress=sender)
-    ses.verify_email_address(EmailAddress=recipients[0])
-
     ses.send_email(
         Source=sender,
         Destination={'ToAddresses': recipients},

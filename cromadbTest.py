@@ -1,15 +1,17 @@
 import pandas as pd
 from dotenv import load_dotenv
 import os
+from flask import session, current_app
 import openai
-import chromadb
-from chromadb.utils import embedding_functions
-import os
+from openai import OpenAI
 import chromadb
 from chromadb.utils import embedding_functions
 from datetime import datetime
 import json
 from pymongo import MongoClient
+from langchain.agents.agent_types import AgentType
+from langchain_experimental.agents.agent_toolkits import create_csv_agent
+from langchain_openai import ChatOpenAI
 
 load_dotenv()
 
@@ -20,6 +22,11 @@ m_client = MongoClient('localhost', 27017)
 def text_embedding(text):
         response = openai.Embedding.create(model="text-embedding-3-small", input=text)
         return response["data"][0]["embedding"]
+
+openai_client = OpenAI()
+def get_embedding(text):
+   text = text.replace("\n", " ")
+   return openai_client.embeddings.create(input = [text], model="text-embedding-3-small").data[0].embedding
 
 client = chromadb.Client()
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
@@ -192,6 +199,9 @@ def load_data(file_name, temp=False):
                 documents=batch_docs,
                 ids=batch_ids
             )
+    if file_name:
+        df.to_csv(file_name, index=False)
+        print(f"Data saved to {file_name}")
 
 
 def load_json_data(json_data, file=False):
@@ -282,20 +292,20 @@ def execute_query(query, user_id, temp=False):
     else:
         embedding_query = 'give me top 3 candidates'
     
-    vector = text_embedding(embedding_query)
+    vector = get_embedding(embedding_query)
+    print('temp',temp)
     if temp:
         results = collection2.query(    
             query_embeddings=vector,
-            n_results=1000,
+            n_results=4000,
             include=["documents"]
         )
     else:
         results = collection.query(    
             query_embeddings=vector,
-            n_results=1000,
+            n_results=4000,
             include=["documents"]
         )
-
     available_tokens_for_results = 100000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
 
     # Convert results to string and truncate if necessary
@@ -312,19 +322,35 @@ def execute_query(query, user_id, temp=False):
     ]
     print(prompt)
     # Start streaming
-    response = openai.ChatCompletion.create(
-        model="gpt-4-turbo",
-        messages=messages,
-        temperature=0.1,
-        stream=True
-    )
+    # Check if the query involves counting or querying the number of candidates
+    if temp:
+        file_path = os.path.join('csvdata/json_data.csv')
+    else:
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], user_id+'.csv')
+    if "how many" in query.lower() or "count" in query.lower():
+        agent = create_csv_agent(
+            ChatOpenAI(temperature=0.1, model="gpt-4-turbo"),
+            file_path,
+            verbose=True,
+            agent_type=AgentType.OPENAI_FUNCTIONS,
+        )
+        print('Using agent for counting query.')
+        yield agent.run(query)
+    else:
+        print('Using chat completions for general query.')
+        response = openai_client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=messages,
+            temperature=0.1,
+            stream=True
+        )
 
-    # Yield each chunk as it is received
-    for message in response:
-        if 'choices' in message and len(message['choices']) > 0:
-            chunk = message['choices'][0].get('delta', {}).get('content', '')
-            if chunk:
-                yield chunk
+        # Yield each chunk as it is received
+        for message in response:
+            if message.choices[0].delta.content is not None:
+                chunk = message.choices[0].delta.content
+                if chunk:
+                    yield chunk
 
 def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)

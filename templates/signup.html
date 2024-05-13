@@ -138,7 +138,7 @@
 
 <body>
     <div class="navbar">
-        <h1>Signup Page</h1>
+        <h1>Sign up Page</h1>
         <div>
             <button class="btn" onclick="location.href='/login'">Login</button>
         </div>
@@ -175,6 +175,44 @@
         </div>
     </div>
     <script>
+        document.getElementById('signupForm').addEventListener('submit', function (event) {
+            event.preventDefault();  // Prevent the default form submission
+
+            // Check for blank space values in input fields
+            const inputs = this.querySelectorAll('input[type="text"]:not(#company), input[type="password"], input[type="email"]');
+            let allFieldsValid = true;
+            for (let input of inputs) {
+                if (input.value.trim() === '') {
+                    allFieldsValid = false;
+                    break;
+                }
+            }
+
+            if (!allFieldsValid) {
+                alert('Please fill in all fields. Fields cannot contain only spaces.');
+                return;
+            }
+
+            var formData = new FormData(this);
+
+            fetch('/signup', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = '/login';  // Redirect to the homepage on success
+                    } else {
+                        response.json().then(data => {
+                            alert(data.message);  // Show error message from server
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+        });
         function validatePassword(password) {
             const passwordError = document.getElementById('password_error');
             const submitButton = document.querySelector('button[type="submit"]');

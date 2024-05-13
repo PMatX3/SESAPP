@@ -18,11 +18,15 @@ import time
 from htmlTemplates import css, bot_template, user_template
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
+from flask_session import Session
 
 app = Flask(__name__)
-CORS(app, origins=["https://yourbestcandidate.ai"], allow_headers=["Content-Type"])
+# CORS(app, origins=["https://yourbestcandidate.ai"], allow_headers=["Content-Type"])
+CORS(app, supports_credentials=True)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/user_db"
-socketio = SocketIO(app)
+socketio = SocketIO(app, ping_timeout=60, ping_interval=25)
+
+app.permanent_session_lifetime = timedelta(days=7)
 
 socketio.init_app(app, cors_allowed_origins="*")
 
@@ -69,10 +73,23 @@ def load_and_cache_file_data(filename=None):
     def load_file():
         load_data(filename)
         
-
     # Start a new thread for loading JSON data
     thread = threading.Thread(target=load_file)
     thread.start()
+
+@app.route('/files', methods=['GET'])
+def list_files():
+    company_name = request.args.get('companyName')
+    root_dir = 'company_data'
+    allowed_extensions = {'.pdf', '.csv', '.json'}
+    files_list = []
+
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if company_name in filename and os.path.splitext(filename)[1] in allowed_extensions:
+                files_list.append(filename)
+
+    return jsonify(files_list)
 
 def check_for_file(company_name):
     root_dir = 'company_data'  # Start from the root of the filesystem
@@ -86,14 +103,9 @@ def check_for_file(company_name):
                 file_found = os.path.join(dirpath, filename)
                 break
         if file_found:
-            break
-
-    if file_found:
-        load_and_cache_json_data(file_found)
-        return 200
+            return file_found
     else:
-        print("No file found containing the company name in the filename.")
-        return 'You don\'t have any data loaded into the database'
+        return None
 
 def calculate_days_since_join(join_date_str):
     join_date = datetime.strptime(join_date_str, "%Y-%m-%d")
@@ -259,6 +271,7 @@ def edit(app_name):
 def delete(app_name):
     # Logic to delete the record associated with app_name
     delete_result = mongo.users.delete_one({'app_name': app_name})
+    mongo.chat_history.delete_many({'user_id': app_name})
     if delete_result.deleted_count > 0:
         flash('Record deleted successfully!')
     else:
@@ -381,6 +394,15 @@ def login():
 
 @app.route('/logout')
 def logout():
+    user_id = session.get('user_id')
+    if user_id:
+        filename = f"{user_id}.csv"
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        try:
+            os.remove(file_path)
+            print(f"Deleted {file_path}")
+        except FileNotFoundError:
+            print(f"File not found: {file_path}")
     # Clear the session
     session.clear()
     # Redirect to login page
@@ -466,8 +488,8 @@ def reset_password():
         reset_token = jwt.encode({'user_id': user_id, 'exp': exp}, app.secret_key, algorithm='HS256')
         path = url_for('change_password', token=reset_token)
         reset_link = f"{DOMAIN}{path}"
-        send_reset_password_mail(user_id,'Reset Password link', firstname, reset_link)
-        # send_email([user_id],'Reset Password link', 'vaibhav', reset_link)
+        # send_reset_password_mail(user_id,'Reset Password link', firstname, reset_link)
+        send_email([user_id],'Reset Password link', firstname, reset_link)
         return jsonify({'message':'email sent!'})
     else:
         return render_template('reset_password.html')
@@ -481,15 +503,16 @@ def load_new_data():
         files = None
     data_types = request.form
     data_types = data_types.getlist('type')
+    user_id = session.get('user_id')
     print(files)
     message = None
     if files:
         files_list = files.getlist('file')
         for i,file in enumerate(files_list):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(file_path)
             _, file_ext = os.path.splitext(filename)  # Extract the file extension
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], user_id+file_ext)
+            file.save(file_path)
             if file_ext == '.pdf':
                 pdf_docs = [file_path]  # Adjusted to work with a single file
                 raw_text = get_pdf_text(pdf_docs)  # Extract text from the PDF
@@ -499,6 +522,7 @@ def load_new_data():
                 # CSV processing logic
                 df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
                 load_and_cache_file_data(file_path)
+                # load_data(file_path)
                 time.sleep(20)
             elif file_ext == '.json':
                 starttime = datetime.now()
@@ -512,33 +536,32 @@ def load_new_data():
         user_id = session.get('user_id')
         session['recrutly_id'] = True
         user = mongo.users.find_one({'app_name': user_id})
+        print('user===>>>',user)
         if user:
             company_name = user.get('company', 'No company associated')
-        
-        res = check_for_file(company_name)
-        
-        time.sleep(20)
+        file_path = check_for_file(company_name)
+        if file_path:
+            load_and_cache_json_data(file_path)
+        else:
+            return "You don't have any data loaded into the database", 404 
         if message is not None:
             message += ' and '+f'{company_name} data processed.'
         else:
             message = f'{company_name} data processed.'
-        if res != 200:
-           message = res 
-           return message, 404
+        
     return jsonify({'message':message}), 200
 
 
 @socketio.on('ask')
 def handle_ask(json):
     user_question = json['question']
-    user_id = session.get('user_id')
-    chat_id = session.get('chat_id')
+    user_id = json.get('user_id')
+    chat_id = json.get('chat_id')
     recruitly_data = json.get('recruitly_data', False)
 
     if not user_id or not chat_id:
         emit('error', {'error': 'User ID or Chat ID missing from session'})
         return
-
     entire_response = ''
     for chunk in execute_query(user_question, user_id, recruitly_data):
         entire_response += chunk
