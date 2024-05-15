@@ -73,6 +73,7 @@ def load_and_cache_file_data(filename=None):
     def load_file():
         load_data(filename)
         
+
     # Start a new thread for loading JSON data
     thread = threading.Thread(target=load_file)
     thread.start()
@@ -126,10 +127,10 @@ def index():
             session['days'] = days
             session['login_attempt'] = login_attempts
 
-            if days_since_join >= days:
-                return redirect(url_for('pricing'))
-            else:
-                return render_template('index.html')
+            # if days_since_join >= days:
+            #     return redirect(url_for('pricing'))
+            # else:
+            return render_template('index.html')
         else:
             return redirect(url_for('login'))
     else:
@@ -536,7 +537,6 @@ def load_new_data():
         user_id = session.get('user_id')
         session['recrutly_id'] = True
         user = mongo.users.find_one({'app_name': user_id})
-        print('user===>>>',user)
         if user:
             company_name = user.get('company', 'No company associated')
         file_path = check_for_file(company_name)

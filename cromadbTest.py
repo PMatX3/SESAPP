@@ -6,6 +6,9 @@ import openai
 from openai import OpenAI
 import chromadb
 from chromadb.utils import embedding_functions
+import os
+import chromadb
+from chromadb.utils import embedding_functions
 from datetime import datetime
 import json
 from pymongo import MongoClient
@@ -183,7 +186,7 @@ def load_data(file_name, temp=False):
     docs=df["text"].tolist() 
     ids= [str(x) for x in df.index.tolist()]
     # Define maximum batch size
-    max_batch_size = 50
+    max_batch_size = 166
     
     # Splitting the documents and ids into batches and adding them to the collection
     for i in range(0, len(docs), max_batch_size):
@@ -293,7 +296,7 @@ def execute_query(query, user_id, temp=False):
         embedding_query = 'give me top 3 candidates'
     
     vector = get_embedding(embedding_query)
-    print('temp',temp)
+
     if temp:
         results = collection2.query(    
             query_embeddings=vector,
@@ -306,8 +309,7 @@ def execute_query(query, user_id, temp=False):
             n_results=4000,
             include=["documents"]
         )
-    available_tokens_for_results = 100000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
-
+    available_tokens_for_results = 300000 - len(query)  # Subtracting an estimated length for static text in the prompt
     # Convert results to string and truncate if necessary
     results_str = "\n".join(str(item) for item in results['documents'][0])
     if len(results_str) > available_tokens_for_results:
@@ -320,37 +322,30 @@ def execute_query(query, user_id, temp=False):
         {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
         {"role": "user", "content": prompt}
     ]
-    print(prompt)
-    # Start streaming
+    # print(prompt)
+
     # Check if the query involves counting or querying the number of candidates
     if temp:
         file_path = os.path.join('csvdata/json_data.csv')
     else:
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], user_id+'.csv')
-    if "how many" in query.lower() or "count" in query.lower():
-        agent = create_csv_agent(
-            ChatOpenAI(temperature=0.1, model="gpt-4-turbo"),
-            file_path,
-            verbose=True,
-            agent_type=AgentType.OPENAI_FUNCTIONS,
-        )
-        print('Using agent for counting query.')
-        yield agent.run(query)
-    else:
-        print('Using chat completions for general query.')
-        response = openai_client.chat.completions.create(
-            model="gpt-4-turbo",
-            messages=messages,
-            temperature=0.1,
-            stream=True
-        )
+    
+    # Start streaming        
+    
+    print('Using chat completions for general query.')
+    response = openai_client.chat.completions.create(
+        model="gpt-4-turbo",
+        messages=messages,
+        temperature=0,
+        stream=True
+    )
 
-        # Yield each chunk as it is received
-        for message in response:
-            if message.choices[0].delta.content is not None:
-                chunk = message.choices[0].delta.content
-                if chunk:
-                    yield chunk
+    # Yield each chunk as it is received
+    for message in response:
+        if message.choices[0].delta.content is not None:
+            chunk = message.choices[0].delta.content
+            if chunk:
+                yield chunk
 
 def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)
