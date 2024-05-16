@@ -8,13 +8,23 @@ def fetch_and_store_data(sort='DESC', sort_field='createdOn', page_size=100):
     page_number = 0
     total_pages = None
     # Define the keys you want to extract
+    # keys_to_extract = [
+    #     "title", "gender", "reference", "fullName", "firstName", "surname", "jobTitle", 
+    #     "address", "profileImageUrl", "type", "email", "alternateEmail", "mobile", 
+    #     "timeZone", "skype", "facebook", "linkedIn", "twitter", "hasInterview", 
+    #     "dateOfBirth", "overview", "languages", "employer", "skills", "rating", 
+    #     "nationalities"
+    # ]
     keys_to_extract = [
         "title", "gender", "reference", "fullName", "firstName", "surname", "jobTitle", 
-        "address", "profileImageUrl", "type", "email", "alternateEmail", "mobile", 
-        "timeZone", "skype", "facebook", "linkedIn", "twitter", "hasInterview", 
+        "address", "profileImageUrl", "email", "alternateEmail", "mobile", 
+        "timeZone", "skype", "facebook", "linkedIn", "twitter", 
         "dateOfBirth", "overview", "languages", "employer", "skills", "rating", 
         "nationalities"
     ]
+
+    # Add specific keys for the address
+    address_keys_to_extract = ["cityName", "country", "countryCode","postCode"]
 
     while total_pages is None or page_number < total_pages:
         url = f"{base_url}?apiKey={api_key}&pageNumber={page_number}&pageSize={page_size}&sort={sort}&sortField={sort_field}"
@@ -23,11 +33,15 @@ def fetch_and_store_data(sort='DESC', sort_field='createdOn', page_size=100):
             data = response.json()
             if 'data' in data:
                 # Filter each item to only include the keys we're interested in
-                filtered_data = [{k: item.get(k, None) for k in keys_to_extract} for item in data['data']]
+                filtered_data = [
+                    {**{k: item.get(k, None) for k in keys_to_extract},
+                    "address": {ak: item['address'].get(ak, None) for ak in address_keys_to_extract if 'address' in item and item['address']}
+                    } for item in data['data']
+                ]
                 all_data.extend(filtered_data)
                 total_count = data.get('totalCount', 0)
                 total_pages = (total_count + page_size - 1) // page_size  # Calculate total pages needed
-                page_number+=1
+                page_number += 1
                 print(f"Page {page_number}/{total_pages} processed.")
             else:
                 print("No data found in response.")

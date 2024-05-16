@@ -309,17 +309,19 @@ def execute_query(query, user_id, temp=False):
             n_results=4000,
             include=["documents"]
         )
-    available_tokens_for_results = 300000 - len(query)  # Subtracting an estimated length for static text in the prompt
+    available_tokens_for_results = 400000 - len(query)  # Subtracting an estimated length for static text in the prompt
     # Convert results to string and truncate if necessary
-    results_str = "\n".join(str(item) for item in results['documents'][0])
-    if len(results_str) > available_tokens_for_results:
-        results_str = results_str[:available_tokens_for_results]  # Truncate results to fit within token limits
+    results_str = "".join(str(item) for item in results['documents'][0])
+    single_line_text = results_str.replace("\n", " ")
+    if len(single_line_text) > available_tokens_for_results:
+        single_line_text = single_line_text[:available_tokens_for_results]  # Truncate results to fit within token limits
 
-    prompt = f'Based on the data in {results_str}, answer {query}'
+    prompt = f'Based on the data in {single_line_text}, answer {query}'
 
     messages = [
         # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
-        {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
+        # {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions ensuring no repetitions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
+        {"role": "system", "content": "Welcome to BestCandidate AI Bot! I'm here to assist you by providing structured answers to your questions, ensuring there are no repetitions. Let's get started! If you have any questions, feel free to ask."},
         {"role": "user", "content": prompt}
     ]
     # print(prompt)
@@ -334,9 +336,9 @@ def execute_query(query, user_id, temp=False):
     
     print('Using chat completions for general query.')
     response = openai_client.chat.completions.create(
-        model="gpt-4-turbo",
+        model="gpt-4o",
         messages=messages,
-        temperature=0,
+        temperature=0.1,
         stream=True
     )
 
