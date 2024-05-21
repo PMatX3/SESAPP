@@ -16,17 +16,21 @@ import jwt
 import stripe
 import time
 from htmlTemplates import css, bot_template, user_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, disconnect
 from flask_cors import CORS
 from flask_session import Session
+import gc
+import eventlet
+eventlet.monkey_patch()
 
 app = Flask(__name__)
 # CORS(app, origins=["https://yourbestcandidate.ai"], allow_headers=["Content-Type"])
 CORS(app, supports_credentials=True)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/user_db"
-socketio = SocketIO(app, ping_timeout=60, ping_interval=25)
+socketio = SocketIO(app, ping_timeout=240, ping_interval=120)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Adjust based on your requirements
 
-app.permanent_session_lifetime = timedelta(days=7)
+cancellation_flag = threading.Event()
 
 socketio.init_app(app, cors_allowed_origins="*")
 
@@ -554,20 +558,60 @@ def load_new_data():
 
 @socketio.on('ask')
 def handle_ask(json):
-    user_question = json['question']
-    user_id = json.get('user_id')
-    chat_id = json.get('chat_id')
-    recruitly_data = json.get('recruitly_data', False)
+    try:
+        global cancellation_flag
+        cancellation_flag.clear()
+        user_question = json['question']
+        user_id = json.get('user_id')
+        chat_id = json.get('chat_id')
+        recruitly_data = json.get('recruitly_data', False)
+        message_id = str(uuid.uuid4())
+        
+        if not user_id or not chat_id:
+            emit('error', {'error': 'User ID or Chat ID missing from session'})
+            return
+        entire_response = ''
+        continuation_token = None
+        retry = False
 
-    if not user_id or not chat_id:
-        emit('error', {'error': 'User ID or Chat ID missing from session'})
-        return
-    entire_response = ''
-    for chunk in execute_query(user_question, user_id, recruitly_data):
-        entire_response += chunk
-        emit('message', {'data': md.render(entire_response)})
+        while True:
+            finish_res = None  # Initialize finish_res at the start of the loop
+            for chunk, temp_finish_res in execute_query(user_question, user_id, recruitly_data, continuation_token):
+                print('finish_res',temp_finish_res)
+                if cancellation_flag.is_set():
+                    break
+                if retry:
+                    entire_response = entire_response[:-400]
+                    retry = False
+                entire_response += chunk
+                rendered_response = md.render(entire_response)
+                add_chat_message(user_id, user_question, rendered_response, chat_id, message_id)
+                emit('message', {'data': rendered_response, 'is_complete':temp_finish_res})
+                # Clear the chunk to free memory
+                del chunk
+                # Force garbage collection to free memory
+                gc.collect()
+                finish_res = temp_finish_res  # Update finish_res from the loop variable
 
-    add_chat_message(user_id, user_question, md.render(entire_response), chat_id)
+            if finish_res=='length':
+                retry = True
+                continuation_token = f'Your response : {rendered_response} got cut off, because you only have limited response space. Continue writing exactly where you left off based on context : Context. Do not repeat yourself. Start your response exact with: "{entire_response[-400:]}", don\'t forgot to respect format of response based on previous response and don\'t start with like "Here is response" or anything just start from where you left'  # Update the continuation token for the next iteration
+                continue  # Continue the loop to process the next part of the query
+            else:
+                break
+
+        # Clear entire_response if no longer needed
+        del entire_response
+        gc.collect()
+    
+    except Exception as e:
+        emit('error', {'error': str(e)})
+
+@socketio.on('cancel_task')
+def handle_cancel_task():
+    global cancellation_flag
+    cancellation_flag.set()  # Set the flag to signal cancellation
+    emit('task_cancelled', {'data': 'Task cancellation requested'})
 
 @app.route('/get_chat_history', methods=['GET'])
 def api_get_chat_history():

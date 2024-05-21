@@ -613,6 +613,29 @@
             transform: scale(1.2);
             transition: .5s;
         }
+
+        #continue-btn {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            /* Green background */
+            color: white;
+            /* White text */
+            border: none;
+            /* No border */
+            border-radius: 5px;
+            /* Rounded corners */
+            cursor: pointer;
+            /* Pointer cursor on hover */
+            font-size: 16px;
+            /* Larger font size */
+            transition: background-color 0.3s;
+            /* Smooth transition for hover effect */
+        }
+
+        #continue-btn:hover {
+            background-color: #45a049;
+            /* Darker shade of green on hover */
+        }
     </style>
 </head>
 
@@ -687,6 +710,7 @@
                 <div class="input-group">
                     <input type="text" id="question-input" placeholder="Ask a question...">
                     <button class="btn" id="ask-btn">Ask</button>
+                    <button class="btn" id="cancel-btn" style="display: none;">Cancel</button>
                 </div>
                 <div id="messages"></div>
             </div>
@@ -813,10 +837,10 @@
                 reconnectionAttempts: Infinity,
                 reconnectionDelay: 1000,
                 reconnectionDelayMax: 5000,
-                timeout: 20000
+                timeout: 20000,
             });
             var botResponseDiv; // Reference to the bot response div
-
+            var cancelBtn = document.getElementById('cancel-btn');
             document.getElementById('ask-btn').addEventListener('click', function () {
                 var csvInput = document.getElementById('csv-upload');
                 var jsonInput = document.getElementById('json-upload');
@@ -830,9 +854,9 @@
                 if (!recruitlyDataCheckbox) {
                     recruitly = false;
                 } else {
-                    if(recruitlyDataCheckbox.checked){
+                    if (recruitlyDataCheckbox.checked) {
                         recruitly = true;
-                    }else{
+                    } else {
                         recruitly = false;
                     }
                 }
@@ -846,7 +870,7 @@
                     alert('Please enter a question.');
                     return;
                 }
-
+                cancelBtn.style.display = 'inline';
                 // Check if the bot response div already exists, if not create it
                 var botMessageTemplate = `
 <div class="chat-message bot">
@@ -880,16 +904,30 @@
 
                 // Listen for the 'message' event to receive the response
                 socket.on('message', function (data) {
+                    console.log(data.data)
                     if (botResponseDiv) {
                         botResponseDiv.innerHTML = data.data; // Update the content of the bot response
+                    }
+                    if (data.is_complete == 'stop' || data.is_complete == 'length') {
+                        cancelBtn.style.display = 'none';
                     }
                 });
 
                 // Handle any errors
                 socket.on('error', function (error) {
                     console.error('Error:', error.error);
+                    cancelBtn.style.display = 'none';
                 });
             });
+
+            cancelBtn.onclick = function () {
+                socket.emit('cancel_task')
+                socket.disconnect();
+                cancelBtn.style.display = 'none';
+                setTimeout(function () {
+                    socket.connect();
+                }, 500);
+            };
 
             const sidebarToggleButton = document.createElement('button');
             sidebarToggleButton.setAttribute('type', 'button');

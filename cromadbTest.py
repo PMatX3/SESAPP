@@ -44,20 +44,26 @@ collection2 = client.get_or_create_collection("candidates2",embedding_function=o
 job_query = client.get_or_create_collection("job_query",embedding_function=openai_ef)
 chat_history_collection = db['chat_history']
 
-def add_chat_message(user_id, message, response, chat_id):
+def add_chat_message(user_id, message, response, chat_id, message_id):
     """
-    Adds a chat message and its response to the MongoDB collection, including chat_id.
+    Adds or updates a chat message and its response in the MongoDB collection.
+    Checks if a message with the given message_id exists, updates it if available, or adds it if not.
     """
     timestamp = datetime.now().isoformat()
     document = {
         "user_id": user_id,
         "chat_id": chat_id,
         "message": message,
+        "message_id": message_id,
         "response": response,
         "timestamp": timestamp
     }
-    chat_history_collection.insert_one(document)
-    print('Data saved to MongoDB')
+    # Using update_one with upsert=True to update if exists, or insert if not
+    chat_history_collection.update_one(
+        {"message_id": message_id, "chat_id": chat_id},  # Filter by message_id
+        {"$set": document},          # Update or set the document fields
+        upsert=True                  # Insert as a new document if not exists
+    )
 
 def get_chat_history(user_id, chat_id=None):
     """
@@ -67,6 +73,7 @@ def get_chat_history(user_id, chat_id=None):
     query = {"user_id": user_id}
     if chat_id:
         query["chat_id"] = chat_id
+    
     history = list(chat_history_collection.find(query).sort("timestamp", -1))
     return history
 
@@ -287,7 +294,7 @@ def load_json_data(json_data, file=False):
 #     final_response = ''.join(collected_messages)
 #     return final_response
 
-def execute_query(query, user_id, temp=False):
+def execute_query(query, user_id, temp=False, continuation_token=None):
     job_desc = job_query.get('job_profile')
 
     if job_desc['documents'] != []:
@@ -316,7 +323,13 @@ def execute_query(query, user_id, temp=False):
     if len(single_line_text) > available_tokens_for_results:
         single_line_text = single_line_text[:available_tokens_for_results]  # Truncate results to fit within token limits
 
-    prompt = f'Based on the data in {single_line_text}, answer {query}'
+    if continuation_token:
+        print('In continue')
+        # Adjust the prompt or setup to continue from where it left off
+        prompt = f"Continuing : {continuation_token.replace('Context',single_line_text)} and answer the query : {query}"
+    else:
+        prompt = f'Based on the data in {single_line_text}, answer {query}'
+
 
     messages = [
         # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
@@ -344,10 +357,10 @@ def execute_query(query, user_id, temp=False):
 
     # Yield each chunk as it is received
     for message in response:
-        if message.choices[0].delta.content is not None:
-            chunk = message.choices[0].delta.content
-            if chunk:
-                yield chunk
+        # print('message===>',message)
+        chunk = message.choices[0].delta.content if message.choices[0].delta.content is not None else ""
+        finish_res = message.choices[0].finish_reason 
+        yield chunk,finish_res
 
 def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)
