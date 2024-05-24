@@ -128,7 +128,7 @@ def send_reset_password_mail(to_email, subject, username, reset_link):
             <a href="{reset_link}" class="btn">Reset Password</a>
             <p>If you didn't request a password reset, you can ignore this email.</p>
             <div class="footer">
-                <p>If you encounter any issues, please contact support at <a href="mailto:support@example.com">support@example.com</a>.</p>
+                <p>If you encounter any issues, please contact support at <a href="mailto:support@yourbestcandidate.ai">support@yourbestcandidate.ai</a>.</p>
                 <p>This email was sent automatically. Please do not reply to this email.</p>
             </div>
         </div>
@@ -219,7 +219,7 @@ def send_email(recipients, subject, username, reset_link):
             <a href="{reset_link}" class="btn">Reset Password</a>
             <p>If you didn't request a password reset, you can ignore this email.</p>
             <div class="footer">
-                <p>If you encounter any issues, please contact support at <a href="mailto:support@example.com">support@example.com</a>.</p>
+                <p>If you encounter any issues, please contact support at <a href="mailto:support@yourbestcandidate.ai">support@yourbestcandidate.ai</a>.</p>
                 <p>This email was sent automatically. Please do not reply to this email.</p>
             </div>
         </div>

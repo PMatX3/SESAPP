@@ -303,7 +303,6 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
         embedding_query = 'give me top 3 candidates'
     
     vector = get_embedding(embedding_query)
-
     if temp:
         results = collection2.query(    
             query_embeddings=vector,
@@ -322,7 +321,6 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
     single_line_text = results_str.replace("\n", " ")
     if len(single_line_text) > available_tokens_for_results:
         single_line_text = single_line_text[:available_tokens_for_results]  # Truncate results to fit within token limits
-
     if continuation_token:
         print('In continue')
         # Adjust the prompt or setup to continue from where it left off
@@ -334,7 +332,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
     messages = [
         # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
         # {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions ensuring no repetitions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
-        {"role": "system", "content": "Welcome to BestCandidate AI Bot! I'm here to assist you by providing structured answers to your questions, ensuring there are no repetitions. Let's get started! If you have any questions, feel free to ask."},
+        {"role": "system", "content": "Welcome to BestCandidate AI Bot! I'm here to assist you by providing structured answers to your questions, ensuring there are no repetitions and it is beautifully formatted and if the question is not related to the context/data or you don't know the answer don't give wrong answers please just say 'Sorry I am not able to help you in this type of question!' in the response. Let's get started! If you have any questions, feel free to ask."},
         {"role": "user", "content": prompt}
     ]
     # print(prompt)

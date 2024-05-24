@@ -126,11 +126,16 @@ def index():
         if user_data:
             days_since_join = calculate_days_since_join(user_data['join_date'])
             days = user_data.get('days', 0)
+            company = user_data.get('company', '')
             login_attempts = user_data.get('login_attempts')
             session['days_since_join'] = days_since_join
             session['days'] = days
+            session['company'] = company
             session['login_attempt'] = login_attempts
-
+            if company == 'SES':
+                file_path = check_for_file(company)
+                if file_path:
+                    load_and_cache_json_data(file_path)
             # if days_since_join >= days:
             #     return redirect(url_for('pricing'))
             # else:
@@ -401,13 +406,14 @@ def login():
 def logout():
     user_id = session.get('user_id')
     if user_id:
-        filename = f"{user_id}.csv"
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        try:
-            os.remove(file_path)
-            print(f"Deleted {file_path}")
-        except FileNotFoundError:
-            print(f"File not found: {file_path}")
+        for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+            if user_id in filename:
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                try:
+                    os.remove(file_path)
+                    print(f"Deleted {file_path}")
+                except FileNotFoundError:
+                    print(f"File not found: {file_path}")
     # Clear the session
     session.clear()
     # Redirect to login page
@@ -516,7 +522,8 @@ def load_new_data():
         for i,file in enumerate(files_list):
             filename = secure_filename(file.filename)
             _, file_ext = os.path.splitext(filename)  # Extract the file extension
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], user_id+file_ext)
+            anonymous_filename = str(uuid.uuid4())+ user_id + file_ext  # Generate a unique filename
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], anonymous_filename)
             file.save(file_path)
             if file_ext == '.pdf':
                 pdf_docs = [file_path]  # Adjusted to work with a single file
@@ -566,7 +573,7 @@ def handle_ask(json):
         chat_id = json.get('chat_id')
         recruitly_data = json.get('recruitly_data', False)
         message_id = str(uuid.uuid4())
-        
+
         if not user_id or not chat_id:
             emit('error', {'error': 'User ID or Chat ID missing from session'})
             return
@@ -577,7 +584,6 @@ def handle_ask(json):
         while True:
             finish_res = None  # Initialize finish_res at the start of the loop
             for chunk, temp_finish_res in execute_query(user_question, user_id, recruitly_data, continuation_token):
-                print('finish_res',temp_finish_res)
                 if cancellation_flag.is_set():
                     break
                 if retry:
