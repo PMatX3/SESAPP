@@ -11,6 +11,7 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
         rel="stylesheet">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='/images/Yourbestcandidateai-white-logo.png') }}">
     <style>
         * {
             box-sizing: border-box;
@@ -137,12 +138,6 @@
 </head>
 
 <body>
-    <div class="navbar">
-        <h1>Sign up Page</h1>
-        <div>
-            <button class="btn" onclick="location.href='/login'">Login</button>
-        </div>
-    </div>
     <div class="center-container">
         <div class="signup-container">
             <form id="signupForm" action="/signup" method="POST">
@@ -169,6 +164,10 @@
                     <input type="password" oninput="validatePassword(this.value)" id="password" name="password"
                         required>
                     <span id="password_error" style="color: red;"></span>
+                </div>
+                <!-- already have an account -->
+                <div class="already-account">
+                    <p>Already have an account? <a href="/login">Login</a></p>
                 </div>
                 <button type="submit">Sign Up</button>
             </form>

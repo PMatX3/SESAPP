@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Yourbestcandidateai</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="shortcut icon" href="https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f4da.png">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='/images/Yourbestcandidateai-white-logo.png') }}">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
         rel="stylesheet">
@@ -736,7 +736,7 @@
             var recruitlyDataCheckbox = document.getElementById('recruitly-data');
             var company = '{{ session.get('company') }}'
 
-            if(company != ''){
+            if (company != '') {
                 document.getElementById('recruitly-data').checked = true;
             }
             // Function to handle file upload or checkbox change
@@ -836,7 +836,7 @@
             // Call getChatHistory when the page loads to fetch chat history immediately
             getChatHistory();
 
-            var socket = io('https://www.yourbestcandidate.ai', {
+            var socket = io('http://localhost:8502', {
                 reconnection: true,
                 reconnectionAttempts: Infinity,
                 reconnectionDelay: 1000,
