@@ -11,7 +11,7 @@ import chromadb
 from chromadb.utils import embedding_functions
 from datetime import datetime
 import json
-from pymongo import MongoClient
+from mongo_connection import get_mongo_client
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
 from langchain_openai import ChatOpenAI
@@ -20,7 +20,7 @@ load_dotenv()
 
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
-m_client = MongoClient('localhost', 27017)
+m_client = get_mongo_client()
 
 def text_embedding(text):
         response = openai.Embedding.create(model="text-embedding-3-small", input=text)

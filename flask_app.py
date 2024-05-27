@@ -20,13 +20,10 @@ from flask_socketio import SocketIO, emit, disconnect
 from flask_cors import CORS
 from flask_session import Session
 import gc
-import eventlet
-eventlet.monkey_patch()
+from mongo_connection import get_mongo_client
 
 app = Flask(__name__)
-# CORS(app, origins=["https://yourbestcandidate.ai"], allow_headers=["Content-Type"])
 CORS(app, supports_credentials=True)
-app.config["MONGO_URI"] = "mongodb://localhost:27017/user_db"
 socketio = SocketIO(app, ping_timeout=240, ping_interval=120)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Adjust based on your requirements
 
@@ -41,7 +38,7 @@ stripe_keys = {
 
 stripe.api_key = stripe_keys["secret_key"]
 
-client = MongoClient(app.config["MONGO_URI"])
+client = get_mongo_client()
 mongo = client['user_db']
 
 app.secret_key = '31dee9b85d3be7513eda6e3bb1b2e22edd923194d18b3cf8'
@@ -141,9 +138,9 @@ def index():
             # else:
             return render_template('index.html')
         else:
-            return redirect(url_for('login'))
+            return render_template('hompage.html')
     else:
-        return redirect(url_for('login'))
+        return render_template('hompage.html')
 
 #PAYMENT PART    
 @app.route('/pricing')
@@ -725,4 +722,4 @@ def get_all_credentials():
 
 if __name__ == '__main__':
     # app.run(host="0.0.0.0", port=8501)
-    socketio.run(app, host="0.0.0.0", port=8501)
+    socketio.run(app, host="0.0.0.0", port=8502, debug=True)
