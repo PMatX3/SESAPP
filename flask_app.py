@@ -591,7 +591,8 @@ def handle_ask(json):
                     retry = False
                 entire_response += chunk
                 rendered_response = md.render(entire_response)
-                add_chat_message(user_id, user_question, rendered_response, chat_id, message_id)
+                # Spawn a new thread to handle message saving
+                threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
                 emit('message', {'data': rendered_response, 'is_complete':temp_finish_res})
                 # Clear the chunk to free memory
                 del chunk

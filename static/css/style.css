@@ -77,11 +77,17 @@
     max-width: 425px;
     width: 100%;
 }
-.login-form-data-box form .input-group input.form-control{
-    height: 48px;
-}
+ 
 .login-form-data-box form .form-control:focus{
     box-shadow: none;
+}
+.input-password button{
+    border-left: none;
+    border-color: #dee2e6;
+}
+.input-password button:hover{
+    border: none;
+    background: linear-gradient(90deg, rgba(24, 38, 40, 1) 0%, rgba(87, 186, 152, 1) 100%);
 }
 
 .login-form form {
@@ -148,3 +154,34 @@
     color: #3B945E;
 }
 
+
+
+#signupForm .input-group .error-text{
+    margin: 0;
+    font-size: 14px;
+}
+#signupForm .input-group .input-box{
+    width: 100%;
+}
+
+#passwordCriteria {
+    list-style-type: none; /* Removes default list styling */
+    padding: 0; /* Removes default padding */
+    margin-left: 4px;
+    margin-top: 10px; /* Adds some space above the list */
+}
+
+#passwordCriteria li {
+    color: red; /* Default color indicating unmet criteria */
+    margin-bottom: 5px; /* Adds space between list items */
+}
+
+#passwordCriteria li::before {
+    content: "✗ "; /* Adds a cross mark before each item */
+    color: red; /* Red color for the cross mark */
+}
+
+#passwordCriteria li[style="color: green;"]::before {
+    content: "✓ "; /* Changes the cross mark to a check mark when criteria is met */
+    color: green; /* Green color for the check mark */
+}

@@ -35,9 +35,9 @@
             align-items: center;
         }
 
-        .btn {
+        .btn,
+        .btn2 {
             padding: 8px 16px;
-            /* Adjust padding to ensure buttons are of the same size */
             color: white;
             background-color: #475063;
             border: none;
@@ -45,21 +45,21 @@
             cursor: pointer;
             text-decoration: none;
             margin-left: 10px;
-            /* Space between buttons */
             font-size: 16px;
-            /* Ensure text size is consistent */
             line-height: 1.5;
-            /* Adjust line height for vertical alignment */
             display: inline-block;
-            /* Use inline-block for better control over dimensions */
             width: 100px;
-            /* Set a fixed width */
             text-align: center;
-            /* Center the text inside the button */
         }
 
-        .btn:hover {
+        .btn:hover,
+        .btn2:hover {
             background-color: #29313d;
+        }
+
+        .edit {
+            margin-bottom: 10px;
+            /* Adds space between the Edit and Delete buttons */
         }
 
         .table-container {
@@ -67,36 +67,33 @@
             background-color: white;
             margin: 20px;
             border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         th,
         td {
             text-align: left;
-            padding: 6px;
+            padding: 12px;
             border-bottom: 1px solid #ddd;
         }
 
         th {
+            background-color: #475063;
+            color: white;
+        }
+
+        tr:nth-child(even) {
             background-color: #f0f2f6;
         }
 
-        .btn2 {
-            padding: 6px 12px;
-            color: white;
-            background-color: #475063;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .btn2:hover {
-            background-color: #29313d;
+        tr:hover {
+            background-color: #e2e2e2;
         }
     </style>
 </head>
@@ -140,7 +137,7 @@
                     </td>
                     <td>{{ user.join_date }}</td>
                     <td>
-                        <a href="{{ url_for('edit', app_name=user.app_name) }}" class="btn2">Edit</a>
+                        <a href="{{ url_for('edit', app_name=user.app_name) }}" class="btn2 edit">Edit</a>
                         <a href="{{ url_for('delete', app_name=user.app_name) }}" class="btn2"
                             onclick="return confirm('Are you sure?');">Delete</a>
                     </td>
