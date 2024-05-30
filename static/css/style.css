@@ -680,12 +680,21 @@
     margin-bottom: 50px;
 }
 
-.accordion-item {
+.accordion-section .accordion-item {
     margin-bottom: 20px;
     border-radius: 16px;
+    overflow: hidden;
+    border: none;
 }
 
-.accordion-button::after {
+.accordion-section .accordion-button {
+    border: 0;
+    font-weight: 700;
+    font-size: 18px;
+    color: #182628;
+}
+
+.accordion-section .accordion-button::after {
     background-image: url(../images/plus.png);
     background-repeat: no-repeat;
     background-position: center;
@@ -700,16 +709,12 @@
 
 }
 
-.accordion-button {
-    border: 0;
-}
-
-.accordion-button:not(.collapsed) {
+.accordion-section .accordion-button:not(.collapsed) {
     background-color: #fff;
     box-shadow: inherit;
 }
 
-.accordion-button:not(.collapsed)::after {
+.accordion-section .accordion-button:not(.collapsed)::after {
     background-image: url(../images/minese.png);
     background-repeat: no-repeat;
     background-position: center;
@@ -786,42 +791,145 @@
     font-weight: 800;
     text-align: center;
     font-family: "Martel", serif;
-    margin-top: 100px;
     margin-bottom: 50px;
 }
 
-.star-icon ul {
+.client-section {
+    padding: 100px 0;
+}
+
+.client-section .star-icon ul {
     display: flex;
     align-items: center;
 }
 
-.star-icon p {
+.client-section .star-icon p {
     font-size: 12px;
     color: #565656;
 }
 
-.star-icon ul li a {
+.client-section .star-icon ul li a {
     color: #F3CD03;
 }
 
-.review-buttun {
+.client-section .see-all-review {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 100px;
+    margin-top: 20px;
 }
 
-.review-buttun button {
-    border-radius: 100px;
+.contact-box {
+    padding: 100px 0;
+    background-image: url(../images/contact-bg.png);
+}
+
+.contact-box .title-box h2 {
+    color: #fff;
+}
+
+.contact-box .book-demo-row {
+    justify-content: center;
+}
+
+.update-form {
     text-align: center;
-    background-color: #000;
+    width: 100%;
+    margin-top: 60px;
+}
+
+.select-time-btn {
+    background: rgb(24, 38, 40);
+    background: linear-gradient(0deg, rgba(24, 38, 40, 1) 0%, rgba(87, 186, 152, 1) 100%);
+    color: #fff;
+    font-weight: 600;
+    border-radius: 100px;
+    padding: 10px 20px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    margin: 0 auto;
+    border: none;
+}
+
+.select-time-btn:hover {
+    background: linear-gradient(90deg, rgba(24, 38, 40, 1) 0%, rgba(87, 186, 152, 1) 100%);
+}
+
+.footer-wrp {
+    background-color: #182628;
+    padding-top: 100px;
+}
+
+.footer-wrp .footer-row {
+    justify-content: center;
+}
+
+.footer-wrp .footer-row .footer-top h3 {
+    text-align: center;
+    color: #fff;
+}
+
+.footer-wrp .footer-row .footer-top .button-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
+    gap: 20px;
+}
+
+.footer-wrp .footer-row .footer-top .button-box .btn-outline {
+    border: 1px solid #fff;
+    color: #fff;
+    font-size: 14px;
+    text-transform: capitalize;
+    min-width: 177px;
+}
+
+.footer-wrp .footer-row .footer-top .button-box .btn-white {
+    background-color: #fff;
+    min-width: 177px;
+}
+
+.footer-wrp .footer-links h5 {
+    font-size: 18px;
+    color: #fff;
+    margin-bottom: 10px;
+}
+
+.footer-wrp .footer-links ul li a {
     font-size: 14px;
     color: #fff;
-    padding: 8px 20px;
-    font-weight: 600;
-    border: none;
-    margin-top: 20px;
+}
+
+.bottom-footer-right ul {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px
+}
+
+.footer-wrp .bottom-footer {
+    padding: 40px 0;
+    border-top: 1px solid #ffffff24;
+}
+
+.footer-wrp .bottom-footer .bottom-footer-left a {
+    color: #fff;
+}
+
+.footer-wrp .bottom-footer .bottom-footer-right ul li a {
+    width: 39px;
+    height: 39px;
+    border: 1px solid #ffffff54;
+    color: #fff;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }

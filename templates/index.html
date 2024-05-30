@@ -733,6 +733,7 @@
             var pdfInput = document.getElementById('pdf-upload');
             var csvInput = document.getElementById('csv-upload');
             var jsonInput = document.getElementById('json-upload');
+            var recruitlyDataCheckbox = document.getElementById('recruitly-data');
             var company = '{{ session.get('company') }}'
 
             // Function to handle file upload or checkbox change
@@ -1064,8 +1065,8 @@
             // Initial call to fetch and display chat history
             fetchChatHistory();
 
-            var recruitlyDataCheckbox = document.getElementById('recruitly-data');
-            if (company != '' && recruitlyDataCheckbox) {
+
+            if (company != '' && recruitlyDataCheckbox && company == 'SES') {
                 document.getElementById('recruitly-data').checked = true;
             }
             if (recruitlyDataCheckbox) {
