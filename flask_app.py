@@ -142,6 +142,10 @@ def index():
     else:
         return render_template('hompage.html')
 
+@app.route('/homepage2')
+def homepage2():
+    return render_template('hompage2.html')
+
 #PAYMENT PART    
 @app.route('/pricing')
 def pricing():
