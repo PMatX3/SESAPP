@@ -21,10 +21,11 @@
 
     <!-- css -->
     <link rel="stylesheet" href="./static/assets/css/style.css">
+    <link rel="shortcut icon" href="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai-white-logo.png">
 
 </head>
 
-<title>Document</title>
+<title>YourBestCandidateAI</title>
 
 </head>
 
@@ -33,7 +34,7 @@
         <nav class="navbar navbar-expand-lg">
             <div class="container">
                 <a class="navbar-brand" href="#">
-                    <img src="./static/assets/images/logo.png" alt="">
+                    <img src="./static/images/Yourbestcandidateai.svg" style="filter: hue-rotate(66deg) saturate(150%);" alt="">
                 </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                     aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,7 +43,7 @@
                 <div class="collapse navbar-collapse mx-auto" id="navbarNav">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link active" aria-current="page" href="#">Pricing</a>
+                            <a class="nav-link active" aria-current="page" href="pricing">Pricing</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#">Blog</a>
@@ -55,7 +56,8 @@
                         </li>
                     </ul>
                 </div>
-                <button class="btn header-btn">Start Writing</button>
+                <button class="btn header-btn"><a href="{{ url_for('login') }}"
+                        style="color: white; text-decoration: none;">Book a Demo</a></button>
             </div>
         </nav>
     </header>
@@ -65,16 +67,15 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="hero-text-box">
-                        <h1>Supercharge Your Content Creation with Autowriter AI</h1>
-                        <p class="hero-para-text">Harness the power of AI to create SEO-optimized and plagiarism-free
-                            content for your blogs,
-                            ads,
-                            emails, and website <b>10X faster.</b></p>
-                        <button class="btn hero-btn starting_btn">Start Writing</button>
+                        <h1>Find Top Talent Fast. YourBestCandidateAI.</h1>
+                        <p class="hero-para-text">YourBestCandidateAI streamlines hiring with AI-powered candidate
+                            selection.</p>
+                        <button class="btn hero-btn starting_btn"><a href="{{ url_for('login') }}"
+                                style="color: white; text-decoration: none;">Book a Demo</a></button>
                         <ul class="banifit-list">
                             <li>
                                 <span class="icon"><i class="bi bi-check text-success"></i></span>
-                                10 Day Free Trial
+                                14 Day Free Trial
                             </li>
                             <li>
                                 <span class="icon"><i class="bi bi-check text-success"></i></span>
@@ -141,11 +142,10 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="generator-wrp">
-                        <h2 class="generator-title">How does AI Content
-                            Generator work?</h2>
-                        <p> Give our AI a few keywords and we'll automatically create blog articles, product
-                            descriptions,
-                            artwork and more for you with just a click of a button. </p>
+                        <h2 class="generator-title">How does YourBestCandidateAI work?</h2>
+                        <p>Send it your ideal candidate profiles csv, then it uses AI to find the best matches from your
+                            file of
+                            applicants. Saves you time, focuses on top talent.</p>
                     </div>
                 </div>
                 <div class="">
@@ -154,91 +154,88 @@
                             <div class="sliderdetails">
                                 <div class="slidercontant">
                                     <div class="slidercontantHeading">
-                                        <h3>Generate quality, factual content</h3>
+                                        <h3>Identify Top Talent Efficiently</h3>
                                     </div>
                                     <div class="slidercontantdetails">
-                                        <p>Writing great content isn't easy. We've got a suite of tools that can help
-                                            you create high quality content at scale.</p>
+                                        <p>Finding the best candidates can be challenging. Our suite of tools
+                                            streamlines the process, enabling you to identify top talent quickly and
+                                            effectively.</p>
                                         <div class="slidercontantmaindetailsBox">
                                             <div class="slidercontantmaindetails">
                                                 <div class="slidercontantmaindetailsIcon">
-                                                    <img src="./static/assets/images/rightIcon.svg">
+                                                    <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
                                                 </div>
-                                                <p>Instantly batch generate product descriptions, SEO copy & more with
-                                                    our
-                                                    batch generation tool</p>
+                                                <p>Efficiently review and rank resumes with our batch analysis tool</p>
                                             </div>
                                             <div class="slidercontantmaindetails">
                                                 <div class="slidercontantmaindetailsIcon">
-                                                    <img src="./static/assets/images/rightIcon.svg">
+                                                    <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
                                                 </div>
-                                                <p>Blog article wizard takes you from title to a 1,000 word article in
-                                                    just
-                                                    minutes</p>
+                                                <p>Generate candidate profiles from resumes in minutes with our
+                                                    AI-powered profile builder</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="sliderVideo">
-                                    <img src="./static/assets/images/Research.gif">
+                                    <img src="./static/assets/images/Research.gif" alt="Research">
                                 </div>
                             </div>
                         </div>
 
-                        <div>
+                        <div class="slide">
                             <div class="sliderdetails">
                                 <div class="slidercontant">
                                     <div class="slidercontantHeading">
-                                        <h3>Review and publish copy</h3>
+                                        <h3>Review and Select Candidates</h3>
                                     </div>
                                     <div class="slidercontantdetails">
-                                        <p>Use our AI-powered editing tools to enhance your content, then publish it to
-                                            your favorite platforms.</p>
+                                        <p>Utilize our AI-powered tools to analyze and select the best candidates from
+                                            your list, then easily integrate them into your hiring process.</p>
                                         <div class="slidercontantmaindetailsBox">
                                             <div class="slidercontantmaindetails">
                                                 <img src="./static/assets/images/rightIcon.svg">
-                                                <p>Edit in a clean, minimalist editor</p>
+                                                <p>Analyze resumes with a user-friendly interface</p>
                                             </div>
                                             <div class="slidercontantmaindetails">
                                                 <img src="./static/assets/images/rightIcon.svg">
-                                                <p>Export in multiple formats</p>
+                                                <p>Export selected candidates in multiple formats</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="sliderVideo besttimeImg">
-                                    <img src="./static/assets/images/besttime.png">
+                                    <img src="./static/assets/images/besttime.png" alt="Best Time">
                                 </div>
                             </div>
                         </div>
 
-                        <div>
+                        <div class="slide">
                             <div class="sliderdetails">
                                 <div class="slidercontant">
                                     <div class="slidercontantHeading">
-                                        <h3>Describe</h3>
+                                        <h3>Analyze Resumes and Optimize</h3>
                                     </div>
                                     <div class="slidercontantdetails">
-                                        <p>Describe your topic or goal. Specify the keyword (optional) you wish to rank
-                                            for. Choose your output language from 25+ options.</p>
+                                        <p>Analyze resumes and refine your candidate selection process. Specify your
+                                            criteria and preferences to find the best candidates.</p>
                                         <div class="slidercontantmaindetailsBox">
                                             <div class="slidercontantmaindetails">
-                                                <img src="./static/assets/images/rightIcon.svg">
-                                                <p>Include any SEO keywords you want to rank for.</p>
+                                                <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                                <p>Identify key skills and experiences for optimal candidate matches</p>
                                             </div>
                                             <div class="slidercontantmaindetails">
-                                                <img src="./static/assets/images/rightIcon.svg">
-                                                <p>Customize your copy with tone and perspective options</p>
+                                                <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                                <p>Customize search parameters to fit your hiring needs</p>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="sliderVideo DescribeGif">
-                                    <img src="./static/assets/images/Describe.gif">
+                                    <img src="./static/assets/images/Describe.gif" alt="Describe">
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -250,8 +247,7 @@
             <div class="row">
                 <div class="col-lg-12">
                     <div class="generator-wrp">
-                        <h2 class="generator-title" style="max-width: 713px;">The Smartest & Easiest Way to
-                            Create Content</h2>
+                        <h2 class="generator-title" style="max-width: 713px;">Effortlessly Find Top Candidates</h2>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -261,35 +257,30 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="CreateContent">
-                        <h3>Never lose your voice.</h3>
-                        <p>Tone of voice defines the conversation about your brand. Whether you speak boldly, cheekily,
-                            formally, or only in internet speak (👋 u do u). Autowriter learns from your brand to help
-                            you stay consistent, wherever you create.
+                        <h3>Never Miss a Potential Hire</h3>
+                        <p>Every candidate is unique, just like your brand's voice. YourBestCandidateAI ensures you
+                            maintain consistency in your hiring process while accommodating diverse candidate profiles.
                         </p>
                         <div class="CreateContentDetails">
                             <img src="./static/assets/images/brand.svg">
                             <div>
-                                <h5>Stay on-brand</h5>
-                                <p>
-                                    Stay on-brand
-                                    On-brand AI assisted content, everywhere you create.</p>
+                                <h5>Stay Consistent</h5>
+                                <p>Consistently assess candidates based on your brand's values and requirements.</p>
                             </div>
                         </div>
                         <div class="CreateContentDetails">
                             <img src="./static/assets/images/consistency.svg">
                             <div>
-                                <h5>
-                                    Ensure consistency</h5>
-                                <p>
-                                    See to it that all of your content aligns with your brand's tone, style, and
-                                    business.</p>
+                                <h5>Ensure Quality</h5>
+                                <p>Guarantee that every candidate aligns with your company's culture and expectations.
+                                </p>
                             </div>
                         </div>
                         <div class="CreateContentDetails">
                             <img src="./static/assets/images/creation.svg">
                             <div>
-                                <h5>Scale content creation</h5>
-                                <p>Create content 10x faster – without losing what makes your brand unique.</p>
+                                <h5>Streamline Hiring</h5>
+                                <p>Accelerate your hiring process without compromising on candidate fit.</p>
                             </div>
                         </div>
                     </div>
@@ -303,13 +294,14 @@
             <div class="row">
                 <div class="col-lg-6">
                     <div class="CreateContent modelsBox">
-                        <h3>One AI tool, all the best models.</h3>
-                        <p>Autowriter goes beyond being a mere language model. Powered by Autowriter's AI Engine, it
-                            combines the strengths of top models like OpenAI's GPT-4, Anthropic, and Google's models. On
-                            top of that, Autowriter infuses these outputs with the latest search data, your brand's
-                            unique voice, and optimization tools such as SEO and grammar.</p>
-                        <p>Our interoperability across models makes us exceptionally reliable even in challenging
-                            situations. How awesome is that?</p>
+                        <h3>One AI for Optimal Candidate Selection</h3>
+                        <p>YourBestCandidateAI harnesses the power of cutting-edge AI models, including proprietary
+                            algorithms and industry-leading technologies, to revolutionize your candidate selection
+                            process. By integrating advanced models like GPT-4 and Anthropic, we ensure unparalleled
+                            accuracy and efficiency in candidate evaluation.</p>
+                        <p>Our AI seamlessly adapts to your hiring needs, providing reliable insights and
+                            recommendations even in the most challenging scenarios. Experience the future of recruitment
+                            today!</p>
                     </div>
                 </div>
                 <div class="col-lg-6">
@@ -317,14 +309,13 @@
                         <img src="./static/assets/images/models.png">
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
 
     <section class="Create-Content">
         <div class="container">
-            <div class="row alings-center">
+            <div class="row aligns-center">
                 <div class="col-lg-6">
                     <div class="CreateContentimg SecurityImg">
                         <img src="./static/assets/images/Security.png">
@@ -332,12 +323,14 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="CreateContent modelsBox">
-                        <h3>Security & Privacy</h3>
-                        <p>Autowriter prioritizes the safety and security of your data with robust built-in features
-                            that constantly adapt to evolving security protocols. All our data centers are located in
-                            the U.S., and rest assured that your data is completely isolated from our AI/ML models.</p>
-                        <p>We never retain ownership of your outputs, ensuring your information remains strictly
-                            confidential throughout the entire process.</p>
+                        <h3>Security and Confidentiality</h3>
+                        <p>YourBestCandidateAI prioritizes the protection of your data with state-of-the-art security
+                            features that continuously evolve to meet the latest standards. Our data centers are located
+                            in secure facilities within the United States, ensuring the highest level of data integrity
+                            and privacy.</p>
+                        <p>We never retain ownership of your candidate data, guaranteeing complete confidentiality
+                            throughout the recruitment process. Trust YourBestCandidateAI for a secure and reliable
+                            candidate selection experience.</p>
                     </div>
                 </div>
             </div>
@@ -350,96 +343,25 @@
                 <div class="col-lg-12">
                     <div class="single_item">
                         <div class="first_testimonial">
-
                             <div class="quote_data">
                                 <img src="./static/assets/images/quote.svg" alt="">
                             </div>
-
                             <div class="our_clients_dats">
-                                <h3>
-                                    "Easy to use and navigate."
-                                </h3>
-
-                                <p>
-                                    "Autowriter lets us create a month’s worth of content in one week for our clients,
-                                    allowing us to spend the rest of the month engaging and optimizing.”
-                                </p>
+                                <h3>"Efficient and Effective."</h3>
+                                <p>"YourBestCandidateAI has transformed our hiring process, allowing us to identify top
+                                    talent swiftly and accurately. With its intuitive interface and powerful AI models,
+                                    we can now make informed decisions with confidence."</p>
                             </div>
-
                             <div class="personal_info">
                                 <div class="personal_profile">
                                     <img src="./static/assets/images/client.png" alt="">
                                 </div>
-
                                 <div class="profile_name">
-                                    <p>
-                                        Sophia Thompson
-                                    </p>
+                                    <p>Sophia Thompson</p>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="first_testimonial">
-
-                            <div class="quote_data">
-                                <img src="./static/assets/images/quote.svg" alt="">
-                            </div>
-
-                            <div class="our_clients_dats">
-                                <h3>
-                                    "One stop shop for all your creative content generation."
-                                </h3>
-
-                                <p>
-                                    New content creators often struggle to understand how to make their content stand
-                                    out. However, with Autowriter's advanced AI, I went from zero to hero in a matter of
-                                    seconds and now I feel I can do better and better."
-                                </p>
-                            </div>
-
-                            <div class="personal_info">
-                                <div class="personal_profile">
-                                    <img src="./static/assets/images/client-2.png" alt="">
-                                </div>
-
-                                <div class="profile_name">
-                                    <p>
-                                        David R., Freelancer
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="first_testimonial">
-
-                            <div class="quote_data">
-                                <img src="./static/assets/images/quote.svg" alt="">
-                            </div>
-
-                            <div class="our_clients_dats">
-                                <h3>
-                                    If there was 7 stars I would give it. TREMENDOUS!
-                                </h3>
-
-                                <p>
-                                    I have used some AI writing tools like Rytr, Peppertype, and Jasper but I found
-                                    Autowriter to be the best for writing complete blog posts. Just follow the steps and
-                                    you will have an amazing article ready to publish.
-                                </p>
-                            </div>
-
-                            <div class="personal_info">
-                                <div class="personal_profile">
-                                    <img src="./static/assets/images/client-3.png" alt="">
-                                </div>
-
-                                <div class="profile_name">
-                                    <p>
-                                        Dorothea K., Ecommerce Owner
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <!-- other testimonials -->
                     </div>
                 </div>
             </div>
@@ -449,108 +371,49 @@
     <section class="writing_tools">
         <div class="container">
             <div class="tools_wrp">
-                <h2>
-                    50+ Powerful AI Writing Tools at your Fingertips.
-                </h2>
+                <h2>Unlock the Power of AI Recruitment Tools</h2>
             </div>
-
             <div class="row tool_cards">
                 <div class="col-lg-6">
                     <div class="blog_writer">
                         <div class="tool_data">
                             <img src="./static/assets/images/tool.svg" alt="">
                         </div>
-
                         <div class="blog_details">
-                            <h6>
-                                AI Blog Writer
-                            </h6>
-
-                            <p>
-                                Generate engaging blog posts effortlessly and boost your online presence.
-                            </p>
+                            <h6>AI Resume Screening</h6>
+                            <p>Leverage AI-powered tools to screen resumes and identify top candidates effortlessly.</p>
                         </div>
-
                     </div>
                 </div>
-
                 <div class="col-lg-6">
                     <div class="blog_writer">
                         <div class="tool_data">
                             <img src="./static/assets/images/tool.svg" alt="">
                         </div>
-
                         <div class="blog_details">
-                            <h6>
-                                Facebook Ads
-                            </h6>
-
-                            <p>
-                                Create high-performing Facebook Ads to generate more leads.
-                            </p>
+                            <h6>Interview Scheduling</h6>
+                            <p>Streamline the interview process with AI-powered scheduling tools, ensuring a smooth and efficient experience for both candidates and recruiters.</p>
                         </div>
-
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="blog_writer">
-                        <div class="tool_data">
-                            <img src="./static/assets/images/tool.svg" alt="">
-                        </div>
-
-                        <div class="blog_details">
-                            <h6>
-                                Product Descriptions
-                            </h6>
-
-                            <p>
-                                Craft epic product descriptions for your eCommerce store.
-                            </p>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="col-lg-6">
-                    <div class="blog_writer">
-                        <div class="tool_data">
-                            <img src="./static/assets/images/tool.svg" alt="">
-                        </div>
-
-                        <div class="blog_details">
-                            <h6>
-                                Landing Page Headlines
-                            </h6>
-
-                            <p>
-                                Capture your visitors’ attention with these landing page headlines.
-                            </p>
-                        </div>
-
                     </div>
                 </div>
             </div>
         </div>
     </section>
+    
 
     <section class="transformation_section">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12">
                     <div class="transform_details">
-                        <h2>
-                            Transform the way you handle your marketing, transform the way you do business.
-                        </h2>
-
-                        <p>
-                            See how easy it can be to write amazing content. Start your free trial today!
-                        </p>
+                        <h2>Transform Your Hiring Process Today!</h2>
+                        <p>Discover the future of recruitment with YourBestCandidateAI. Start your free trial now!</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
 
     <section class="footer_wrp">
         <div class="container">
@@ -559,14 +422,14 @@
                     <div class="footer_social_data">
                         <div class="footer_logo">
                             <a href="#">
-                                <img src="./static/assets/images/logo.png" alt="">
+                                <img src="./static/images/Yourbestcandidateai.svg" style="filter: hue-rotate(66deg) saturate(150%);" alt="">
                             </a>
                         </div>
 
                         <div class="footer_text">
                             <p>
                                 <a href="#">
-                                    hello@autowriter.ai
+                                    hello@yourbestcandidate.ai
                                 </a>
                             </p>
                         </div>
@@ -703,7 +566,7 @@
                 <div class="col-lg-12">
                     <div class="copyright_data">
                         <p>
-                            © All rights reserved. Autowriter, LLC
+                            © All rights reserved. YourBestCandidateAI, LLC
                         </p>
                     </div>
                 </div>
