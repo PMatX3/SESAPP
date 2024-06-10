@@ -15,7 +15,6 @@ from mongo_connection import get_mongo_client
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
 from langchain_openai import ChatOpenAI
-import google.generativeai as genai
 
 load_dotenv()
 
@@ -37,10 +36,6 @@ openai_ef = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=OPENAI_API_KEY,
                 model_name="text-embedding-3-small"
             )
-
-model = genai.GenerativeModel('gemini-1.5-flash')
-
-genai.configure(api_key='AIzaSyAIUXWwE1Rd6vQgq7N9JJ1-8mkjSJln21Q')
 
 db = m_client['user_db']
 
@@ -304,7 +299,6 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
 
     if job_desc['documents'] != []:
         embedding_query = ''.join(job_desc['documents'])
-        print('Job_desc:',''.join(job_desc['documents']))
     else:
         embedding_query = 'give me top 3 candidates'
     
@@ -324,7 +318,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
     available_tokens_for_results = 400000 - len(query)  # Subtracting an estimated length for static text in the prompt
     # Convert results to string and truncate if necessary
     results_str = "".join(str(item) for item in results['documents'][0])
-    single_line_text = results_str.replace("\n", " ")
+    single_line_text = results_str.replace("\n", " ").replace(" ", "")
     if len(single_line_text) > available_tokens_for_results:
         single_line_text = single_line_text[:available_tokens_for_results]  # Truncate results to fit within token limits
     if continuation_token:
@@ -337,7 +331,41 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
     messages = [
         # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
         # {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions ensuring no repetitions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
-        {"role": "system", "content": "Welcome to YourBestCandidateAI! I’m here to assist you in finding the best candidates based on your job descriptions and provided resume data. To get started, simply provide a detailed job description, and I will match it with the most suitable candidates. You can ask about specific candidates, request comparisons between multiple candidates, or ask for a list of top candidates that meet certain criteria. For example, you might say, “Find the best candidates for the Software Engineer position,” or “Compare Jane Doe and John Smith for the Marketing Manager role.” The more detailed your job descriptions and criteria, the better I can match candidates to your needs. Ensure you consistently send candidate names or IDs in your response for better response. Let’s get started! If you have any questions or need further assistance, feel free to ask. I’m here to help you find your best candidate."},
+        {"role": "system", "content": """Welcome to YourBestCandidateAI!
+
+                We're excited to partner with you in revolutionizing your hiring process by harnessing the power of AI to precisely match your job descriptions with the most suitable candidates. Here's how we ensure seamless collaboration to find your perfect candidates:
+
+                Overview:
+                At YourBestCandidateAI, we specialize in intelligently matching job descriptions with candidate resumes to pinpoint the ideal fit for your organization. With our advanced algorithms, we prioritize accuracy and efficiency to streamline your recruitment journey.
+
+                How It Works:
+                Detailed Job Descriptions:
+
+                Provide thorough job descriptions, outlining specific roles, required skills, experience levels, educational qualifications, and any other pertinent criteria.
+                Example: "Seeking a seasoned Software Engineer (Ref ID: SE123) with expertise in Python, cloud computing, and a minimum of 5 years of industry experience."
+                Candidate Matching and Comparison:
+
+                Request the best candidates based on your job description parameters, ensuring to include their reference IDs.
+                Directly compare multiple candidates to identify the best fit for your organization.
+                Receive curated lists of top candidates based on your specified criteria, each with their reference IDs included.
+                Sample Requests:
+                Finding Candidates:
+
+                "Identify top candidates for the role of Marketing Manager (Ref ID: MM456)."
+                "List candidates proficient in project management and finance, each with their respective reference IDs."
+                Candidate Comparison:
+
+                "Compare the qualifications of Jane Doe (Ref ID: JD789) and John Smith (Ref ID: JS987) for the Marketing Manager position, focusing on their digital marketing expertise and campaign management experience."
+                "Provide a side-by-side analysis of candidates with over a decade of data analysis experience, ensuring to include their reference IDs."
+                Candidate Count:
+
+                "How many candidates match the criteria for the Data Scientist position (Ref ID: DS321)?"
+                "What's the total number of candidates with expertise in machine learning, and could you please provide their reference IDs?"
+                Tips for Optimal Results:
+                Detailed Descriptions: The more detailed your job descriptions, the better we can match candidates to your specific requirements.
+                Consistent Naming/IDs: To ensure accurate responses, please refer to candidates consistently by their names or reference IDs.
+                Additional Resources:
+                For additional assistance or inquiries, feel free to reach out at any time. We're committed to your satisfaction and dedicated to helping you find the perfect candidate for your team."""},
         {"role": "user", "content": prompt}
     ]
 
