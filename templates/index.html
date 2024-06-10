@@ -1178,25 +1178,6 @@
                 }
             };
 
-            //handle logout
-            let logoutTimer;
-            const logoutAfterInactivity = () => {
-                window.location.href = '{{ url_for("logout") }}'; // Adjust this to your logout URL
-            };
-
-            const resetLogoutTimer = () => {
-                clearTimeout(logoutTimer);
-                logoutTimer = setTimeout(logoutAfterInactivity, 1200000); // 1200000 ms = 20 minutes
-            };
-
-            // Events that should reset the timer
-            ['click', 'mousemove', 'keypress'].forEach(event => {
-                document.addEventListener(event, resetLogoutTimer);
-            });
-
-            // Initialize the timer when the page loads
-            resetLogoutTimer();
-
             function startTour() {
                 var intro = introJs();
                 intro.setOptions({

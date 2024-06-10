@@ -15,6 +15,7 @@ from mongo_connection import get_mongo_client
 from langchain.agents.agent_types import AgentType
 from langchain_experimental.agents.agent_toolkits import create_csv_agent
 from langchain_openai import ChatOpenAI
+import google.generativeai as genai
 
 load_dotenv()
 
@@ -36,6 +37,10 @@ openai_ef = embedding_functions.OpenAIEmbeddingFunction(
                 api_key=OPENAI_API_KEY,
                 model_name="text-embedding-3-small"
             )
+
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+genai.configure(api_key='AIzaSyAIUXWwE1Rd6vQgq7N9JJ1-8mkjSJln21Q')
 
 db = m_client['user_db']
 
@@ -299,6 +304,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
 
     if job_desc['documents'] != []:
         embedding_query = ''.join(job_desc['documents'])
+        print('Job_desc:',''.join(job_desc['documents']))
     else:
         embedding_query = 'give me top 3 candidates'
     
@@ -326,16 +332,15 @@ def execute_query(query, user_id, temp=False, continuation_token=None):
         # Adjust the prompt or setup to continue from where it left off
         prompt = f"Continuing : {continuation_token.replace('Context',single_line_text)} and answer the query : {query}"
     else:
-        prompt = f'Based on the data in {single_line_text}, answer {query}'
-
+        prompt = f'Here is the job description: {embedding_query}. Based on the resume data provided in {single_line_text}, please answer the following query: {query}. Ensure that your answer directly addresses the query and matches the job requirements and candidate information provided. Thank you!'
 
     messages = [
         # {"role": "system", "content": "You answer questions BestCandidate AI Bot. You will always answer in structured format and in markdown format and please don't use markdown word in response"},
         # {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions ensuring no repetitions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
-        {"role": "system", "content": "Welcome to BestCandidate AI Bot! I'm here to assist you by providing structured answers to your questions, ensuring there are no repetitions and it is beautifully formatted. Let's get started! If you have any questions, feel free to ask."},
+        {"role": "system", "content": "Welcome to YourBestCandidateAI! I’m here to assist you in finding the best candidates based on your job descriptions and provided resume data. To get started, simply provide a detailed job description, and I will match it with the most suitable candidates. You can ask about specific candidates, request comparisons between multiple candidates, or ask for a list of top candidates that meet certain criteria. For example, you might say, “Find the best candidates for the Software Engineer position,” or “Compare Jane Doe and John Smith for the Marketing Manager role.” The more detailed your job descriptions and criteria, the better I can match candidates to your needs. Ensure you consistently send candidate names or IDs in your response for better response. Let’s get started! If you have any questions or need further assistance, feel free to ask. I’m here to help you find your best candidate."},
         {"role": "user", "content": prompt}
     ]
-    
+
     # Start streaming        
     print('Using chat completions for general query.')
     response = openai_client.chat.completions.create(
