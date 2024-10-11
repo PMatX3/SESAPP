@@ -1,9 +1,9 @@
-from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, Response
+from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, Response, send_file
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 import os,json
-from cromadbTest import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
-from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email
+from cromadbTest import load_data, execute_query, execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
+from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email, send_demo_email
 import pandas as pd
 import uuid
 import threading
@@ -21,8 +21,34 @@ from flask_cors import CORS
 from flask_session import Session
 import gc
 from mongo_connection import get_mongo_client
+import eventlet
+from cromadbTest import job_query
+import logging
+import html2text
+import re
+from flask_migrate import Migrate
+from models import db  # Assuming 'db' is your SQLAlchemy instance
+
+eventlet.monkey_patch()
 
 app = Flask(__name__)
+
+
+# Initialize SQLAlchemy
+# Import the models
+from models import db, BookingAppointment
+from flask_app import app
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/ubuntu/SES_Flask/bookings_storage.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# db = SQLAlchemy(app)
+db.init_app(app)
+# Create the database tables if they don't exist
+with app.app_context():
+    db.create_all()
+
+migrate = Migrate(app, db)
+
 CORS(app, supports_credentials=True)
 socketio = SocketIO(app, ping_timeout=240, ping_interval=120)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Adjust based on your requirements
@@ -53,6 +79,12 @@ md = (
     .use(footnote_plugin)
     .enable('table')
 )
+
+
+import logging
+
+# Setup logging with a file name
+logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def load_and_cache_json_data(filename=None, temp=False):
     def load_json():
@@ -93,6 +125,11 @@ def list_files():
 
     return jsonify(files_list)
 
+
+# @app.route('/robots.txt', methods=['GET'])
+# def list_files():
+#     return 'robots.txt'
+
 def check_for_file(company_name):
     root_dir = 'company_data'  # Start from the root of the filesystem
     file_found = None
@@ -114,9 +151,15 @@ def calculate_days_since_join(join_date_str):
     current_date = datetime.now()
     difference = current_date - join_date
     return difference.days
-
 @app.route('/')
 def index():
+    return render_template('hompage2.html')
+
+@app.route('/chat')
+def chat():
+    job_desc = job_query.get('job_profile')
+    if job_desc['documents']:
+        job_desc['documents'] = []
     if 'user_id' in session:
         user_id = session['user_id']
         user_data = mongo.users.find_one({'app_name': user_id})
@@ -138,44 +181,58 @@ def index():
             # else:
             return render_template('index.html')
         else:
-            return render_template('hompage2.html')
+            return redirect('/')
     else:
-        return render_template('hompage2.html')
-
+        return redirect('/')
+    
 #PAYMENT PART    
 @app.route('/pricing')
 def pricing():
     return render_template('pricing.html')
 
+@app.route('/terms_and_conditions')
+def terms_and_conditions():
+    return render_template('terms_of_services.html')
+
+@app.route('/privacy_policy')
+def privacy_policy():
+    return render_template('privacy_policy.html')
+
 @app.route("/charge", methods=["POST"])
 def charge():
-    amount = 1000  # amount in cents
-    currency = "usd"
-    description = "A Flask Charge"
+    return render_template('coming_soon.html')
+    # amount = 1000  # amount in cents
+    # currency = "usd"
+    # description = "A Flask Charge"
 
-    stripe.api_key = stripe_keys["secret_key"]
-
-    create_checkout_session = stripe.checkout.Session.create(
-        line_items=[
-            {
-                'price':'price_1PAm40DJlqPYNFXOr648BpiK',
-                'quantity':1
-            }
-        ],
-        mode='subscription',
-        success_url=f'{DOMAIN}/',
-        cancel_url=f'{DOMAIN}/pricing'
-    )
-
-    if create_checkout_session['payment_status'] == 'unpaid':
-        with app.test_client() as client:
-            response = client.post('/edit/' + session['user_id'], data={'new_days': 100, 'new_join_date': datetime.now().date().isoformat()})
-            if response.status_code == 200:
-                print('Days updated to 100 for unpaid session.')
-            else:
-                print('Failed to update days for unpaid session.')
-
-    return redirect(create_checkout_session.url,303)
+    # stripe.api_key = stripe_keys["secret_key"]
+    # print("stripe_keys ==> ",stripe_keys)
+    # create_checkout_session = stripe.checkout.Session.create(
+    #     line_items=[
+    #         {
+    #             'price':'price_1P9ng8DJlqPYNFXOetpsVLtL',
+    #             'quantity':1
+    #         }
+    #     ],
+    #     mode='subscription',
+    #     success_url=f'{DOMAIN}/',
+    #     cancel_url=f'{DOMAIN}/pricing'
+    # )
+    # print("123 ---- ==== ")
+    # print("create_checkout_session['payment_status'] => ", create_checkout_session['payment_status'])
+    # if create_checkout_session['payment_status'] == 'unpaid':
+    #     with app.test_client() as client:
+    #         print("in with")
+    #         print("session['user_id'] => ", session['user_id'])
+    #         response = client.post('/edit/' + session['user_id'], data={'new_days': 100, 'new_join_date': datetime.now().date().isoformat()})
+    #         print("response = > ", response)
+    #         if response.status_code == 200:
+    #             print('Days updated to 100 for unpaid session.')
+    #         else:
+    #             print('Failed to update days for unpaid session.')
+    # print("12333")
+    # print("check out url", create_checkout_session.url)
+    # return redirect(create_checkout_session.url,303)
 
 # admin part
 @app.route('/admin')
@@ -308,6 +365,9 @@ def updated_cmp():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        if 'user_id' in session:
+            return redirect('/')
+
         # Extract data from form
         first_name = request.form.get('firstName')
         last_name = request.form.get('lastName')
@@ -396,8 +456,11 @@ def login():
             else:
                 return jsonify({'message': 'Invalid credentials'}), 401
     elif request.method == 'GET':
-        session.clear()
-        return render_template('login.html')
+        if 'user_id' not in session:
+            session.clear()
+            return render_template('login.html')
+        else:
+            return redirect('/chat')
 
 @app.route('/logout')
 def logout():
@@ -428,6 +491,7 @@ def chats():
         if request.method == 'POST':
             data = request.get_json()  # Get JSON data from request
             selected_chat_id = data.get('chat_id')  # Extract chat_id from JSON data
+            print("selected_chat_id => ", selected_chat_id)
             if selected_chat_id:
                 session['chat_id'] = selected_chat_id
                 session['user_id'] = user_id
@@ -441,23 +505,36 @@ def chats():
                     
                     # Make a GET request to the local API endpoint
                     response = client.get('/get_chat_history')
-                print(response.json)
                 if response.status_code == 200:
                     chat_history = response.json
                 else:
                     chat_history = {'error': 'Failed to retrieve chat history'}
-                return jsonify({'chat_list': chat_list, 'chat_history': chat_history})
+                return jsonify({'chat_list': chat_list, 'chat_history': chat_history, 'selected_chat_id': selected_chat_id})
         
         return jsonify({'chat_list': chat_list, 'chat_history': chat_history})
 
 @app.route('/new_chat')
 def new_chat():
-    # Generate a new chat_id using uuid
-    chat_id = str(uuid.uuid4())
-    # Set the new chat_id in the session
-    session['chat_id'] = chat_id
-    # Render the index.html page
-    return render_template('index.html')
+    try:
+        if 'user_id' in session:
+            user_id = session.get('user_id')
+            user_conversations[user_id] = []
+            # Generate a new chat_id using uuid
+            chat_id = str(uuid.uuid4()) 
+            # Set the new chat_id in the session
+            session['chat_id'] = chat_id
+            print("chat_id from new_chat ===== ", chat_id)
+            # response.headers['Location'] += '?new_chat=false'  # Optionally set new_chat to false
+            return render_template('index.html')
+            # response = redirect(url_for('index'))  # Redirect to index without new_chat in URL
+            return response
+        else:
+            return redirect('/login')
+    except Exception as e:
+        print("=============")
+        print(e)
+        print("=============")
+        return redirect(url_for('login'))
 
 @app.route('/change_password')
 def change_password():
@@ -512,7 +589,6 @@ def load_new_data():
     data_types = request.form
     data_types = data_types.getlist('type')
     user_id = session.get('user_id')
-    print(files)
     message = None
     if files:
         files_list = files.getlist('file')
@@ -559,9 +635,18 @@ def load_new_data():
         
     return jsonify({'message':message}), 200
 
+# Flask route to handle CSV download
+@app.route('/download_csv/<filename>', methods=['GET'])
+def download_csv(filename):
+    file_path = f"/tmp/{filename}"
+    return send_file(file_path, as_attachment=True)
+
+# Create a global dictionary to store user conversations
+user_conversations = {}
 
 @socketio.on('ask')
 def handle_ask(json):
+
     try:
         global cancellation_flag
         cancellation_flag.clear()
@@ -570,7 +655,133 @@ def handle_ask(json):
         chat_id = json.get('chat_id')
         recruitly_data = json.get('recruitly_data', False)
         message_id = str(uuid.uuid4())
+        try:
+            # Use test_client to make a request to the local API
+            with app.test_client() as client:
+                # Ensure the session is passed to the test client
+                with client.session_transaction() as sess:
+                    sess['chat_id'] = str(chat_id)  # Use session variable
+                    sess['user_id'] = str(user_id)  # Use session variable
+                
+                # Make a GET request to the local API endpoint
+                response = client.get('/get_chat_history')
 
+            chat_history = response.json
+        except Exception as e:
+            print("No chat history found")
+            print(e)
+            chat_history = []
+
+
+        if not user_id or not chat_id:
+            emit('error', {'error': 'User ID or Chat ID missing from session'})
+            return
+        
+        # Initialize conversation history for the user if not already present
+        if user_id not in user_conversations:
+            user_conversations[user_id] = []
+
+        entire_response = ''
+        continuation_token = None
+        retry = False
+
+        # Append the current question to the user's conversation history
+        user_conversations[user_id].append({'question': user_question})
+
+        # remove Html, \\ , and links from the conversation
+        if 'error' in chat_history:
+            chat_history = []
+
+        for chat in chat_history:
+            chat['ai'] = html2text.html2text(chat['ai'])
+            chat['ai'] = chat['ai'].replace('\n', '').replace('*', '')
+            chat['ai'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['ai'])
+            chat['ai'] = chat['ai'].replace('\\', '')
+
+            chat['user'] = html2text.html2text(chat['user'])
+            chat['user'] = chat['user'].replace('\n', '').replace('*', '')
+            chat['user'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['user'])
+            chat['user'] = chat['user'].replace('\\', '')
+
+        while True:
+            finish_res = None  # Initialize finish_res at the start of the loop
+            for chunk, temp_finish_res in execute_query(user_question, user_id, recruitly_data, continuation_token, user_conversation = chat_history):
+                if cancellation_flag.is_set():
+                    break
+                if retry:
+                    entire_response = entire_response[:-400]
+                    retry = False
+                entire_response += chunk
+                rendered_response = md.render(entire_response)
+
+                # Store the response in the user's conversation history
+                text_content = html2text.html2text(rendered_response)
+                text_content = text_content.replace('\n', '').replace('*', '')
+
+                # Spawn a new thread to handle message saving
+                threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
+                emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
+
+                # Clear the chunk to free memory
+                del chunk
+                # Force garbage collection to free memory
+                gc.collect()
+                finish_res = temp_finish_res  # Update finish_res from the loop variable
+            user_conversations[user_id][-1]['response'] = text_content
+            if finish_res == 'length':
+                retry = True
+                continuation_token = f'Your response : {rendered_response} got cut off, because you only have limited response space. Continue writing exactly where you left off based on context : Context. Do not repeat yourself. Start your response exact with: "{entire_response[-400:]}", don\'t forget to respect format of response based on previous response and don\'t start with like "Here is response" or anything just start from where you left'
+                continue  # Continue the loop to process the next part of the query
+            # elif finish_res == 'csv_download':
+            #     print('done hrer')
+            #     download_link = f"https://yourbestcandidate.ai/download_csv/{user_id}_results.csv"
+            #     entire_response += f"We have large data and because of token limitation I am not able to respond, but here is the download button of that data in CSV: [Download CSV]({download_link})"
+            #     rendered_response = md.render(entire_response)
+            #     emit('message', {'data': rendered_response, 'is_complete': 'stop'})
+            #     break
+            else:
+                break
+
+        # Clear entire_response if no longer needed
+        del entire_response
+        gc.collect()
+    
+    except Exception as e:
+        emit('error', {'error': str(e)})
+
+@socketio.on('ask2')
+def handle_ask2(json):
+    print("handle_ask2 called")
+    try:
+        global cancellation_flag
+        cancellation_flag.clear()
+        user_question = json['question']
+        user_id = json.get('user_id')
+        chat_id = json.get('chat_id')
+        recruitly_data = json.get('recruitly_data', False)
+
+        try:
+            # Use test_client to make a request to the local API
+            with app.test_client() as client:
+                # Ensure the session is passed to the test client
+                with client.session_transaction() as sess:
+                    sess['chat_id'] = session['chat_id']  # Use session variable
+                    sess['user_id'] = session['user_id']  # Use session variable
+                
+                # Make a GET request to the local API endpoint
+                response = client.get('/get_chat_history')
+            print("chat history ===== \n\n")
+            print(response.json)
+            print("chat history ===== \n\n")
+            chat_history = response.json
+        except Exception as e:
+            print("No chat history found")
+            print(e)
+            chat_history = []
+
+
+        message_id = str(uuid.uuid4())
+        print("question ===> ", user_question)
         if not user_id or not chat_id:
             emit('error', {'error': 'User ID or Chat ID missing from session'})
             return
@@ -580,7 +791,11 @@ def handle_ask(json):
 
         while True:
             finish_res = None  # Initialize finish_res at the start of the loop
-            for chunk, temp_finish_res in execute_query(user_question, user_id, recruitly_data, continuation_token):
+            for chunk, temp_finish_res in execute_query2(user_question, user_id, recruitly_data, continuation_token):
+                if temp_finish_res == 'csv':
+                    emit('message', {'csv_data': chunk, 'is_complete': 'csv'})
+                    add_chat_message(user_id, user_question, chunk, chat_id, message_id)
+                    break
                 if cancellation_flag.is_set():
                     break
                 if retry:
@@ -591,6 +806,7 @@ def handle_ask(json):
                 # Spawn a new thread to handle message saving
                 threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
                 emit('message', {'data': rendered_response, 'is_complete':temp_finish_res})
+
                 # Clear the chunk to free memory
                 del chunk
                 # Force garbage collection to free memory
@@ -613,6 +829,7 @@ def handle_ask(json):
 
 @socketio.on('cancel_task')
 def handle_cancel_task():
+    print("task cancel ===== > ")
     global cancellation_flag
     cancellation_flag.set()  # Set the flag to signal cancellation
     emit('task_cancelled', {'data': 'Task cancellation requested'})
@@ -631,7 +848,7 @@ def api_get_chat_history():
         if chat_history:
             for message in chat_history:
                 message['_id'] = str(message['_id'])  # Convert ObjectId to string
-            formatted_history = [{'user': user_template.replace('{{MSG}}', message['message']), 'ai': bot_template.replace('{{MSG}}', message['response'])} for message in chat_history]
+            formatted_history = [{'user': user_template.replace('{{MSG}}', message['message']), 'ai': bot_template.replace('{{MSG}}', message['response'] if isinstance(message['response'], str) else "CSV preview is not displayed in the chat history.")} for message in chat_history]
             return jsonify(formatted_history), 200
         else:
             return jsonify({'error': 'Chat history not found'}), 404
@@ -720,6 +937,103 @@ def get_all_credentials():
         credentials.append(password)
     return jsonify(credentials)
 
+@app.route('/check_slot_is_booked', methods=['GET'])
+def check_slot_is_booked():
+    date = request.args.get('date')
+    timeslot = request.args.get('timeslot')
+    existing_booking = BookingAppointment.query.filter_by(date=date, timeslot=timeslot).first()
+    if existing_booking:
+        return jsonify({"is_booked": True}), 200
+    else:
+        return jsonify({"is_booked": False}), 200
+
+@app.route('/book_demo', methods=['POST'])
+def book_demo():
+    # Get the data from the request
+    name = request.json.get('name')
+    email = request.json.get('email')
+    phone = request.json.get('phone')
+    date = request.json.get('date')
+    timeslot = request.json.get('timeslot')
+    message = request.json.get('message')
+    # Print the data to the console (or log it)
+    print("Received demo booking:")
+    print(f"Email: {email}")
+    print(f"Phone: {phone}")
+    print(f"Date: {date}")
+    print(f"Time Slot: {timeslot}")
+
+    date_obj = datetime.strptime(date, "%Y-%m-%d")
+
+    # Log the data
+    logging.info(f"Received demo booking: name: {name}, Email: {email}, Phone: {phone}, Date: {date_obj}, Time Slot: {timeslot}, Message: {message}")
+
+    existing_booking = BookingAppointment.query.filter_by(date=date_obj, timeslot=timeslot).first()
+    print("existing_booking ===> ", existing_booking)
+    if existing_booking:
+        return jsonify({"error": "This time slot is already booked."}), 409
+
+    # Create a new booking entry
+    try:
+        new_booking = BookingAppointment(email=email, phone=phone, date=date_obj, timeslot=timeslot, name=name, message=message)
+        # Add the booking to the session and commit it to the database
+        db.session.add(new_booking)
+        db.session.commit()
+    except Exception as e:
+        print("error ===> ", e)
+
+    # Prepare the email details for the user
+    subject_user = "Demo Booking Confirmation"
+    username = email.split('@')[0]  # Get username from email address
+    booking_details = {
+        'date': date,
+        'timeslot': timeslot,
+        'email': email,
+        'phone': phone,
+    }
+    # # Send the demo booking confirmation email to the user
+    try:
+        send_demo_email([email], subject_user, username, booking_details)
+    except Exception as e:
+        print("error ===> ", e)
+    # Prepare the email details for the site owner
+    subject_owner = "New Demo Booking Received"
+    owner_email = "vaibhavsharma3070@gmail.com"
+    print("before sending email")
+
+    # Respond with a success message
+    return jsonify({"message": "Demo booking received successfully!"}), 200
+
+@app.route('/available_time_slots', methods=['GET'])
+def available_time_slots():
+    # Get the date from the request arguments
+    selected_date = request.args.get('date')
+    if not selected_date:
+        return jsonify({'error': 'Date parameter is required.'}), 400
+    # Convert the date string to a datetime object=
+    # Define all possible time slots
+    all_time_slots = [
+        "10:00 AM to 10:45 AM", 
+        "11:00 AM to 11:45 AM", 
+        "12:45 PM to 1:30 PM", 
+        "1:45 PM to 2:30 PM", 
+        "2:45 PM to 3:30 PM"
+    ]
+    # Fetch booked time slots from the database for the selected date
+
+    try:
+        date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+    except Exception as e:
+        print("error ===> ", e)
+    try:
+        booked_slots = [booking.timeslot for booking in BookingAppointment.query.filter_by(date=date_obj).all()]
+    except Exception as e:
+        print("error ===> ", e)
+    # Determine available time slots
+    available_slots = [slot for slot in all_time_slots if slot not in booked_slots]
+    return jsonify({'available_time_slots': available_slots}), 200
+
+
 if __name__ == '__main__':
     # app.run(host="0.0.0.0", port=8501)
-    socketio.run(app, host="0.0.0.0", port=8502, debug=True)
+    socketio.run(app, host="0.0.0.0", port=8501)

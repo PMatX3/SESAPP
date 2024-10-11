@@ -31,7 +31,7 @@
             <div class="col-lg-6 p-0">
                 <div class="login-left-box">
                     <div class="login-img">
-                        <img src="https://www.yourbestcandidate.ai/static/images/login-image.png" class="img-fluid"
+                        <img src="https://www.yourbestcandidate.ai/static/images/login_img_two.jpg" class="img-fluid"
                             alt="Login Image">
                     </div>
                     <div class="login-content">
@@ -106,6 +106,13 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-lg-12">
+                                    <div class="input-group mb-3">
+                                        <input type="checkbox" id="terms" name="terms" value="terms" style="margin-right: 10px;">
+                                        <label for="terms"> I agree to the <a href="/terms_and_conditions">Terms of Service</a></label>
+                                        <p id="errorMessage_terms" class="text-danger" style="display: none;">Please agree to the Terms of Service.</p>
+                                    </div>
+                                </div>
                             </div>
                             <p id="errorMessage" class="text-danger text-center"></p>
                             <button type="submit" class="login-btn w-100">Sign Up</button>
@@ -117,8 +124,16 @@
         </div>
     </div>
     <script>
+        document.getElementById('terms').addEventListener('change', function () {
+            document.getElementById('errorMessage_terms').style.display = 'none';
+        });
         document.getElementById('signupForm').addEventListener('submit', function (event) {
             event.preventDefault();  // Prevent the default form submission
+            console.log("terms ==> ", document.getElementById('terms').checked)
+            if (!document.getElementById('terms').checked) {
+                document.getElementById('errorMessage_terms').style.display = 'block';
+                return;
+            }
 
             // Check for blank space values in input fields
             const inputs = this.querySelectorAll('input[type="text"]:not(#company), input[type="password"], input[type="email"]');

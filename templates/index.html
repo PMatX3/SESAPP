@@ -13,6 +13,9 @@
         rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/4.1.0/introjs.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.10/marked.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+        integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+        crossorigin="anonymous"></script>
     <style>
         * {
             box-sizing: border-box;
@@ -29,6 +32,10 @@
             text-size-adjust: 100%;
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
             -webkit-font-smoothing: auto;
+        }
+
+        .hover-box-not-allowed {
+            cursor: not-allowed;
         }
 
         .app-container {
@@ -734,7 +741,55 @@
             var csvInput = document.getElementById('csv-upload');
             var jsonInput = document.getElementById('json-upload');
             var recruitlyDataCheckbox = document.getElementById('recruitly-data');
-            var company = '{{ session.get('company') }}'
+            var company = '{{ session.get('company') }}' 
+            var selected_chat_id = "{{ session.get('chat_id') }}"
+
+            document.getElementById('question-input').addEventListener('keypress', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent the default action (form submission)
+                    document.getElementById('ask-btn').click(); // Trigger the click event on the ask button
+                }
+            });
+
+            function load_data_api(formData){
+                console.log("Load Data API called ");
+                // Send the formData to the server
+                fetch('/load_data', {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then(response => {
+                        if (response.status === 404) {
+                            return response.text().then(text => {
+                                alert(text);
+                                document.getElementById('recruitly-data').checked = false; // Uncheck the checkbox
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (loader) loader.style.display = 'none';
+                        isProcessed = true;
+                        var successContainer = document.getElementById('success-message-container');
+                        var successMessage = document.getElementById('success-message');
+                        successMessage.textContent = data.message;
+                        if (data.message != null) {
+                            successContainer.style.display = 'flex';
+                        }
+
+                        setTimeout(() => {
+                            successContainer.style.display = 'none';
+                        }, 3000);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (loader) loader.style.display = 'none';
+                    });
+            }
+
+            var temp_form_data = new FormData();
+            temp_form_data.append('type', 'json');
+            load_data_api(temp_form_data)
 
             // Function to handle file upload or checkbox change
             function handleFileUploadOrCheckboxChange() {
@@ -773,39 +828,8 @@
 
                 // Display the loader
                 if (loader) loader.style.display = 'flex';
-
-                // Send the formData to the server
-                fetch('/load_data', {
-                    method: 'POST',
-                    body: formData,
-                })
-                    .then(response => {
-                        if (response.status === 404) {
-                            return response.text().then(text => {
-                                alert(text);
-                                document.getElementById('recruitly-data').checked = false; // Uncheck the checkbox
-                            });
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (loader) loader.style.display = 'none';
-                        isProcessed = true;
-                        var successContainer = document.getElementById('success-message-container');
-                        var successMessage = document.getElementById('success-message');
-                        successMessage.textContent = data.message;
-                        if (data.message != null) {
-                            successContainer.style.display = 'flex';
-                        }
-
-                        setTimeout(() => {
-                            successContainer.style.display = 'none';
-                        }, 3000);
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        if (loader) loader.style.display = 'none';
-                    });
+                load_data_api(formData)
+                
             }
 
             // Attach event listeners to file inputs and checkbox
@@ -843,6 +867,7 @@
             var botResponseDiv; // Reference to the bot response div
             var cancelBtn = document.getElementById('cancel-btn');
             document.getElementById('ask-btn').addEventListener('click', function () {
+                console.log("-- ask button disabled -- ");
                 var csvInput = document.getElementById('csv-upload');
                 var jsonInput = document.getElementById('json-upload');
                 var recruitlyDataCheckbox = document.getElementById('recruitly-data');
@@ -872,45 +897,50 @@
                     return;
                 }
                 cancelBtn.style.display = 'inline';
+                document.getElementById('ask-btn').disabled = true;
+                document.getElementById('ask-btn').classList.add('hover-box-not-allowed');
                 // Check if the bot response div already exists, if not create it
                 var botMessageTemplate = `
-<div class="chat-message bot">
-<div class="avatar">
-    <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
-</div>
-<div class="message" id="bot-response">Generating response...</div>
-</div>
-`;
+            <div class="chat-message bot">
+            <div class="avatar">
+                <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
+            </div>
+            <div class="message" id="bot-response">Generating response...</div>
+            </div>
+            `;
                 messagesDiv.insertAdjacentHTML('afterbegin', botMessageTemplate);
                 botResponseDiv = document.getElementById('bot-response');
 
                 // Display user message using the user template
                 var userMessageTemplate = `
-<div class="chat-message user">
-    <div class="avatar">
-        <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User-logo" border="0" width="400" height="400">
-    </div>    
-    <div class="message">${question}</div>
-</div>
-`;
+            <div class="chat-message user">
+                <div class="avatar">
+                    <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User-logo" border="0" width="400" height="400">
+                </div>    
+                <div class="message">${question}</div>
+            </div>
+            `;
                 messagesDiv.insertAdjacentHTML('afterbegin', userMessageTemplate);
-
+                if (typeof selected_chat_id === 'undefined') {
+                    selected_chat_id = "{{ session.get('chat_id') }}"
+                }
                 // Send the question to the server using Socket.IO
                 socket.emit('ask', {
                     question: question,
                     recruitly_data: recruitly,
-                    user_id: '{{ session.get('user_id') }}',
-                    chat_id: '{{ session.get('chat_id') }}'
+                    user_id: "{{ session.get('user_id') }}",
+                    chat_id: selected_chat_id
                 });
 
                 // Listen for the 'message' event to receive the response
                 socket.on('message', function (data) {
-                    console.log(data.data)
                     if (botResponseDiv) {
                         botResponseDiv.innerHTML = data.data; // Update the content of the bot response
                     }
                     if (data.is_complete == 'stop' || data.is_complete == 'length') {
                         cancelBtn.style.display = 'none';
+                        document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                        document.getElementById('ask-btn').disabled = false;
                     }
                 });
 
@@ -918,13 +948,101 @@
                 socket.on('error', function (error) {
                     console.error('Error:', error.error);
                     cancelBtn.style.display = 'none';
+                    document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                    document.getElementById('ask-btn').disabled = false;
                 });
             });
 
+            //             document.getElementById('ask-btn').addEventListener('click', async function (e) {
+            //                 e.preventDefault();
+
+            //                 var csvInput = document.getElementById('csv-upload');
+            //                 var jsonInput = document.getElementById('json-upload');
+            //                 var recruitlyDataCheckbox = document.getElementById('recruitly-data');
+            //                 var questionInput = document.getElementById('question-input');
+            //                 var question = questionInput.value.trim(); // Trim whitespace
+            //                 var messagesDiv = document.getElementById('messages'); // Get the messages div
+            //                 questionInput.value = '';
+            //                 var recruitly = false;
+
+            //                 if (!recruitlyDataCheckbox) {
+            //                     recruitly = false;
+            //                 } else {
+            //                     if (recruitlyDataCheckbox.checked) {
+            //                         recruitly = true;
+            //                     } else {
+            //                         recruitly = false;
+            //                     }
+            //                 }
+
+            //                 if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
+            //                     alert('Please upload a CSV or JSON file, or check the company data checkbox.');
+            //                     return; // Stop the function if validation fails
+            //                 }
+
+            //                 if (question === '') {
+            //                     alert('Please enter a question.');
+            //                     return;
+            //                 }
+            //                 cancelBtn.style.display = 'inline';
+            //                 // Check if the bot response div already exists, if not create it
+            //                 var botMessageTemplate = `
+            // <div class="chat-message bot">
+            // <div class="avatar">
+            //     <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
+            // </div>
+            // <div class="message" id="bot-response">Generating response...</div>
+            // </div>
+            // `;
+            //                 messagesDiv.insertAdjacentHTML('afterbegin', botMessageTemplate);
+            //                 var botResponseDiv = document.getElementById('bot-response');
+
+            //                 // Display user message using the user template
+            //                 var userMessageTemplate = `
+            // <div class="chat-message user">
+            //     <div class="avatar">
+            //         <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User-logo" border="0" width="400" height="400">
+            //     </div>    
+            //     <div class="message">${question}</div>
+            // </div>
+            // `;
+            //                 messagesDiv.insertAdjacentHTML('afterbegin', userMessageTemplate);
+
+            //                 // Send the question to the server using fetch
+            //                 const response = await fetch("/ask_stream", {
+            //                     method: "POST",
+            //                     headers: { "Content-Type": "application/json" },
+            //                     body: JSON.stringify({
+            //                         question: question,
+            //                         recruitly_data: recruitly,
+            //                         user_id: '{{ session.get('user_id') }}',
+            //                         chat_id: '{{ session.get('chat_id') }}'
+            //                     })
+            //                 });
+
+            //                 const reader = response.body.getReader();
+            //                 let output = "";
+
+            //                 while (true) {
+            //                     const { done, value } = await reader.read();
+            //                     output = new TextDecoder().decode(value);
+            //                     console.log(output)
+            //                     botResponseDiv.innerHTML = output;
+
+            //                     if (done) {
+            //                         cancelBtn.style.display = 'none';
+            //                         return;
+            //                     }
+            //                 }
+            //             });
+
             cancelBtn.onclick = function () {
+                cancelBtn.style.display = 'none';
+                document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                document.getElementById('ask-btn').disabled = false;
                 socket.emit('cancel_task')
                 socket.disconnect();
-                cancelBtn.style.display = 'none';
+                
                 setTimeout(function () {
                     socket.connect();
                 }, 500);
@@ -957,12 +1075,15 @@
                 })
                     .then(response => response.json())
                     .then(data => {
+                        console.log("data ===== ", data);
                         displayChatHistory2(data);
+
                     })
                     .catch(error => {
                         console.error('Error fetching chat history:', error);
                     });
             }
+            console.log("chat_id from fetch ===== ", "{{ session.get('chat_id') }}");
 
             // Function to display chat history
             function displayChatHistory2(chatHistory) {
@@ -1028,6 +1149,7 @@
                     .then(response => response.json())
                     .then(data => {
                         displayChatHistory(data.chat_history)
+                        selected_chat_id = data.selected_chat_id;
                     })
                     .catch(error => {
                         console.error('Error posting chat:', error);

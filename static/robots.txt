@@ -1,0 +1,4 @@
+User-agent: *
+Allow: 
+Disallow: https://yourbestcandidate.ai/chat
+Sitemap: https://yourbestcandidate.ai/static/sitemap.xml
