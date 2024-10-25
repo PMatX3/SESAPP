@@ -3,6 +3,8 @@ from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 import os,json
 from cromadbTest import load_data, execute_query, execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
+# from test import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
+# from test import execute_query
 from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email, send_demo_email
 import pandas as pd
 import uuid
@@ -86,12 +88,12 @@ import logging
 # Setup logging with a file name
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def load_and_cache_json_data(filename=None, temp=False):
+def load_and_cache_json_data(filename=None, user_id=None, temp=False):
     def load_json():
         if filename and temp:
             with open(filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)
-                load_json_data(data, True)
+                load_json_data(data)
         else:
             with open(filename, 'r', encoding='utf-8') as file:
                 data = json.load(file)
@@ -101,10 +103,25 @@ def load_and_cache_json_data(filename=None, temp=False):
     # Start a new thread for loading JSON data
     thread = threading.Thread(target=load_json)
     thread.start()
+# def load_and_cache_json_data(filename=None, user_id=None, temp=False):
+#     def load_json():
+#         if filename and temp:
+#             with open(filename, 'r', encoding='utf-8') as file:
+#                 data = json.load(file)
+#                 load_json_data(data, user_id,True)
+#         else:
+#             with open(filename, 'r', encoding='utf-8') as file:
+#                 data = json.load(file)
+#                 load_json_data(data, user_id)
+        
 
-def load_and_cache_file_data(filename=None):
+#     # Start a new thread for loading JSON data
+#     thread = threading.Thread(target=load_json)
+#     thread.start()
+
+def load_and_cache_file_data(filename=None, user_id=None):
     def load_file():
-        load_data(filename)
+        load_data(filename, user_id)
         
 
     # Start a new thread for loading JSON data
@@ -142,6 +159,7 @@ def check_for_file(company_name):
                 file_found = os.path.join(dirpath, filename)
                 break
         if file_found:
+            print("file_found => ",file_found)
             return file_found
     else:
         return None
@@ -172,10 +190,12 @@ def chat():
             session['days'] = days
             session['company'] = company
             session['login_attempt'] = login_attempts
+            print("company => ",company)
             if company == 'SES':
+                print("in if")
                 file_path = check_for_file(company)
                 if file_path:
-                    load_and_cache_json_data(file_path)
+                    load_and_cache_json_data(file_path, user_id)
             # if days_since_join >= days:
             #     return redirect(url_for('pricing'))
             # else:
@@ -605,13 +625,12 @@ def load_new_data():
                 load_pdf_data(raw_text)  # Process the extracted text as needed
             elif file_ext == '.csv':
                 # CSV processing logic
-                df = pd.read_csv(file_path)  # Read the CSV file into a DataFrame
-                load_and_cache_file_data(file_path)
+                load_and_cache_file_data(file_path, user_id)
                 # load_data(file_path)
                 time.sleep(20)
             elif file_ext == '.json':
                 starttime = datetime.now()
-                load_and_cache_json_data(file_path, True)
+                load_and_cache_json_data(file_path, user_id, True)
                 endtime = datetime.now()
                 print(f"Time taken: {endtime - starttime}")
         session['recrutly_id'] = False
@@ -622,10 +641,11 @@ def load_new_data():
         session['recrutly_id'] = True
         user = mongo.users.find_one({'app_name': user_id})
         if user:
-            company_name = user.get('company', 'No company associated')
-        file_path = check_for_file(company_name)
+            company_name = user.get('company', None)
+        
+        file_path = check_for_file(company_name) if company_name not in ['', None] else None
         if file_path:
-            load_and_cache_json_data(file_path)
+            load_and_cache_json_data(file_path, user_id)
         else:
             return "You don't have any data loaded into the database", 404 
         if message is not None:
@@ -655,6 +675,7 @@ def handle_ask(json):
         chat_id = json.get('chat_id')
         recruitly_data = json.get('recruitly_data', False)
         message_id = str(uuid.uuid4())
+        print('recruitly_data => ',recruitly_data)
         try:
             # Use test_client to make a request to the local API
             with app.test_client() as client:
