@@ -111,6 +111,7 @@ def load_pdf_data(text):
     )
 
 def load_data(file_name, temp=False):
+    print('file_name ===>',file_name, temp)
     df=pd.read_csv(file_name)
     df.head()
     
@@ -131,6 +132,7 @@ def load_data(file_name, temp=False):
                 ids=batch_ids
             )
         else:
+            print('Using collection')
             collection.add(
                 documents=batch_docs,
                 ids=batch_ids
@@ -296,6 +298,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
         print("error in execute_query")
 
     job_desc = job_query.get('job_profile')
+    print('job_desc===>',job_desc)
     if job_desc['documents'] != []:
         embedding_query = ''.join(job_desc['documents'])
     else:
@@ -309,6 +312,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
             include=["documents"]
         )
     else:
+        print('Using collection')
         results = collection.query(    
             query_embeddings=vector,
             n_results=4000,
@@ -316,7 +320,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
         )
     available_tokens_for_results = 400000 - len(query)  # Subtracting an estimated length for static text in the prompt
     results_str = "".join(str(item) for item in results['documents'][0])
-    
+    print('results_str===>',results_str)
     single_line_text = mongo_results_str if len(mongo_results_str) >= available_tokens_for_results else results_str.replace("\n", " ")
     
     is_truncated = len(single_line_text) > available_tokens_for_results
@@ -702,3 +706,7 @@ def cromadb_test(file_name,query):
     )
     response_message = response["choices"][0]["message"]["content"]    
     return response_message
+
+def clear_collection(user_id):
+    collection2.delete(where={"user_id": {"$eq": user_id}})
+    print("Collection cleared successfully for user_id:", user_id)

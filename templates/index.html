@@ -150,7 +150,8 @@
         }
 
         .sidebar-content {
-            padding: 4rem 1.5rem;
+            padding: 1rem 1.5rem;
+            position: absolute;
         }
 
         .app-container .content {
@@ -172,7 +173,6 @@
             align-items: center;
             /* Center items vertically */
             justify-content: center;
-            /* Center items horizontally */
             background-color: #a6caff;
             /* Light blue background */
             padding: 10px;
@@ -365,6 +365,16 @@
             overflow-x: hidden;
         }
 
+        /* Hide sidebar on small screens */
+        /* @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar-toggle-btn {
+                left: 5px;
+            }
+        } */
+
         /* Style the scrollbar itself (width, background) */
         .sidebar-overflow::-webkit-scrollbar {
             width: 10px;
@@ -453,7 +463,7 @@
         .sidebar-toggle-btn {
             position: fixed;
             top: 52px;
-            left: 220px;
+            left: 200px;
             -webkit-box-align: center;
             align-items: center;
             -webkit-box-pack: center;
@@ -787,9 +797,9 @@
                     });
             }
 
-            var temp_form_data = new FormData();
-            temp_form_data.append('type', 'json');
-            load_data_api(temp_form_data)
+            // var temp_form_data = new FormData();
+            // temp_form_data.append('type', 'json');
+            // load_data_api(temp_form_data)
 
             // Function to handle file upload or checkbox change
             function handleFileUploadOrCheckboxChange() {
@@ -868,8 +878,24 @@
             var cancelBtn = document.getElementById('cancel-btn');
             document.getElementById('ask-btn').addEventListener('click', function () {
                 console.log("-- ask button disabled -- ");
+                
                 var csvInput = document.getElementById('csv-upload');
                 var jsonInput = document.getElementById('json-upload');
+                var recruitlydatacheckbox = document.getElementById('recruitly-data');
+
+                if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
+                    if(recruitlydatacheckbox){
+                        if (recruitlydatacheckbox.checked){
+                            console.log("pass");
+                        }else{
+                            alert('Please upload a CSV or JSON file, or check the company data checkbox.');
+                            return;
+                        }
+                    }else{
+                        alert('Please upload a CSV or JSON file, or check the company data checkbox.');
+                        return;
+                    }
+                }
                 var recruitlyDataCheckbox = document.getElementById('recruitly-data');
                 var questionInput = document.getElementById('question-input');
                 var question = questionInput.value.trim(); // Trim whitespace
@@ -887,47 +913,49 @@
                     }
                 }
 
-                if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
-                    alert('Please upload a CSV or JSON file, or check the company data checkbox.');
-                    return; // Stop the function if validation fails
-                }
+                // if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
+                //     alert('Please upload a CSV or JSON file, or check the company data checkbox.');
+                //     return; // Stop the function if validation fails
+                // }
 
                 if (question === '') {
                     alert('Please enter a question.');
                     return;
                 }
+                
                 cancelBtn.style.display = 'inline';
                 document.getElementById('ask-btn').disabled = true;
                 document.getElementById('ask-btn').classList.add('hover-box-not-allowed');
+
                 // Check if the bot response div already exists, if not create it
                 var botMessageTemplate = `
-            <div class="chat-message bot">
-            <div class="avatar">
-                <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
-            </div>
-            <div class="message" id="bot-response">Generating response...</div>
-            </div>
-            `;
+                    <div class="chat-message bot">
+                        <div class="avatar">
+                            <img src="https://i.ibb.co/cN0nmSj/Screenshot-2023-05-28-at-02-37-21.png">
+                        </div>
+                        <div class="message" id="bot-response">Generating response...</div>
+                    </div>
+                `;
                 messagesDiv.insertAdjacentHTML('afterbegin', botMessageTemplate);
                 botResponseDiv = document.getElementById('bot-response');
 
                 // Display user message using the user template
                 var userMessageTemplate = `
-            <div class="chat-message user">
-                <div class="avatar">
-                    <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User-logo" border="0" width="400" height="400">
-                </div>    
-                <div class="message">${question}</div>
-            </div>
-            `;
+                    <div class="chat-message user">
+                        <div class="avatar">
+                            <img src="https://i.ibb.co/rdZC7LZ/Photo-logo-1.png" alt="User-logo" border="0" width="400" height="400">
+                        </div>
+                        <div class="message">${question}</div>
+                    </div>
+                `;
                 messagesDiv.insertAdjacentHTML('afterbegin', userMessageTemplate);
                 if (typeof selected_chat_id === 'undefined') {
                     selected_chat_id = "{{ session.get('chat_id') }}"
                 }
                 // Send the question to the server using Socket.IO
                 socket.emit('ask', {
-                    question: question,
-                    recruitly_data: recruitly,
+                        question: question,
+                        recruitly_data: recruitly,
                     user_id: "{{ session.get('user_id') }}",
                     chat_id: selected_chat_id
                 });
@@ -935,14 +963,19 @@
                 // Listen for the 'message' event to receive the response
                 socket.on('message', function (data) {
                     if (botResponseDiv) {
-                        botResponseDiv.innerHTML = data.data; // Update the content of the bot response
+                        botResponseDiv.innerHTML = data.data // Update the content of the bot response
                     }
                     if (data.is_complete == 'stop' || data.is_complete == 'length') {
-                        cancelBtn.style.display = 'none';
-                        document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
-                        document.getElementById('ask-btn').disabled = false;
+                            cancelBtn.style.display = 'none';
+                            document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                            document.getElementById('ask-btn').disabled = false;
+                        } else {
+                            // Append the new data to the bot response
+                            console.log("data ======= ", data);
+                            // botResponseDiv.innerHTML += `${data}`;
+                        }
                     }
-                });
+                );
 
                 // Handle any errors
                 socket.on('error', function (error) {
@@ -952,6 +985,12 @@
                     document.getElementById('ask-btn').disabled = false;
                 });
             });
+
+            socket.on('connect', function() {
+                console.log('Connected to the server via WebSocket securely!');
+            });
+
+
 
             //             document.getElementById('ask-btn').addEventListener('click', async function (e) {
             //                 e.preventDefault();
@@ -1060,8 +1099,11 @@
                 sidebar.classList.toggle('sidebar-hidden');
                 // Adjust button position based on sidebar state
                 const isSidebarHidden = sidebar.classList.contains('sidebar-hidden');
-                this.style.left = isSidebarHidden ? '5px' : '220px';
-
+                const mainsidebar = document.querySelector('.sidebar');
+                this.style.left = isSidebarHidden ? '5px' : '200px';
+                this.style.left = isSidebarHidden ? '5px' : '200px';
+                mainsidebar.style.maxWidth = isSidebarHidden ? '0px' : '550px';
+                mainsidebar.style.minWidth = isSidebarHidden ? '0px' : '244px';
                 // Update the SVG icon based on the sidebar state
                 this.innerHTML = isSidebarHidden ?
                     '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor" xmlns="http://www.w3.org/2000/svg" color="inherit" class="eyeqlp51 st-emotion-cache-1pbsqtx ex0cdmw0"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6-6-6z"></path></svg>' :
