@@ -1,0 +1,679 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero-section">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="hero-text-box">
+                    <h1>Find Top Talent Fast. YourBestCandidateAI.</h1>
+                    <p class="hero-para-text">YourBestCandidateAI streamlines hiring with AI-powered candidate
+                        selection.</p>
+                    <button class="btn hero-btn starting_btn" data-bs-toggle="modal" data-bs-target="#demoModal">
+                        Book a Demo
+                    </button>
+                    <ul class="banifit-list">
+                        <li>
+                            <span class="icon"><i class="bi bi-check text-success"></i></span>
+                            <b>14 Day Free Trial</b>
+                        </li>
+                        <li>
+                            <span class="icon"><i class="bi bi-check text-success"></i></span>
+                            <b>Instant Access</b>
+                        </li>
+                        <li>
+                            <span class="icon"><i class="bi bi-check text-success"></i></span>
+                            <b>Cancel Anytime</b>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<!-- Modal -->
+<div class="modal fade" id="demoModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="demoModalLabel">Book a Demo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="demoForm">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required pattern="\S.*">
+                        <p id="name_error" style="color: red; display: none;">Name cannot be empty or just spaces.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" required pattern="\S.*">
+                        <p id="email_error" style="color: red; display: none;">Email cannot be empty or just spaces.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" required pattern="\d+" maxlength="13" title="Please enter a valid phone number without spaces.">
+                        <p id="phone_error" style="color: red; display: none;">Phone number cannot be empty or just spaces and must be 13 digits.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Select Date</label>
+                        <input type="date" class="form-control" id="date" name="appointment_date" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Message</label>
+                        <textarea class="form-control" id="message" name="message" pattern="\S.*"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="timeslot" class="form-label">Select Time Slot</label>
+                        <select class="form-control" id="timeslot" required>
+                            <option value="">Choose a time slot</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="validateAndSubmitForm()">Submit</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // date range
+    document.addEventListener('DOMContentLoaded', function() {
+        const dateInput = document.getElementById('date');
+        const today = new Date();
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1); // Set to tomorrow
+
+        const threeWeeksFromNow = new Date();
+        threeWeeksFromNow.setDate(today.getDate() + 4);
+
+        // Format the date to YYYY-MM-DD
+        const formatDate = (date) => {
+            const d = new Date(date);
+            let month = '' + (d.getMonth() + 1);
+            let day = '' + d.getDate();
+            const year = d.getFullYear();
+
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+
+            return [year, month, day].join('-');
+        };
+
+        dateInput.setAttribute('min', formatDate(tomorrow)); // Set min to tomorrow
+        dateInput.setAttribute('max', formatDate(threeWeeksFromNow));
+    });
+    // date range
+
+    // time slot
+    document.getElementById('date').addEventListener('input', function() {
+        const date = this.value; // Get the date value from the input field
+        fetch(`/available_time_slots?date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const timeSlotsSelect = document.getElementById('timeslot'); // Corrected ID
+                timeSlotsSelect.innerHTML = ''; // Clear existing options
+                console.log("data.available_time_slots ==> ", data.available_time_slots);
+                if (data.available_time_slots && data.available_time_slots.length > 0) {
+                    data.available_time_slots.forEach(slot => {
+                        const option = document.createElement('option');
+                        option.value = slot;
+                        option.textContent = slot;
+                        timeSlotsSelect.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.textContent = 'No available slots';
+                    timeSlotsSelect.appendChild(option);
+                }
+            })
+            .catch(error => console.error('Error fetching time slots:', error));
+    });
+
+
+    document.getElementById('date').addEventListener('input', function() {
+        const input = this;
+        const currentDate = new Date();
+        const inputDate = new Date(input.value);
+
+        if (inputDate < currentDate) {
+            input.setCustomValidity("Please select a future date.");
+        } else {
+            input.setCustomValidity("");
+        }
+    });
+    function validate_form(){
+        const nameInput = document.getElementById('name');
+        const nameValue = nameInput.value;
+
+        if (nameValue.trim() === '') {
+            document.getElementById('name_error').style.display = 'block';
+            return false;
+        } else {
+            document.getElementById('name_error').style.display = 'none';
+        }
+        
+        const phoneInput = document.getElementById('phone');
+        const phoneValue = phoneInput.value;
+
+        if (!/^\d+$/.test(phoneValue)) {
+            document.getElementById('phone_error').style.display = 'block';
+            return false;
+        } else {
+            document.getElementById('phone_error').style.display = 'none';
+        }
+        if (phoneValue.length < 10 || phoneValue.length > 13) {
+            document.getElementById('phone_error').style.display = 'block';
+            return false;
+        } else {
+            document.getElementById('phone_error').style.display = 'none';
+        }
+        return true;
+    }
+
+    function validateAndSubmitForm() {
+
+        res = validate_form();
+        console.log("res ==> ", res);
+        if(!res){
+            return;
+        }
+        console.log("res 123123");
+        const form = document.getElementById('demoForm');
+        if (form.checkValidity()) {
+            const formData = {
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                date: document.getElementById('date').value,
+                timeslot: document.getElementById('timeslot').value,
+                message: document.getElementById('message').value,
+            };
+            fetch('/check_slot_is_booked?date=' + formData.date + '&timeslot=' + formData.timeslot)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.is_booked) {
+                        alert('This time slot is already booked. Please select another time.');
+                    } else {
+                        fetch('/book_demo', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(formData),
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            alert(data.message);
+                            location.reload();
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('demoModal'));
+                            modal.hide();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('There was an error booking your demo. Please try again.');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('There was an error checking the slot. Please try again.');
+                });
+        } else {
+            form.reportValidity();
+        }
+    }
+    </script>
+
+
+<!-- <section class="video-section">
+        <div class="video-wrp">
+            <div class="ratio ratio-4x3">
+                <iframe
+                    src="https://cdn.embedly.com/widgets/media.html?src=https%3A%2F%2Ffast.wistia.net%2Fembed%2Fiframe%2F15az7uebfw&display_name=Wistia%2C+Inc.&url=https%3A%2F%2Fslaterdigitalgroup.wistia.com%2Fmedias%2F15az7uebfw&image=https%3A%2F%2Fembed-ssl.wistia.com%2Fdeliveries%2Fa25f0e7fc90001c11173d7829034e562.jpg%3Fimage_crop_resized%3D960x540&key=96f1f04c5f4143bcb0f2e68c87d65feb&type=text%2Fhtml&schema=wistia"
+                    title="YouTube video" allowfullscreen></iframe>
+            </div>
+        </div>
+    </section> -->
+<section class="video-section"></section>
+<div class="video-wrp">
+    <div class="ratio ratio-4x3">
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/QivRb-QOSkQ?si=2KDlutqnRqMy_Bge" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+
+        </iframe>
+    </div>
+</div>
+</section>
+
+<!-- <video width="500px" 
+           height="400px" 
+           controls="controls">
+        <source src="./static/video/invideo-ai-1080 Revolutionize Your Recruitment Process w 2024-09-18.mp4" 
+                                    type="video/mp4" />
+    </video> -->
+
+<section class="generator-work" id="main-blog" style="padding-top: 55px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="generator-wrp">
+                    <h2 class="generator-title">BestCandidate.AI</h2>
+                    <p>Revolutionizing Talent Selection for Businesses
+                        In an era where finding the right talent is critical to business success, the recruitment
+                        process can often feel overwhelming and inefficient. For companies that want to stay ahead,
+                        leveraging technology to streamline candidate selection is not just an option—it's a necessity.
+                        BestCandidate.AI is a cutting-edge solution designed to take the guesswork out of recruitment,
+                        providing businesses with a powerful tool to identify the best candidates with precision and
+                        speed.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="generator-wrp">
+                    
+                    <video class="demo-video" autoplay loop muted>
+                        <source src="./static/assets/video/demo_video.mp4" type="video/mp4" />
+                      </video>
+                </div>
+            </div>
+
+
+            <div class="col-lg-12">
+                <div class="generator-wrp">
+                    <h2 class="generator-title">What is BestCandidate.AI?</h2>
+                    <p>BestCandidate.AI is an advanced AI-powered platform that transforms the recruitment process by
+                        efficiently sifting through candidate data to find the top matches for any job description. The
+                        platform integrates seamlessly with existing recruitment databases and job descriptions, using
+                        sophisticated algorithms to analyze, rank, and recommend candidates that best fit the role. This
+                        tool is designed to support businesses of all sizes, ensuring that they can quickly and
+                        effectively identify top talent without the need for extensive manual screening.</p>
+                </div>
+            </div>
+            <div class="">
+                <div class="AIContent">
+                    <div class="firstSlide">
+                        <div class="sliderdetails">
+                            <div class="slidercontant">
+                                <div class="slidercontantHeading">
+                                    <h3>Key Features and Benefits</h3>
+                                </div>
+                                <div class="slidercontantdetails">
+                                    <p class="slidersubtitle">Seamless Data Integration:</p>
+                                    <!-- <div class="slidercontantmaindetailsBox">
+                                        <div class="slidercontantmaindetails">
+                                            <div class="slidercontantmaindetailsIcon">
+                                                <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                            </div>
+                                            <p>Efficiently review and rank resumes with our batch analysis tool</p>
+                                        </div>
+                                        <div class="slidercontantmaindetails">
+                                            <div class="slidercontantmaindetailsIcon">
+                                                <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                            </div>
+                                            <p>Generate candidate profiles from resumes in minutes with our
+                                                AI-powered profile builder</p>
+                                        </div>
+                                    </div> -->
+                                    <p>BestCandidate.AI integrates effortlessly with your existing candidate data
+                                        sources, such as CV databases and recruitment platforms like Recruitly. This
+                                        seamless integration allows for a streamlined workflow, ensuring that you can
+                                        continue using your preferred tools while benefiting from the added power of AI.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="sliderVideo">
+                                <img src="./static/assets/images/Research.gif" alt="Research">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide">
+                        <div class="sliderdetails">
+                            <div class="slidercontant">
+                                <div class="slidercontantHeading">
+                                    <h3>AI-Powered Candidate Matching</h3>
+                                </div>
+                                <div class="slidercontantdetails">
+                                    <p>The platform’s core strength lies in its AI-driven candidate matching engine. By
+                                        analyzing both structured and unstructured data from CVs and job descriptions,
+                                        BestCandidate.AI identifies the most relevant candidates based on skills,
+                                        experience, and other critical factors. This process significantly reduces the
+                                        time spent on manual screening and ensures that only the most suitable
+                                        candidates are brought to your attention.</p>
+                                    <!-- <div class="slidercontantmaindetailsBox">
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg">
+                                            <p>Analyze resumes with a user-friendly interface</p>
+                                        </div>
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg">
+                                            <p>Export selected candidates in multiple formats</p>
+                                        </div>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="sliderVideo besttimeImg">
+                                <img src="./static/assets/images/besttime.png" alt="Best Time">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide">
+                        <div class="sliderdetails">
+                            <div class="slidercontant">
+                                <div class="slidercontantHeading">
+                                    <h3>Ranking and Recommendation System:</h3>
+                                </div>
+                                <div class="slidercontantdetails">
+                                    <p>BestCandidate.AI doesn’t just find candidates—it ranks them. The platform
+                                        provides a ranked list of the top candidates for any given role, allowing
+                                        recruiters to focus on the best matches first. This ranking is based on a
+                                        combination of semantic search, embeddings, and machine learning algorithms,
+                                        ensuring accuracy and relevance in candidate selection.</p>
+                                    <!-- <div class="slidercontantmaindetailsBox">
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                            <p>Identify key skills and experiences for optimal candidate matches</p>
+                                        </div>
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                            <p>Customize search parameters to fit your hiring needs</p>
+                                        </div>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="sliderVideo DescribeGif">
+                                <img src="./static/assets/images/Describe.gif" alt="Describe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide">
+                        <div class="sliderdetails">
+                            <div class="slidercontant">
+                                <div class="slidercontantHeading">
+                                    <h3>Knowledge Base Integration</h3>
+                                </div>
+                                <div class="slidercontantdetails">
+                                    <p>The platform includes a comprehensive knowledge base that enhances its candidate
+                                        matching capabilities. This feature allows BestCandidate.AI to learn and adapt
+                                        over time, improving its ability to recommend candidates that align closely with
+                                        specific job descriptions and company requirements.</p>
+                                    <!-- <div class="slidercontantmaindetailsBox">
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg">
+                                            <p>Analyze resumes with a user-friendly interface</p>
+                                        </div>
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg">
+                                            <p>Export selected candidates in multiple formats</p>
+                                        </div>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="sliderVideo besttimeImg">
+                                <img src="./static/assets/images/besttime.png" alt="Best Time">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide">
+                        <div class="sliderdetails">
+                            <div class="slidercontant">
+                                <div class="slidercontantHeading">
+                                    <h3>LLM-Enhanced Search</h3>
+                                </div>
+                                <div class="slidercontantdetails">
+                                    <p>Leveraging the power of large language models (LLMs), BestCandidate.AI offers a
+                                        search experience that goes beyond traditional keyword matching. Recruiters can
+                                        input natural language queries or specific job descriptions, and the platform
+                                        will return a list of candidates ranked by their suitability for the role. This
+                                        advanced search capability enables more nuanced and context-aware candidate
+                                        selection.</p>
+                                    <!-- <div class="slidercontantmaindetailsBox">
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                            <p>Identify key skills and experiences for optimal candidate matches</p>
+                                        </div>
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg" alt="Right Icon">
+                                            <p>Customize search parameters to fit your hiring needs</p>
+                                        </div>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="sliderVideo DescribeGif">
+                                <img src="./static/assets/images/Describe.gif" alt="Describe">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="slide">
+                        <div class="sliderdetails">
+                            <div class="slidercontant">
+                                <div class="slidercontantHeading">
+                                    <h3>Scalable and Flexible</h3>
+                                </div>
+                                <div class="slidercontantdetails">
+                                    <p>BestCandidate.AI is designed to grow with your business. Whether you’re hiring
+                                        for one position or managing multiple openings across various departments, the
+                                        platform scales effortlessly to meet your needs. It’s flexible enough to adapt
+                                        to different industries and roles, making it a versatile tool for any
+                                        recruitment strategy.</p>
+                                    <!-- <div class="slidercontantmaindetailsBox">
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg">
+                                            <p>Analyze resumes with a user-friendly interface</p>
+                                        </div>
+                                        <div class="slidercontantmaindetails">
+                                            <img src="./static/assets/images/rightIcon.svg">
+                                            <p>Export selected candidates in multiple formats</p>
+                                        </div>
+                                    </div> -->
+                                </div>
+                            </div>
+                            <div class="sliderVideo besttimeImg">
+                                <img src="./static/assets/images/besttime.png" alt="Best Time">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="Create-Content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="generator-wrp">
+                    <h2 class="generator-title" style="max-width: 713px;">Why Choose BestCandidate.AI?</h2>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="CreateContentimg">
+                    <img src="./static/assets/images/ai_girl.png">
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="CreateContent">
+                    <!-- <h3>Never Miss a Potential Hire</h3>
+                    <p>Every candidate is unique, just like your brand's voice. YourBestCandidateAI ensures you
+                        maintain consistency in your hiring process while accommodating diverse candidate profiles.
+                    </p> -->
+                    <div class="CreateContentDetails">
+                        <img src="./static/assets/images/brand.svg">
+                        <div>
+                            <h5>Enhanced Efficiency</h5>
+                            <p>By automating the initial stages of candidate screening, BestCandidate.AI allows
+                                recruiters to focus their time and resources on interviewing and selecting the best
+                                candidates. This not only speeds up the hiring process but also reduces the risk of
+                                missing out on top talent.</p>
+                        </div>
+                    </div>
+                    <div class="CreateContentDetails">
+                        <img src="./static/assets/images/consistency.svg">
+                        <div>
+                            <h5>Cost Savings</h5>
+                            <p>With BestCandidate.AI, businesses can significantly cut down on the costs associated with
+                                lengthy recruitment processes and reliance on external recruitment agencies. The
+                                platform offers a cost-effective solution that delivers high-quality results without the
+                                need for expensive third-party services.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="CreateContentDetails">
+                        <img src="./static/assets/images/creation.svg">
+                        <div>
+                            <h5>Improved Decision-Making</h5>
+                            <p>The AI-driven insights provided by BestCandidate.AI empower recruiters to make better,
+                                more informed hiring decisions. By leveraging data and machine learning, the platform
+                                reduces bias and improves the overall quality of hires.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="Create-Content">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6">
+                <div class="CreateContent modelsBox">
+                    <h3>AI-Powered Candidate Matching</h3>
+                    <p>YourBestCandidateAI harnesses the power of cutting-edge AI models, including proprietary
+                        algorithms and industry-leading technologies, to revolutionize your candidate selection
+                        process. By integrating advanced models like GPT-4 and Anthropic, we ensure unparalleled
+                        accuracy and efficiency in candidate evaluation.</p>
+                    <p>Our AI seamlessly adapts to your hiring needs, providing reliable insights and
+                        recommendations even in the most challenging scenarios. Experience the future of recruitment
+                        today!</p>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="CreateContentimg modelsBoxImg">
+                    <img src="./static/assets/images/models.png">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="Create-Content">
+    <div class="container">
+        <div class="row aligns-center">
+            <div class="col-lg-6">
+                <div class="CreateContentimg SecurityImg">
+                    <img src="./static/assets/images/Security.png">
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="CreateContent modelsBox">
+                    <h3>Security and Confidentiality</h3>
+                    <p>YourBestCandidateAI prioritizes the protection of your data with state-of-the-art security
+                        features that continuously evolve to meet the latest standards. Our data centers are located
+                        in secure facilities within the United States, ensuring the highest level of data integrity
+                        and privacy.</p>
+                    <p>We never retain ownership of your candidate data, guaranteeing complete confidentiality
+                        throughout the recruitment process. Trust YourBestCandidateAI for a secure and reliable
+                        candidate selection experience.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="testimonial_wrp">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="single_item">
+                    <div class="first_testimonial">
+                        <div class="quote_data">
+                            <img src="./static/assets/images/Quote.svg" alt="">
+                        </div>
+                        <div class="our_clients_dats">
+                            <h3>"Efficient and Effective."</h3>
+                            <p>"YourBestCandidateAI has transformed our hiring process, allowing us to identify top
+                                talent swiftly and accurately. With its intuitive interface and powerful AI models,
+                                we can now make informed decisions with confidence."</p>
+                        </div>
+                        <div class="personal_info">
+                            <div class="personal_profile">
+                                <img src="./static/assets/images/client.png" alt="">
+                            </div>
+                            <div class="profile_name">
+                                <p>Sophia Thompson</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- other testimonials -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="writing_tools">
+    <div class="container">
+        <div class="tools_wrp">
+            <h2>Unlock the Power of AI Recruitment Tools</h2>
+        </div>
+        <div class="row tool_cards">
+            <div class="col-lg-6">
+                <div class="blog_writer">
+                    <div class="tool_data">
+                        <img src="./static/assets/images/tool.svg" alt="">
+                    </div>
+                    <div class="blog_details">
+                        <h6>AI Resume Screening</h6>
+                        <p>Leverage AI-powered tools to screen resumes and identify top candidates effortlessly.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="blog_writer">
+                    <div class="tool_data">
+                        <img src="./static/assets/images/tool.svg" alt="">
+                    </div>
+                    <div class="blog_details">
+                        <h6>Interview Scheduling </h6>
+                        <p>Streamline the interview process with AI-powered scheduling tools, ensuring a smooth and
+                            efficient experience for both candidates and recruiters.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+<section class="transformation_section">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="transform_details" style="display: flex; flex-direction: column;">
+                    <h2>Transform Your Hiring Process Today!</h2>
+                    <p>BestCandidate.AI offers a sophisticated, AI-driven solution that modernizes the recruitment
+                        process, making it faster, more efficient, and more effective. By harnessing the power of AI,
+                        businesses can ensure they are not only attracting top talent but also making smarter,
+                        data-driven hiring decisions.</p>
+                    <button class="btn hero-btn starting_btn" data-bs-toggle="modal" data-bs-target="#demoModal">
+                        Book a Demo
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

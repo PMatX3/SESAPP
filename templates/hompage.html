@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Martel:wght@200;300;400;600;700;800;900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <!-- icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- slick slider -->
+    <link rel="stylesheet" type="text/css" href="./static/css/slick.css" />
+    <!-- Bootstrap css -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <!-- Style Css -->
+    <link rel="stylesheet" href="./static/css/style.css">
+    <title>Hompage</title>
+</head>
+
+<body>
+    <header class="header-box">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <img src="./static/images/Yourbestcandidateai.svg" alt="">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Jobs</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                                aria-expanded="false"> Categories </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#">Action</a></li>
+                                <li><a class="dropdown-item" href="#">Another action</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item" href="#">Something else here</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link ">Blogs</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link ">Testimonials</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link ">Contact Us</a>
+                        </li>
+                    </ul>
+                    <div class="header-right-box">
+                        <button class="btn btn-black" type="submit"><a href="{{ url_for('login') }}"
+                                style="color: white; text-decoration: none;">Post a Job <i
+                                    class="fa-solid fa-paper-plane"></i></a></button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <main class="main-box">
+        <section class="hero-secrion">
+            <div class="container-fluid">
+                <div class="hero-title-box">
+                    <h1>AI-Powered <br> Video Interview Solutions</h1>
+                    <p>We revolutionize end-to-end remote hiring landscape with cutting-edge <br> video interview
+                        solutions.</p>
+                    <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                            style="color: white; text-decoration: none;">Book a Demo</a></button>
+                </div>
+                <div class="hero-vector-box">
+                    <img src="./static/images/hero-vector.svg" alt="">
+                </div>
+            </div>
+        </section>
+        <section class="our-clients">
+            <div class="container">
+                <div class="title-box">
+                    <h2>We have been featured</h2>
+                </div>
+                <div class="our-clients-logo-box">
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-1.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-2.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-3.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-4.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-5.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-6.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-1.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-2.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-3.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-4.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-5.png" alt="">
+                    </div>
+                    <div class="clients-logo">
+                        <img src="./static/images/logo-6.png" alt="">
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="about-us">
+            <div class="container">
+                <div class="title-box">
+                    <h2>About US</h2>
+                </div>
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="about-us-img">
+                            <img src="./static/images/about-image.png" class="img-fluid" alt="">
+                        </div>
+                    </div>
+                    <div class="col-md-7">
+                        <div class="about-us-text">
+                            <h3>Transform Your Hiring with InCruiter's Video Interview Software</h3>
+                            <p>InCruiter revolutionizes the world of remote hiring by providing video interview
+                                software. Our cutting-edge interview solutions are here to transform your recruitment
+                                game. With a network of over 3000+ expert interviewers and a suite of 6 captivating
+                                products, we are your ultimate partner in speeding up your hiring process. Discover the
+                                power of our advanced AI Interview Software, as we redefine recruitment solutions. From
+                                tapping into a pool of freelance interviewers to providing a seamless live interview
+                                platform and even an AI bot for one-way video interviews, InCruiter offers a
+                                comprehensive range of products.</p>
+                            <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                    style="color: white; text-decoration: none;">Book a Demo</a></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="software-data">
+            <div class="container">
+                <div class="title-box">
+                    <h2>Why choose InCruiter’s Applicant Tracking Software?</h2>
+                </div>
+                <div class="software-data-box-table">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Features</th>
+                                    <th>Other Applicant Tracking System</th>
+                                    <th>InCruiter’s Applicant Tracking System</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Candidate Tracking</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Scheduling</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Calendar Invite</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Resume Parsing</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Job Boards Posting</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Real-Time Interview Feedback</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>AI-Powered JD</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Live Candidate Evaluation</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Panel Management</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Map Candidate Slot With Panel</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-xmark"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>White-Labeled Platform</td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="availability">
+                                            <i class="fa-regular fa-circle-check"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="card-info">
+            <div class="container">
+                <div class="details-box">
+                    <h3>Check it out for yourself <br>
+                        <span>Start your trial, and the best part is</span> *No Credit Card Required*
+                    </h3>
+                    <button><a href="{{ url_for('login') }}" style="color: black; text-decoration: none;">Get
+                            Started</a></button>
+                </div>
+            </div>
+        </section>
+        <section class="our-products">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="products-tabs">
+                            <ul class="nav nav-tabs" id="productsTab" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="Features-tab" data-bs-toggle="tab"
+                                        data-bs-target="#Features-tab-pane" type="button" role="tab"
+                                        aria-controls="Features-tab-pane" aria-selected="true">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>AI Features</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="InbuiltATS-tab" data-bs-toggle="tab"
+                                        data-bs-target="#InbuiltATS-tab-pane" type="button" role="tab"
+                                        aria-controls="InbuiltATS-tab-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>Inbuilt ATS</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="CalendarInvite-tab" data-bs-toggle="tab"
+                                        data-bs-target="#CalendarInvite-tab-pane" type="button" role="tab"
+                                        aria-controls="CalendarInvite-tab-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>Calendar Invite</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="CodeCompiler-tab" data-bs-toggle="tab"
+                                        data-bs-target="#CodeCompiler-tab-pane" type="button" role="tab"
+                                        aria-controls="CodeCompiler-tab-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>Code Compiler</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="WhiteLabeling-tab" data-bs-toggle="tab"
+                                        data-bs-target="#WhiteLabeling-tab-pane" type="button" role="tab"
+                                        aria-controls="WhiteLabeling-tab-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>White Labeling</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="AutoSuggest-tab" data-bs-toggle="tab"
+                                        data-bs-target="#AutoSuggest-tab-pane" type="button" role="tab"
+                                        aria-controls="AutoSuggest-tab-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>Auto Suggest</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="AutoReminderTab" data-bs-toggle="tab"
+                                        data-bs-target="#AutoReminderTab-pane" type="button" role="tab"
+                                        aria-controls="AutoReminderTab-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>Auto Reminder</p>
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="ResumeScoring" data-bs-toggle="tab"
+                                        data-bs-target="#ResumeScoring-pane" type="button" role="tab"
+                                        aria-controls="ResumeScoring-pane" aria-selected="false">
+                                        <div class="icon-box">
+                                            <img src="./static/images/microchip-ai.svg" alt="">
+                                        </div>
+                                        <p>Resume Scoring</p>
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="tab-content" id="productsTabContent">
+                                <div class="tab-pane fade show active" id="Features-tab-pane" role="tabpanel"
+                                    aria-labelledby="Features-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="InbuiltATS-tab-pane" role="tabpanel"
+                                    aria-labelledby="InbuiltATS-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>Inbuilt ATS</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="CalendarInvite-tab-pane" role="tabpanel"
+                                    aria-labelledby="CalendarInvite-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="CodeCompiler-tab-pane" role="tabpanel"
+                                    aria-labelledby="CodeCompiler-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="WhiteLabeling-tab-pane" role="tabpanel"
+                                    aria-labelledby="WhiteLabeling-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="AutoSuggest-tab-pane" role="tabpanel"
+                                    aria-labelledby="AutoSuggest-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="AutoReminder-tab-pane" role="tabpanel"
+                                    aria-labelledby="AutoReminder-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="ResumeScoring-tab-pane" role="tabpanel"
+                                    aria-labelledby="ResumeScoring-tab" tabindex="0">
+                                    <div class="row">
+                                        <div class="col-lg-4">
+                                            <div class="tab-image">
+                                                <img src="./static/images/microchip-ai.svg" alt="">
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-8">
+                                            <div class="tab-text-details">
+                                                <h5>AI Features</h5>
+                                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting
+                                                    industry. Lorem Ipsum has been the industry's standard dummy text
+                                                    ever since the 1500s.</p>
+                                                <p>when an unknown printer took a galley of type and scrambled it to
+                                                    make a type specimen book. It has survived not only five centuries,
+                                                    but also the leap into electronic typesetting, remaining essentially
+                                                    unchanged.</p>
+                                                <button class="btn btn-pearl"><a href="{{ url_for('login') }}"
+                                                        style="color: white; text-decoration: none;">Book a
+                                                        Demo</a></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="product-impacts">
+            <div class="container">
+                <div class="title-box">
+                    <h2>Our Impact So Far</h2>
+                    <p>Letting the numbers talk!</p>
+                </div>
+                <div class="impact-box-list">
+                    <div class="impact-box"> 1 Mn + Candidate Processed</div>
+                    <div class="impact-box"> 6+ Al Features </div>
+                    <div class="impact-box"> 300+ Clients </div>
+                    <div class="impact-box"> 24X7 Interview Support </div>
+                    <div class="impact-box">100% Automated </div>
+                </div>
+            </div>
+        </section>
+        <section class="recruitment-process">
+            <div class="container">
+                <div class="title-box">
+                    <h2>Optimize your recruitment process with InCruiter’s ATS</h2>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="process-box">
+                            <h3>70%</h3>
+                            <p>Boost in recruiter efficiency</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="process-box">
+                            <h3>80%</h3>
+                            <p>Reduction in monotonous tasks</p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="process-box">
+                            <h3>75%</h3>
+                            <p>Decrease in time to hire</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="questions">
+            <div class="container">
+                <div class="row"></div>
+            </div>
+        </section>
+        <section class="accordion-section">
+            <div class="container">
+                <div class="questions-heading">
+                    <h3>Frequently Asked Questions</h3>
+                    <p>Got a question? We’re here to answer!</p>
+                </div>
+                <div class="accordion-box">
+                    <div class="accordion" id="accordionExample">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne"> What
+                                    is an Applicant Tracking System? </button>
+                            </h2>
+                            <div id="collapseOne" class="accordion-collapse collapse show"
+                                data-bs-parent="#accordionExample">
+                                <div class="accordion-body"> An Applicant Tracking System (ATS) is software that
+                                    streamlines the recruitment process by managing job applications and candidate
+                                    information. It helps recruiters organize, track, and record data efficiently.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    What are the benefits of using AI-powered Applicant Tracking Software? Item #2
+                                </button>
+                            </h2>
+                            <div id="collapseTwo" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <strong>This is the second item's accordion body.</strong> It is hidden by default,
+                                    until the collapse plugin adds the appropriate classes that we use to style each
+                                    element. These classes control the overall appearance, as well as the showing and
+                                    hiding via CSS transitions. You can modify any of this with custom CSS or overriding
+                                    our default variables. It's also worth noting that just about any HTML can go within
+                                    the <code>.accordion-body</code>, though the transition does limit overflow.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                    How does ATS work? </button>
+                            </h2>
+                            <div id="collapseThree" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <strong>This is the third item's accordion body.</strong> It is hidden by default,
+                                    until the collapse plugin adds the appropriate classes that we use to style each
+                                    element. These classes control the overall appearance, as well as the showing and
+                                    hiding via CSS transitions. You can modify any of this with custom CSS or overriding
+                                    our default variables. It's also worth noting that just about any HTML can go within
+                                    the <code>.accordion-body</code>, though the transition does limit overflow.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
+                                    Why do recruiters use ATS? </button>
+                            </h2>
+                            <div id="collapseFour" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <strong>This is the third item's accordion body.</strong> It is hidden by default,
+                                    until the collapse plugin adds the appropriate classes that we use to style each
+                                    element. These classes control the overall appearance, as well as the showing and
+                                    hiding via CSS transitions. You can modify any of this with custom CSS or overriding
+                                    our default variables. It's also worth noting that just about any HTML can go within
+                                    the <code>.accordion-body</code>, though the transition does limit overflow.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                                    Where can I find the best Applicant Tracking System? </button>
+                            </h2>
+                            <div id="collapseFive" class="accordion-collapse collapse"
+                                data-bs-parent="#accordionExample">
+                                <div class="accordion-body">
+                                    <strong>This is the third item's accordion body.</strong> It is hidden by default,
+                                    until the collapse plugin adds the appropriate classes that we use to style each
+                                    element. These classes control the overall appearance, as well as the showing and
+                                    hiding via CSS transitions. You can modify any of this with custom CSS or overriding
+                                    our default variables. It's also worth noting that just about any HTML can go within
+                                    the <code>.accordion-body</code>, though the transition does limit overflow.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="view-button">
+                    <button>View all FAQs</button>
+                </div>
+            </div>
+        </section>
+        <section class="client-section">
+            <div class="container">
+                <div class="client-headnig">
+                    <h3>What our Client say</h3>
+                </div>
+                <div>
+                    <div class="review-slider-nav">
+                        <div>
+                            <div class="slider-card">
+                                <div class="review-headng">
+                                    <h3>Francis Guzman</h3>
+                                    <p>Designer</p>
+                                </div>
+                                <div class="star-icon">
+                                    <ul>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-regular fa-star"></i></a></li>
+                                    </ul>
+                                    <p>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out
+                                        print, graphic or web designs. The passage is attributed to an unknown
+                                        typesetter in the 15th century who is thought to have scrambled parts of
+                                        Cicero's De Finibus</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="slider-card">
+                                <div class="review-headng">
+                                    <h3>Francis Guzman</h3>
+                                    <p>Designer</p>
+                                </div>
+                                <div class="star-icon">
+                                    <ul>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-regular fa-star"></i></a></li>
+                                    </ul>
+                                    <p>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out
+                                        print, graphic or web designs. The passage is attributed to an unknown
+                                        typesetter in the 15th century who is thought to have scrambled parts of
+                                        Cicero's De Finibus</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="slider-card">
+                                <div class="review-headng">
+                                    <h3>Francis Guzman</h3>
+                                    <p>Designer</p>
+                                </div>
+                                <div class="star-icon">
+                                    <ul>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-regular fa-star"></i></a></li>
+                                    </ul>
+                                    <p>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out
+                                        print, graphic or web designs. The passage is attributed to an unknown
+                                        typesetter in the 15th century who is thought to have scrambled parts of
+                                        Cicero's De Finibus</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="slider-card">
+                                <div class="review-headng">
+                                    <h3>Francis Guzman</h3>
+                                    <p>Designer</p>
+                                </div>
+                                <div class="star-icon">
+                                    <ul>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-regular fa-star"></i></a></li>
+                                    </ul>
+                                    <p>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out
+                                        print, graphic or web designs. The passage is attributed to an unknown
+                                        typesetter in the 15th century who is thought to have scrambled parts of
+                                        Cicero's De Finibus</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="slider-card">
+                                <div class="review-headng">
+                                    <h3>Francis Guzman</h3>
+                                    <p>Designer</p>
+                                </div>
+                                <div class="star-icon">
+                                    <ul>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-solid fa-star"></i></a></li>
+                                        <li><a href="#"><i class="fa-regular fa-star"></i></a></li>
+                                    </ul>
+                                    <p>Lorem ipsum, or lipsum as it is sometimes known, is dummy text used in laying out
+                                        print, graphic or web designs. The passage is attributed to an unknown
+                                        typesetter in the 15th century who is thought to have scrambled parts of
+                                        Cicero's De Finibus</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="see-all-review">
+                        <button class="btn btn-black">See More <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="contact-box">
+            <div class="title-box">
+                <h2>Book a Demo</h2>
+            </div>
+            <div class="row book-demo-row">
+                <div class="col-lg-8">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" placeholder="First Name" id="FirstName"
+                                    aria-describedby="FirstName">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+
+                                <input placeholder="Last Name" type="text" class="form-control" id="LastName"
+                                    aria-describedby="LastName">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+
+                                <input placeholder="Contact Number" type="text" class="form-control" id="ContactNumber"
+                                    aria-describedby="EmailAddress">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+
+                                <input type="text" class="form-control" id="EmailAddress" placeholder="Email Address"
+                                    aria-describedby="EmailAddress">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="CompanyName" aria-describedby="CompanyName"
+                                    placeholder="Company Name">
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="mb-3">
+                                <select class="form-select" aria-label="Default select example">
+                                    <option selected>Open this select menu</option>
+                                    <option value="1">One</option>
+                                    <option value="2">Two</option>
+                                    <option value="3">Three</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="form-floating">
+                                <textarea class="form-control" placeholder="Leave a comment here" id="floatingTextarea2"
+                                    style="height: 100px"></textarea>
+                                <label for="floatingTextarea2">Comments</label>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <div class="update-form">
+                                <button class="select-time-btn">Select Time Slot</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <footer class="footer-wrp">
+            <div class="container">
+                <div class="row footer-row">
+                    <div class="col-lg-4">
+                        <div class="footer-top">
+                            <h3>Overcome Ignorance and <br>
+                                Fight for Equality </h3>
+                            <div class="button-box">
+                                <button class="btn btn-outline">RECIEVE NEWS</button>
+                                <button class="btn btn-white">Donate</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-5">
+                    <div class="col-lg-3">
+                        <div class="footer-links">
+                            <h5>Navigation</h5>
+                            <ul>
+                                <li>
+                                    <a href="#">
+                                        Home
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        About Us
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        What We Do
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        To The Power of 10
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="footer-links">
+                            <h5>What We Do</h5>
+                            <ul>
+                                <li>
+                                    <a href="#">
+                                        Encouraging Testing
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Strengthening Advocacy
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Sharing Information
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Building Leadership
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Engaging With Global Fund
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Shining a Light
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="footer-links">
+                            <h5>LEGAL</h5>
+                            <ul>
+                                <li>
+                                    <a href="#">General Info</a>
+                                </li>
+                                <li>
+                                    <a href="#">Privacy Policy</a>
+                                </li>
+                                <li>
+                                    <a href="#">Terms of Service</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <div class="footer-links">
+                            <h5>TALK TO US</h5>
+                            <ul>
+                                <li>
+                                    <a href="mailto:support@yourbestcandidate.ai">support@yourbestcandidate.ai</a>
+                                </li>
+                                <li>
+                                    <a href="#">+66 2399 1145</a>
+                                </li>
+                                <li>
+                                    <a href="#">Contact Us</a>
+                                </li>
+                                <li>
+                                    <a href="#">Facebook</a>
+                                </li>
+                                <li>
+                                    <a href="#">Linkedin</a>
+                                </li>
+                                <li>
+                                    <a href="#">Twitter</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-5 bottom-footer">
+                    <div class="col-lg-6">
+                        <div class="bottom-footer-left">
+                            <a href="#"> 2024 InCruiter India Private Limited. All rights reserved</a>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="bottom-footer-right">
+                            <ul>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa-brands fa-facebook-f"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa-brands fa-linkedin-in"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        <i class="fa-brands fa-twitter"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </main>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+        integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"
+        integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="./static/js/slick.min.js"></script>
+    <script src="./static/js/custom.js"></script>
+</body>
+
+</html>
