@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, flash, jsonify, session, redi
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
 import os,json
-from cromadbTest import load_data, execute_query, execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
+from cromadbTest import load_data, execute_query, execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message, clear_collection
 # from test import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
 # from test import execute_query
 from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email, send_demo_email
@@ -88,7 +88,7 @@ import logging
 # Setup logging with a file name
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def load_and_cache_json_data(filename=None, user_id=None, temp=False):
+def load_and_cache_json_data(filename=None, temp=False):
     def load_json():
         if filename and temp:
             with open(filename, 'r', encoding='utf-8') as file:
@@ -119,9 +119,9 @@ def load_and_cache_json_data(filename=None, user_id=None, temp=False):
 #     thread = threading.Thread(target=load_json)
 #     thread.start()
 
-def load_and_cache_file_data(filename=None, user_id=None):
+def load_and_cache_file_data(filename=None, temp=False):
     def load_file():
-        load_data(filename, user_id)
+        load_data(filename, temp)
         
 
     # Start a new thread for loading JSON data
@@ -180,6 +180,10 @@ def chat():
         job_desc['documents'] = []
     if 'user_id' in session:
         user_id = session['user_id']
+        try:
+            clear_collection(user_id)
+        except Exception as e:
+            print("error in clear collection => ",e)
         user_data = mongo.users.find_one({'app_name': user_id})
         if user_data:
             days_since_join = calculate_days_since_join(user_data['join_date'])
@@ -195,7 +199,7 @@ def chat():
                 print("in if")
                 file_path = check_for_file(company)
                 if file_path:
-                    load_and_cache_json_data(file_path, user_id)
+                    load_and_cache_json_data(file_path, True)
             # if days_since_join >= days:
             #     return redirect(url_for('pricing'))
             # else:
@@ -538,6 +542,10 @@ def new_chat():
     try:
         if 'user_id' in session:
             user_id = session.get('user_id')
+            try:
+                clear_collection(user_id)
+            except Exception as e:
+                print("error in clear collection => ",e)
             user_conversations[user_id] = []
             # Generate a new chat_id using uuid
             chat_id = str(uuid.uuid4()) 
@@ -625,12 +633,12 @@ def load_new_data():
                 load_pdf_data(raw_text)  # Process the extracted text as needed
             elif file_ext == '.csv':
                 # CSV processing logic
-                load_and_cache_file_data(file_path, user_id)
+                load_and_cache_file_data(file_path)
                 # load_data(file_path)
                 time.sleep(20)
             elif file_ext == '.json':
                 starttime = datetime.now()
-                load_and_cache_json_data(file_path, user_id, True)
+                load_and_cache_json_data(file_path, True)
                 endtime = datetime.now()
                 print(f"Time taken: {endtime - starttime}")
         session['recrutly_id'] = False
@@ -645,7 +653,7 @@ def load_new_data():
         
         file_path = check_for_file(company_name) if company_name not in ['', None] else None
         if file_path:
-            load_and_cache_json_data(file_path, user_id)
+            load_and_cache_json_data(file_path, True)
         else:
             return "You don't have any data loaded into the database", 404 
         if message is not None:
@@ -741,6 +749,7 @@ def handle_ask(json):
 
                 # Spawn a new thread to handle message saving
                 threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
+                print(f"----------------------- \n\n ------------------------- {rendered_response} \n\n ------------------------- \n\n -----------------------")
                 emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
 
                 # Clear the chunk to free memory

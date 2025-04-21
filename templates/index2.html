@@ -153,7 +153,8 @@
         }
 
         .sidebar-content {
-            padding: 4rem 1.5rem;
+            padding: 1rem 1.5rem;
+            position: absolute;
         }
 
         .app-container .content {
@@ -452,11 +453,18 @@
             display: block;
             transition: .5s;
         }
-
+        /* @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar-toggle-btn {
+                left: 5px;
+            }
+        } */
         .sidebar-toggle-btn {
             position: fixed;
             top: 52px;
-            left: 220px;
+            left: 200px;
             -webkit-box-align: center;
             align-items: center;
             -webkit-box-pack: center;
@@ -467,7 +475,7 @@
             color: inherit;
             width: auto;
             user-select: none;
-            background-color: #d1d1d100;
+            background-color: #fff;
             border: none;
             padding: 0.5rem;
             font-size: 14px;
@@ -799,7 +807,8 @@
         }
 
         .sidebar-content {
-            padding: 4rem 1.5rem;
+            padding: 1rem 1.5rem;
+            position: absolute;
         }
 
         .app-container .content {
@@ -1102,7 +1111,7 @@
         .sidebar-toggle-btn {
             position: fixed;
             top: 52px;
-            left: 220px;
+            left: 200px;
             -webkit-box-align: center;
             align-items: center;
             -webkit-box-pack: center;
@@ -1524,9 +1533,20 @@
                 }
                 console.log("recruitly => ", recruitly)
 
-                if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
-                    alert('Please upload a CSV or JSON file, or check the company data checkbox.');
-                    return; // Stop the function if validation fails
+                var recruitlydatacheckbox = document.getElementById('recruitly-data');
+
+                if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
+                    if(recruitlydatacheckbox){
+                        if (recruitlydatacheckbox.checked){
+                            console.log("pass");
+                        }else{
+                            alert('Please upload a CSV or JSON file, or check the company data checkbox.');
+                            return;
+                        }
+                    }else{
+                        alert('Please upload a CSV or JSON file, or check the company data checkbox.');
+                        return;
+                    }
                 }
                 console.log("question => ", question)
 

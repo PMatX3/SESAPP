@@ -421,7 +421,7 @@ ul.banifit-list li {
 span.icon {
     display: block;
     width: 25px;
-    height: 24px;
+    height: 25px;
     background-color: rgba(73, 168, 71, .16);
     border-radius: 50%;
     flex-direction: column;
@@ -1340,6 +1340,13 @@ span.icon {
     color: #2a8ad9;
 }
 
+.demo-video {
+    height: 300px;
+    width: 564px;
+    border: 3px solid;
+    border-radius: 25px;
+}
+
 
 @media (max-width: 1200px) {
     .AIContent .slick-prev::after {
@@ -1443,23 +1450,108 @@ span.icon {
         padding: 73px 0;
     }
 
-}
+    .generator-wrp {
+        padding-bottom: 20px;
+        padding-top: 20px;
+    }
 
-@media (max-width: 769px) {
-    .copyright_data {
+    .generator-title {
+        font-size: 26px;
+    }
+
+    .slidercontantHeading h3 {
+        font-size: 24px;
+    }
+
+    .CreateContent h3 {
+        font-size: 24px;
+    }
+
+    .slidercontantdetails {
+        max-width: 100%;
+    }
+
+    .slidercontant {
+        width: 100%;
         text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .AIContent .slick-prev,
+    .AIContent .slick-next {
+        bottom: 0;
+    }
+
+    .CreateContent {
+        margin-top: 30px;
+    }
+
+    .tools_wrp h2::after {
+        width: 150px;
+        height: 150px;
+        right: 0;
+    }
+
+    .tool_cards::before {
+        width: 350px;
+        height: 350px;
+        right: 0;
+    }
+
+    .tools_wrp h2 {
+        font-size: 24px;
+        line-height: 47px;
+        width: 87%;
     }
 
     .transform_details h2 {
         width: 96%;
-        font-size: 32px;
+        font-size: 24px;
         line-height: 41px;
     }
+}
 
-    .tools_wrp h2 {
-        font-size: 35px;
-        line-height: 47px;
-        width: 87%;
+@media (max-width: 767px) {
+
+    .testimonial_wrp::before {
+        top: 0;
+    }
+
+    .transform_details h2::after {
+        top: 10px;
+    }
+
+    .testimonial_wrp::after {
+        display: none;
+    }
+
+    .transformation_section::after {
+        top: 10px;
+    }
+
+    .transform_details p::before {
+        left: 20px;
+    }
+
+    .transform_details p::after {
+        right: 20px;
+    }
+
+    .header-btn {
+        padding: 5px 20px;
+    }
+
+    .transform_details h2::before {
+        display: none;
+    }
+
+    .demo-video {
+        height: 260px;
+        width: 100%;
+    }
+
+    .copyright_data {
+        text-align: center;
     }
 
     .tool_cards {
@@ -1472,7 +1564,7 @@ span.icon {
 
     .our_clients_dats h3 {
         width: 84%;
-        font-size: 30px;
+        font-size: 26px;
         line-height: 48px;
     }
 
@@ -1482,9 +1574,69 @@ span.icon {
         width: 90%;
     }
 
+    .banifit-list {
+        width: 100%;
+    }
+
 }
 
 @media (max-width: 575px) {
+
+
+
+    .hero-btn {
+        padding: 10px 30px;
+    }
+
+    .banifit-list {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .testimonial_wrp::before {
+        display: none;
+    }
+
+    .transformation_section::after {
+        display: none;
+    }
+
+    .transform_details h2::after {
+        display: none;
+    }
+
+    .footer_social_data {
+        text-align: center;
+    }
+
+    .footer_logo {
+        margin: 0 auto;
+    }
+
+    .company_data {
+        text-align: center;
+    }
+
+    .footer_icon ul {
+        justify-content: center;
+    }
+
+    .tool_cards::before {
+        display: none;
+    }
+
+    .transform_details p::after {
+        display: none;
+    }
+
+    .transform_details p::before {
+        display: none;
+    }
+
+    .hero-text-box h1 {
+        font-size: 28px;
+    }
+
     .Create-Content {
         padding: 25px 0;
     }
@@ -1498,7 +1650,7 @@ span.icon {
     }
 
     .generator-title {
-        font-size: 32px;
+        font-size: 26px;
     }
 
     .generator-wrp p {
@@ -1506,7 +1658,7 @@ span.icon {
     }
 
     .slidercontantHeading h3 {
-        font-size: 32px;
+        font-size: 26px;
     }
 
     .slidercontantdetails p {
@@ -1518,7 +1670,7 @@ span.icon {
     }
 
     .CreateContent h3 {
-        font-size: 32px;
+        font-size: 26px;
     }
 
     .CreateContent p {
@@ -1546,6 +1698,10 @@ span.icon {
     .blog_details p {
         font-size: 18px;
         line-height: 28px;
+    }
+
+    .transform_details h2::before {
+        display: none;
     }
 }
 
@@ -1594,9 +1750,5 @@ span.icon {
     }
 
 }
-.demo-video{
-    height: 300px;
-    width: 564px;
-    border: 3px solid;
-    border-radius: 25px;
-}
+
+@media (max-width: 375px) {}
