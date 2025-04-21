@@ -21,3 +21,82 @@ The application will
  e. run a query on ChatGPT
  f. produce a list of candidates based on the best match between the job descriptions, recruitly and CVs
 
+
+
+
+# Streamlit Python App
+
+This is a simple Streamlit Python application showcasing basic functionality.
+
+## Installation
+
+To run this application, make sure you have Python installed on your system. Then, install Streamlit using pip:
+
+```bash
+pip install streamlit
+```
+
+Clone this repository:
+```bash
+git clone https://github.com/PMatX3/SESAPP.git
+```
+
+Navigate to the directory:
+```bash
+cd your_repository
+```
+
+Install the required dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
+Run the Streamlit app:
+
+```bash
+streamlit run app.py
+```
+
+Access the application by opening the provided URL in your web browser.
+
+## Run Project in Mac
+
+Run the Streamlit app in MAC OS:
+
+```bash
+bash run.sh
+```
+
+## Steps to Run Project with Docker
+
+
+Before you begin, ensure you have met the following requirements:
+
+- Docker installed on your machine.
+
+Clone this repository:
+```bash
+git clone https://github.com/PMatX3/SESAPP.git
+```
+
+Navigate to the directory:
+```bash
+cd your_repository
+```
+
+Build the Docker image:
+```bash
+docker build -t sesapp:v1 .
+```
+
+List Docker images to get the image ID [copy the image id with name sesapp]: 
+```bash
+docker image ls
+```
+
+Start the project in a Docker container:
+```bash
+docker run -p 8501:8501 <image_id>
+```
