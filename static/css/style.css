@@ -72,6 +72,7 @@
 
 .login-form {
     background-color: #F8F8F8;
+    padding: 20px;
     height: 100vh;
     display: flex;
     align-items: center;
@@ -958,4 +959,31 @@ ul {
 
 .test {
     background: sandybrown;
+}
+
+@media (max-width: 767px) {
+    .left_col_box {
+        display: none;
+    }
+    .login-left-box{
+        display: none;
+    }
+}
+
+@media (max-width: 575px) {
+    .left_col_box {
+        display: none;
+    }
+
+    .login-form {
+        padding: 20px;
+    }
+
+    .form-check-label {
+        font-size: 14px;
+    }
+
+    .forgot-password a {
+        font-size: 14px;
+    }
 }

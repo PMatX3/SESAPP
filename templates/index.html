@@ -374,7 +374,6 @@
                 left: 5px;
             }
         } */
-
         /* Style the scrollbar itself (width, background) */
         .sidebar-overflow::-webkit-scrollbar {
             width: 10px;
@@ -403,8 +402,12 @@
             width: 100%;
             padding: 6rem 1rem 10rem;
             max-width: 46rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
+            padding-left: 5rem;
+            padding-right: 5rem;
+            position: absolute;
+            left: 50%;
+            right: 50%;
+            transform: translateX(-50%);
         }
 
         .content-wrap h1 {
@@ -474,7 +477,7 @@
             color: inherit;
             width: auto;
             user-select: none;
-            background-color: #d1d1d100;
+            background-color: #fff;
             border: none;
             padding: 0.5rem;
             font-size: 14px;
@@ -653,6 +656,21 @@
             background-color: #45a049;
             /* Darker shade of green on hover */
         }
+
+        @media (max-width: 991px) {}
+
+        @media (max-width: 767px) {
+            .navbar span {
+                font-size: 16px;
+            }
+        }
+
+        @media (max-width: 575px) {
+            .content-wrap {
+                padding-left: 2rem;
+                padding-right: 2rem;
+            }
+        }
     </style>
 </head>
 
@@ -663,14 +681,11 @@
     <div class="navbar">
         <span>Your Best Candidate AI</span>
         <button class="nav-btn" onclick="location.href='{{ 'logout' if session.get('user_id') else 'login' }}'"
-            style="margin-right: 20px;">
-            {{ 'Logout' if session.get('user_id') else 'Login' }}
-        </button>
+            style="margin-right: 20px;"> {{ 'Logout' if session.get('user_id') else 'Login' }} </button>
     </div>
     <!-- add this class when needed trial-ending-soon -->
-    <div class="{{ 'trial-active' if session.get('days', 30) <= 5 else 'trial-active' }}">
-        You have now <span id="days-left">{{ session.get('days') }}</span> days left in your free trial.
-    </div>
+    <div class="{{ 'trial-active' if session.get('days', 30) <= 5 else 'trial-active' }}"> You have now <span
+            id="days-left">{{ session.get('days') }}</span> days left in your free trial. </div>
     <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-overflow">
@@ -699,11 +714,9 @@
                         <input type="file" id="json-upload" accept=".json" style="display: none;">
                         <label for="json-upload" class="browse-btn btn">Upload JSON</label>
                         <div id="json-upload-name" class="file-name-container"></div>
-                    </div>
-                    {% if session.get('company') is not none and session.get('company').strip() != '' %}
-                    <input type="checkbox" id="recruitly-data" required><label for="recruitly-data">Use
-                        {{ session.get('company') }} data</label><br>
-                    {% endif %}
+                    </div> {% if session.get('company') is not none and session.get('company').strip() != '' %} <input
+                        type="checkbox" id="recruitly-data" required><label for="recruitly-data">Use {{
+                        session.get('company') }} data</label><br> {% endif %}
                     <!-- <button class="btn" id="process-btn">Process</button><br> -->
                     <div class="small-loader-container" id="small-loader-container">
                         <div class="small-loader" id="small-loader"></div>
@@ -719,7 +732,6 @@
                 </div>
             </div>
         </div>
-
         <div class="content">
             <div class="content-wrap step3">
                 <h1>Your Best Candidate AI</h1>
@@ -733,7 +745,6 @@
             </div>
         </div>
     </div>
-
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/4.1.0/intro.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
@@ -751,7 +762,7 @@
             var csvInput = document.getElementById('csv-upload');
             var jsonInput = document.getElementById('json-upload');
             var recruitlyDataCheckbox = document.getElementById('recruitly-data');
-            var company = '{{ session.get('company') }}' 
+            var company = '{{ session.get('company') }}'
             var selected_chat_id = "{{ session.get('chat_id') }}"
 
             document.getElementById('question-input').addEventListener('keypress', function (event) {
@@ -761,7 +772,7 @@
                 }
             });
 
-            function load_data_api(formData){
+            function load_data_api(formData) {
                 console.log("Load Data API called ");
                 // Send the formData to the server
                 fetch('/load_data', {
@@ -839,7 +850,7 @@
                 // Display the loader
                 if (loader) loader.style.display = 'flex';
                 load_data_api(formData)
-                
+
             }
 
             // Attach event listeners to file inputs and checkbox
@@ -878,20 +889,20 @@
             var cancelBtn = document.getElementById('cancel-btn');
             document.getElementById('ask-btn').addEventListener('click', function () {
                 console.log("-- ask button disabled -- ");
-                
+
                 var csvInput = document.getElementById('csv-upload');
                 var jsonInput = document.getElementById('json-upload');
                 var recruitlydatacheckbox = document.getElementById('recruitly-data');
 
                 if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
-                    if(recruitlydatacheckbox){
-                        if (recruitlydatacheckbox.checked){
+                    if (recruitlydatacheckbox) {
+                        if (recruitlydatacheckbox.checked) {
                             console.log("pass");
-                        }else{
+                        } else {
                             alert('Please upload a CSV or JSON file, or check the company data checkbox.');
                             return;
                         }
-                    }else{
+                    } else {
                         alert('Please upload a CSV or JSON file, or check the company data checkbox.');
                         return;
                     }
@@ -922,7 +933,7 @@
                     alert('Please enter a question.');
                     return;
                 }
-                
+
                 cancelBtn.style.display = 'inline';
                 document.getElementById('ask-btn').disabled = true;
                 document.getElementById('ask-btn').classList.add('hover-box-not-allowed');
@@ -954,8 +965,8 @@
                 }
                 // Send the question to the server using Socket.IO
                 socket.emit('ask', {
-                        question: question,
-                        recruitly_data: recruitly,
+                    question: question,
+                    recruitly_data: recruitly,
                     user_id: "{{ session.get('user_id') }}",
                     chat_id: selected_chat_id
                 });
@@ -966,15 +977,15 @@
                         botResponseDiv.innerHTML = data.data // Update the content of the bot response
                     }
                     if (data.is_complete == 'stop' || data.is_complete == 'length') {
-                            cancelBtn.style.display = 'none';
-                            document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
-                            document.getElementById('ask-btn').disabled = false;
-                        } else {
-                            // Append the new data to the bot response
-                            console.log("data ======= ", data);
-                            // botResponseDiv.innerHTML += `${data}`;
-                        }
+                        cancelBtn.style.display = 'none';
+                        document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                        document.getElementById('ask-btn').disabled = false;
+                    } else {
+                        // Append the new data to the bot response
+                        console.log("data ======= ", data);
+                        // botResponseDiv.innerHTML += `${data}`;
                     }
+                }
                 );
 
                 // Handle any errors
@@ -986,7 +997,7 @@
                 });
             });
 
-            socket.on('connect', function() {
+            socket.on('connect', function () {
                 console.log('Connected to the server via WebSocket securely!');
             });
 
@@ -1081,7 +1092,7 @@
                 document.getElementById('ask-btn').disabled = false;
                 socket.emit('cancel_task')
                 socket.disconnect();
-                
+
                 setTimeout(function () {
                     socket.connect();
                 }, 500);
@@ -1370,7 +1381,6 @@
             // {% endif %}
         });
     </script>
-
 </body>
 
 </html>
