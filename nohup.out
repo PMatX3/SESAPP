@@ -45075,3 +45075,2179 @@ Traceback (most recent call last):
     raise KeyError('Session is disconnected')
 KeyError: 'Session is disconnected'
 Invalid session ThhBgqhum-ztOgFtAAAC (further occurrences of this error will be logged with level INFO)
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 49, in <module>
+    db.init_app(app)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_sqlalchemy/extension.py", line 312, in init_app
+    raise RuntimeError(
+RuntimeError: A 'SQLAlchemy' instance has already been registered on this Flask app. Import and use that instance instead.
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 49, in <module>
+    db.init_app(app)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_sqlalchemy/extension.py", line 312, in init_app
+    raise RuntimeError(
+RuntimeError: A 'SQLAlchemy' instance has already been registered on this Flask app. Import and use that instance instead.
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 49, in <module>
+    db.init_app(app)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_sqlalchemy/extension.py", line 312, in init_app
+    raise RuntimeError(
+RuntimeError: A 'SQLAlchemy' instance has already been registered on this Flask app. Import and use that instance instead.
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 49, in <module>
+    db.init_app(app)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_sqlalchemy/extension.py", line 312, in init_app
+    raise RuntimeError(
+RuntimeError: A 'SQLAlchemy' instance has already been registered on this Flask app. Import and use that instance instead.
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Invalid session qoO_GYNTjI7OxXd_AAAA (further occurrences of this error will be logged with level INFO)
+ insside JSON 
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+ ============== data loaded
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+recruitly_data =>  False
+Making GET request to /get_chat_history
+Received response for chat history:
+Initialized conversation history for user: kiran@pariag.com
+Appended user question to history for user kiran@pariag.com: give me details Raj Patel
+Processed AI response:
+Processed user question from history:
+Processed AI response:
+Processed user question from history:
+Processed AI response:
+Processed user question from history:
+Entering query execution loop.
+ -- execute_query is called --
+   - Query: give me details Raj Patel
+   - User ID: kiran@pariag.com
+   - Temp: False
+   - Continuation Token: None
+   - Current File Path from Session: csvdata/json_data.csv
+   - Current Data Source from Session: json_existing
+ Query Using collection 1  
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+ insside files
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+Time taken: 0:00:00.205212
+ insside JSON 
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+ ============== data loaded
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+Using collection 2
+Query execution finished with status: stop
+Cleaned up entire_response and triggered garbage collection.
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+recruitly_data =>  True
+Making GET request to /get_chat_history
+Received response for chat history:
+Appended user question to history for user kiran@pariag.com: Arjun Mehta
+Processed AI response:
+Processed user question from history:
+Processed AI response:
+Processed user question from history:
+Processed AI response:
+Processed user question from history:
+Processed AI response:
+Processed user question from history:
+Entering query execution loop.
+ -- execute_query is called --
+   - Query: Arjun Mehta
+   - User ID: kiran@pariag.com
+   - Temp: True
+   - Continuation Token: None
+   - Current File Path from Session: csvdata/json_data.csv
+   - Current Data Source from Session: json_existing
+ Query Using collection 2  
+Query execution finished with status: stop
+Cleaned up entire_response and triggered garbage collection.
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+ insside JSON 
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+ ============== data loaded
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+Using collection 2
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': True, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+Using collection 2
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': True, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 14, 'days_since_join': 0, 'login_attempt': 4, 'recruitly-data': False, 'recrutly_id': True, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+Collection cleared successfully for user_id: test@ses-iraq.com
+company =>  SES
+in if
+SES.json
+file_found =>  company_data/SES.json
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+days since ---- >>>>  214
+Collection cleared successfully for user_id: test@ses-iraq.com
+company =>  SES
+in if
+SES.json
+file_found =>   * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+company_data/SES.json
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+ ============== Session :  <SecureCookieSession {'chat_id': 'ccdbab34-993e-44c6-9b80-dbcdf53baf09', 'company': 'SES', 'days': 100, 'days_since_join': 214, 'login_attempt': 268, 'user_id': 'test@ses-iraq.com', 'user_type': 'user'}>
+ insside files
+ insside JSON 
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+ ============== data loaded
+ ============== Session :  <SecureCookieSession {'chat_id': '5a66d759-24e0-4177-99fa-d07c6becca07', 'company': 'SES', 'days': 100, 'days_since_join': 214, 'login_attempt': 267, 'user_id': 'test@ses-iraq.com', 'user_type': 'user', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'recrutly_id': True}>
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+recruitly_data =>  False
+Making GET request to /get_chat_history
+Received response for chat history:
+Initialized conversation history for user: test@ses-iraq.com
+Appended user question to history for user test@ses-iraq.com: Please give me the top 10 best candidates
+Chat history contains an error, clearing it.
+Entering query execution loop.
+ -- execute_query is called --
+   - Query: Please give me the top 10 best candidates
+   - User ID: test@ses-iraq.com
+   - Temp: False
+   - Continuation Token: None
+   - Current File Path from Session: None
+   - Current Data Source from Session: None
+ Query Using collection 1  
+Query execution finished with status: stop
+Cleaned up entire_response and triggered garbage collection.
+ insside files
+ ============== Session :  <SecureCookieSession {'chat_id': '5a66d759-24e0-4177-99fa-d07c6becca07', 'company': 'SES', 'current_data_source': 'pdf', 'current_file_path': 'uploads/00daa201-c092-4c5e-9633-06d5e142dd09test@ses-iraq.com.pdf', 'days': 100, 'days_since_join': 214, 'login_attempt': 267, 'recrutly_id': False, 'user_id': 'test@ses-iraq.com', 'user_type': 'user'}>
+recruitly_data =>  False
+Making GET request to /get_chat_history
+Received response for chat history:
+Appended user question to history for user test@ses-iraq.com: Find me the top 10 cnadidates
+Processed AI response:
+Processed user question from history:
+Entering query execution loop.
+ -- execute_query is called --
+   - Query: Find me the top 10 cnadidates
+   - User ID: test@ses-iraq.com
+   - Temp: False
+   - Continuation Token: None
+   - Current File Path from Session: None
+   - Current Data Source from Session: None
+ Query Using collection 1  
+Query execution finished with status: stop
+Cleaned up entire_response and triggered garbage collection.
+Collection cleared successfully for user_id: test@ses-iraq.com
+chat_id from new_chat =====  ef42995c-ac7e-429c-be98-d7fa5ab0e81e
+ insside files
+ insside JSON 
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+ ============== data loaded
+ ============== Session :  <SecureCookieSession {'chat_id': 'ef42995c-ac7e-429c-be98-d7fa5ab0e81e', 'company': 'SES', 'current_data_source': 'json_existing', 'current_file_path': 'csvdata/json_data.csv', 'days': 100, 'days_since_join': 214, 'login_attempt': 267, 'recrutly_id': True, 'user_id': 'test@ses-iraq.com', 'user_type': 'user'}>
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+Using collection 2
+recruitly_data =>  False
+Making GET request to /get_chat_history
+Received response for chat history:
+Appended user question to history for user test@ses-iraq.com: find me the top 5 candidates for the Civil Supervisor role
+Chat history contains an error, clearing it.
+Entering query execution loop.
+ -- execute_query is called --
+   - Query: find me the top 5 candidates for the Civil Supervisor role
+   - User ID: test@ses-iraq.com
+   - Temp: False
+   - Continuation Token: None
+   - Current File Path from Session: None
+   - Current Data Source from Session: None
+Using collection 2
+ Query Using collection 1  
+Using collection 2
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+Query execution finished with status: stop
+Cleaned up entire_response and triggered garbage collection.
+ insside files
+ ============== Session :  <SecureCookieSession {'chat_id': 'ef42995c-ac7e-429c-be98-d7fa5ab0e81e', 'company': 'SES', 'current_data_source': 'pdf', 'current_file_path': 'uploads/6c3dac9b-0389-478c-917e-dbdeeeb36f8etest@ses-iraq.com.pdf', 'days': 100, 'days_since_join': 214, 'login_attempt': 267, 'recrutly_id': False, 'user_id': 'test@ses-iraq.com', 'user_type': 'user'}>
+recruitly_data =>  False
+Making GET request to /get_chat_history
+Received response for chat history:
+Appended user question to history for user test@ses-iraq.com: Can you find the top7 candidates for the piping engineer role
+Processed AI response:
+Processed user question from history:
+Entering query execution loop.
+ -- execute_query is called --
+   - Query: Can you find the top7 candidates for the piping engineer role
+   - User ID: test@ses-iraq.com
+   - Temp: False
+   - Continuation Token: None
+   - Current File Path from Session: None
+   - Current Data Source from Session: None
+ Query Using collection 1  
+Query execution finished with status: stop
+Cleaned up entire_response and triggered garbage collection.
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 1130, in <module>
+    socketio.run(app, host="0.0.0.0", port=8501)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_socketio/__init__.py", line 684, in run
+    run_server()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_socketio/__init__.py", line 678, in run_server
+    eventlet.wsgi.server(eventlet_socket, app,
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/wsgi.py", line 1055, in server
+    pool.waitall()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/greenpool.py", line 125, in waitall
+    self.no_coros_running.wait()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/event.py", line 124, in wait
+    result = hub.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt
+Exception ignored in atexit callback: <function _shutdown_resources at 0x7f05c99cf250>
+Traceback (most recent call last):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/monitor.py", line 475, in _shutdown_resources
+    shutdown()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/periodic_executor.py", line 199, in _shutdown_executors
+    executor.join(1)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/periodic_executor.py", line 117, in join
+    self._thread.join(timeout)
+  File "/usr/lib/python3.10/threading.py", line 1100, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/usr/lib/python3.10/threading.py", line 1116, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/semaphore.py", line 107, in acquire
+    hubs.get_hub().switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt: 
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+SES.json
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+Time taken: 0:00:00.011168
+SES.json
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+JSON data saved to csvdata/json_data.csv successfully.
+file_name ===> csvdata/json_data.csv True
+Using collection 2
+Time taken: 0:00:00.006791
+SES.json
+Data saved to csvdata/json_data.csv
+JSON data loaded into Cromadb successfully.
+file_name ===> uploads/284fcf3a-ada6-4387-ae54-2d499435d403kiran@pariag.com.csv False
+Using collection 1
+Data saved to uploads/284fcf3a-ada6-4387-ae54-2d499435d403kiran@pariag.com.csv
+Collection cleared successfully for user_id: kiran@pariag.com
+company =>  Dataflow Solutions
+file_name ===> uploads/00f9b503-f623-44c5-b8ae-149f027bb347kiran@pariag.com.csv False
+Using collection 1
+Data saved to uploads/00f9b503-f623-44c5-b8ae-149f027bb347kiran@pariag.com.csv
+ ============== Session :  <SecureCookieSession {'chat_id': '9a8e3f6b-d71b-400b-891b-54c25817a8c9', 'company': 'Dataflow Solutions', 'current_data_source': 'csv', 'current_file_path': 'uploads/284fcf3a-ada6-4387-ae54-2d499435d403kiran@pariag.com.csv', 'days': 14, 'days_since_join': 1, 'login_attempt': 4, 'recruitly-data': True, 'recrutly_id': False, 'user_id': 'kiran@pariag.com', 'user_type': 'user'}>
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 1130, in <module>
+    socketio.run(app, host="0.0.0.0", port=8501)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_socketio/__init__.py", line 684, in run
+    run_server()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_socketio/__init__.py", line 678, in run_server
+    eventlet.wsgi.server(eventlet_socket, app,
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/wsgi.py", line 1055, in server
+    pool.waitall()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/greenpool.py", line 125, in waitall
+    self.no_coros_running.wait()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/event.py", line 124, in wait
+    result = hub.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt
+Exception ignored in atexit callback: <function _shutdown_resources at 0x7f88d8873250>
+Traceback (most recent call last):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/monitor.py", line 475, in _shutdown_resources
+    shutdown()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/periodic_executor.py", line 199, in _shutdown_executors
+    executor.join(1)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/periodic_executor.py", line 117, in join
+    self._thread.join(timeout)
+  File "/usr/lib/python3.10/threading.py", line 1100, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/usr/lib/python3.10/threading.py", line 1116, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/semaphore.py", line 107, in acquire
+    hubs.get_hub().switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt: 
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149

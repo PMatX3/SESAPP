@@ -25,8 +25,8 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 m_client = get_mongo_client()
 
 def text_embedding(text):
-        response = openai.Embedding.create(model="text-embedding-3-small", input=text)
-        return response["data"][0]["embedding"]
+        response = openai.embeddings.create(model="text-embedding-ada-002", input=text[:8000])
+        return response.data[0].embedding
 
 openai_client = OpenAI()
 def get_embedding(text):
@@ -41,7 +41,7 @@ openai_ef = embedding_functions.OpenAIEmbeddingFunction(
 
 model = genai.GenerativeModel('gemini-1.5-flash')
 
-genai.configure(api_key='AIzaSyAIUXWwE1Rd6vQgq7N9JJ1-8mkjSJln21Q')
+genai.configure(api_key='AIzaSyD-ChpS0ja3bYlIGFuBqEuI_Nei23ehSFU')
 
 db = m_client['user_db']
 
@@ -127,12 +127,13 @@ def load_data(file_name, temp=False):
         batch_docs = docs[i:i + max_batch_size]
         batch_ids = ids[i:i + max_batch_size]
         if temp:
+            print('Using collection 2')
             collection2.add(
                 documents=batch_docs,
                 ids=batch_ids
             )
         else:
-            print('Using collection')
+            print('Using collection 1')
             collection.add(
                 documents=batch_docs,
                 ids=batch_ids
@@ -166,61 +167,6 @@ def load_json_data(json_data, file=False):
         load_data(csv_file_path, temp=False)
     print("JSON data loaded into Cromadb successfully.")
 
-# def execute_query(query, user_id, temp=False):
-#     job_desc = job_query.get('job_profile')
-
-#     if job_desc['documents'] != []:
-#         embedding_query = ''.join(job_desc['documents'])
-#     else:
-#         embedding_query = 'give me top 3 candidates'
-    
-#     vector = text_embedding(embedding_query)
-#     if temp:
-#         results = collection2.query(    
-#             query_embeddings=vector,
-#             n_results=1000,
-#             include=["documents"]
-#         )
-#     else:
-#         results = collection.query(    
-#             query_embeddings=vector,
-#             n_results=1000,
-#             include=["documents"]
-#         )
-
-#     available_tokens_for_results = 100000 - len(query) - 200  # Subtracting an estimated length for static text in the prompt
-
-#     # Convert results to string and truncate if necessary
-#     results_str = "\n".join(str(item) for item in results['documents'][0])
-#     if len(results_str) > available_tokens_for_results:
-#         results_str = results_str[:available_tokens_for_results] 
-#     prompt = f'```{results_str}```Based on the data in ```, answer {query}'
-
-#     messages = [
-#         {"role": "system", "content": "Welcome to BestCandidate AI Bot! I am here to answer your questions in a structured format. Please note that I will always respond in Markdown format. Let's get started!"},
-#         {"role": "user", "content": prompt}
-#     ]
-
-#     # Start streaming
-#     response = openai.ChatCompletion.create(
-#         model="gpt-4-turbo-2024-04-09",
-#         messages=messages,
-#         temperature=0,
-#         stream=True
-#     )
-
-#     # Collecting chunks
-#     collected_chunks = []
-#     collected_messages = []
-#     for chunk in response:
-#         collected_chunks.append(chunk)  # save the event response
-#         if 'choices' in chunk and len(chunk['choices']) > 0 and 'delta' in chunk['choices'][0]:
-#             chunk_message = chunk['choices'][0]['delta']['content']  # extract the message
-#             collected_messages.append(chunk_message)  # save the message
-
-#     # Combine collected messages into a single response
-#     final_response = ''.join(collected_messages)
-#     return final_response
 
 from bson import ObjectId
 def convert_objectid_to_str(doc):
@@ -252,15 +198,21 @@ def convert_to_plain_text(doc, indent=0):
     return plain_text
 
 def execute_query(query, user_id, temp=False, continuation_token=None, user_conversation = []):
+    print(" -- execute_query1 is called --")
+    print(f"   - Query: {query}")
+    print(f"   - User ID: {user_id}")
+    print(f"   - Temp: {temp}")
+    print(f"   - Continuation Token: {continuation_token}")
     mongo_results_str = ""
     try:
         if "how many" in query.lower():
+            print(" inside how many query")
             # Generate CSV file from MongoDB results
             mongo_client = get_mongo_client()
             ses_data_collection = mongo_client['user_db']['SES_data']
             sample_document = ses_data_collection.find_one()
             sample_document = convert_objectid_to_str(sample_document)
-
+    
             # Use GeminiAI to generate a MongoDB query filter based on the user query and the sample document
             sample_document_str = json.dumps(sample_document, indent=2)
             prompt = f"Based on the following sample document:\n{sample_document_str}\nGenerate a MongoDB query filter for the user query: '{query}' and give me only query filter in the response no other text"
@@ -283,10 +235,11 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
             results = [convert_objectid_to_str(result) for result in list(results)]
             mongo_results_str = json.dumps(results)
             # Define the CSV file path
-            csv_file_path = f"/tmp/{user_id}_results.csv"
-            
+            csv_file_path = f"tmp/{user_id}_results.csv"
+            print(f" Step 1 CSV File path is : {csv_file_path} ")
             # Write results to CSV
             with open(csv_file_path, mode='w', newline='') as file:
+                print(f" Step 2 writing in csv  ")
                 writer = csv.writer(file, escapechar='\\')
                 # Write header
                 writer.writerow(results[0].keys())
@@ -304,7 +257,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
     else:
         embedding_query = 'give me top candidates'
     
-    vector = get_embedding(embedding_query)
+    vector = text_embedding(query)
     if temp:
         results = collection2.query(    
             query_embeddings=vector,
@@ -320,7 +273,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
         )
     available_tokens_for_results = 400000 - len(query)  # Subtracting an estimated length for static text in the prompt
     results_str = "".join(str(item) for item in results['documents'][0])
-    print('results_str===>',results_str)
+    # print('results_str===>',results_str)
     single_line_text = mongo_results_str if len(mongo_results_str) >= available_tokens_for_results else results_str.replace("\n", " ")
     
     is_truncated = len(single_line_text) > available_tokens_for_results
@@ -427,146 +380,373 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
         yield chunk,finish_res
 
 def execute_query2(query, user_id, temp=False, continuation_token=None):
+    print(" -- execute_query2 is called --")
+    print(f"   - Query: {query}")
+    print(f"   - User ID: {user_id}")
+    print(f"   - Temp: {temp}")
+    print(f"   - Continuation Token: {continuation_token}")
 
     try:
         if "how many" in query.lower():
             print('Executing "how many" query')
             # Generate CSV file from MongoDB results
+            print('  - Getting MongoDB client')
             mongo_client = get_mongo_client()
+            print('  - Accessing SES_data collection')
             ses_data_collection = mongo_client['user_db']['SES_data']
+            print('  - Finding one sample document')
             sample_document = ses_data_collection.find_one()
+            print('  - Converting ObjectId to string')
             sample_document = convert_objectid_to_str(sample_document)
+            print('  - Sample document:', sample_document)
 
             # Use GeminiAI to generate a MongoDB query filter based on the user query and the sample document
             sample_document_str = json.dumps(sample_document, indent=2)
             prompt = f"Based on the following sample document:\n{sample_document_str}\nGenerate a MongoDB query filter for the user query: '{query}' and give me only query filter in the response no other text"
+            print('  - GeminiAI prompt for query filter:', prompt)
 
             messages = [
                 {"role": "model", "parts": "You are an AI that generates MongoDB query filters based on user queries and sample documents. Use regex for search more efficiently"},
                 {"role": "user", "parts": prompt}
             ]
-
+            print('  - Sending messages to GeminiAI')
             response = model.generate_content(messages)
+            print('  - GeminiAI response:', response.text)
 
             json_match = re.search(r'```json\n(.*?)```', response.text, re.DOTALL)
             if json_match:
                 json_str = json_match.group(1)
+                print('  - Extracted JSON query filter:', json_str)
             else:
                 json_str = '{}'
-                
+                print('  - No JSON found in GeminiAI response, using default: {}')
+
             # Extract the data from the SES_data collection based on json_str query filter
+            print('  - Executing MongoDB find query with filter:', json.loads(json_str))
             results = ses_data_collection.find(json.loads(json_str))
             results = [{k: v for k, v in result.items() if not isinstance(v, ObjectId)} for result in list(results)]
+            print('  - MongoDB query results (first 5):', results[:5])
             mongo_results_str = json.dumps(results)
             # Define the CSV file path
-            csv_file_path = f"/tmp/{user_id}_results.csv"
+            csv_file_path = f"tmp/{user_id}_results.csv"
+            print("  - Step 1 fetching -- csv_file_path --", csv_file_path)
             csv_data = []
             # Write results to CSV
             with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+                print("  - Step 2 writing -- csv_file_path --", csv_file_path)
                 writer = csv.writer(file, escapechar='\\')
                 # Write header
-                writer.writerow(results[0].keys())
-                # Write data rows
-                for result in results:
-                    writer.writerow(result.values())
-                    csv_data.append(result.values())
-            print('CSV file generated successfully')
-            yield results, 'csv'
-            return
+                if results:
+                    writer.writerow(results[0].keys())
+                    # Write data rows
+                    for result in results:
+                        writer.writerow(result.values())
+                        csv_data.append(result.values())
+                    print('CSV file generated successfully')
+                    yield results, 'csv'
+                    return
+                else:
+                    print('No results found for the "how many" query, CSV not generated.')
+                    yield [], 'stop' # Or some other appropriate finish signal
+                    return
         else:
             mongo_results_str = None
     except Exception as e:
-        print('Error in execute_query:', e)
+        print('Error in execute_query (handling "how many"):', e)
+
     try:
+        print('Processing general query')
         job_desc = job_query.get('job_profile')
-        if job_desc['documents'] != []:
+        if job_desc and job_desc.get('documents') != []:
             embedding_query = ''.join(job_desc['documents'])
+            print('  - Using job description documents for embedding query:', embedding_query[:100] + '...')
         else:
             embedding_query = 'give me top 3 candidates'
+            print('  - No job description documents found, using default embedding query:', embedding_query)
+
+        print('  - Getting embedding for query:', embedding_query[:100] + '...')
         vector = get_embedding(embedding_query)
+
         if temp:
-            results = collection2.query(    
+            print('  - Querying collection2 (temporary)')
+            results = collection2.query(
                 query_embeddings=vector,
                 n_results=4000,
                 include=["documents"]
             )
         else:
-            results = collection.query(    
+            print('  - Querying collection')
+            results = collection.query(
                 query_embeddings=vector,
                 n_results=4000,
                 include=["documents"]
             )
+        print('  - ChromaDB query results (first result documents):', results.get('documents', [[]])[0][:100] if results.get('documents') else 'No results')
+
         available_tokens_for_results = 400000 - len(query)  # Subtracting an estimated length for static text in the prompt
-        results_str = "".join(str(item) for item in results['documents'][0])
+        results_str = "".join(str(item) for item in results['documents'][0]) if results.get('documents') and results['documents'][0] else ""
+
         if mongo_results_str:
             single_line_text = mongo_results_str
+            print('  - Using MongoDB results for prompt')
         else:
             single_line_text = results_str.replace("\n", " ")
+            print('  - Using ChromaDB results for prompt')
+
         is_truncated = len(single_line_text) > available_tokens_for_results
+        print('  - Is results text truncated?', is_truncated)
         if is_truncated:
             single_line_text = single_line_text[:available_tokens_for_results]  # Truncate results to fit within token limits
+            print('  - Truncated results text:', single_line_text[:100] + '...')
+
         if continuation_token:
             # Adjust the prompt or setup to continue from where it left off
             prompt = f"Continuing : {continuation_token.replace('Context',single_line_text)} and answer the query : {query}"
+            print('  - Using continuation token for prompt:', prompt[:200] + '...')
         else:
             # prompt = f'Here is the job description: {embedding_query}. Based on the resume data provided in {single_line_text}, please answer the following query: {query}. Ensure that your answer directly addresses the query and matches the job requirements and candidate information provided. Thank you!'
             prompt = f"""You are an AI assistant specialized in matching job candidates to job descriptions. Your task is to analyze the provided job description and candidate information, then answer specific queries about the candidate's suitability for the role. Please follow these guidelines:  Job Description: {embedding_query} Candidate Information: {single_line_text} Query: {query}  Instructions: 1. Carefully read and understand the job description and candidate information. 2. Focus on addressing the specific query provided. 3. Base your response solely on the information given in the job description and candidate details. 4. Provide a concise, relevant answer that directly addresses the query. 5. If the query is unclear or cannot be answered based on the given information, politely ask for clarification. 6. Do not make assumptions or infer information not explicitly stated in the provided data. 7. If greeting the user, respond appropriately without listing candidates.  Your response should be professional, unbiased, and tailored to the specific query and information provided. 8. If you dont have the job discription then answer the query based on the cadidate information"""
-            
+            print('  - Initial prompt for general query:', prompt[:200] + '...')
 
         messages = [
             {"role": "system", "content": """Welcome to YourBestCandidateAI!
 
-                    We're excited to partner with you in revolutionizing your hiring process by harnessing the power of AI to precisely match your job descriptions with the most suitable candidates. Here's how we ensure seamless collaboration to find your perfect candidates:
+                        We're excited to partner with you in revolutionizing your hiring process by harnessing the power of AI to precisely match your job descriptions with the most suitable candidates. Here's how we ensure seamless collaboration to find your perfect candidates:
 
-                    Overview:
-                    At YourBestCandidateAI, we specialize in intelligently matching job descriptions with candidate resumes to pinpoint the ideal fit for your organization. With our advanced algorithms, we prioritize accuracy and efficiency to streamline your recruitment journey.
+                        Overview:
+                        At YourBestCandidateAI, we specialize in intelligently matching job descriptions with candidate resumes to pinpoint the ideal fit for your organization. With our advanced algorithms, we prioritize accuracy and efficiency to streamline your recruitment journey.
 
-                    How It Works:
-                    Detailed Job Descriptions:
+                        How It Works:
+                        Detailed Job Descriptions:
 
-                    Provide thorough job descriptions, outlining specific roles, required skills, experience levels, educational qualifications, and any other pertinent criteria.
-                    Example: "Seeking a seasoned Software Engineer (Ref ID: SE123) with expertise in Python, cloud computing, and a minimum of 5 years of industry experience."
-                    Candidate Matching and Comparison:
+                        Provide thorough job descriptions, outlining specific roles, required skills, experience levels, educational qualifications, and any other pertinent criteria.
+                        Example: "Seeking a seasoned Software Engineer (Ref ID: SE123) with expertise in Python, cloud computing, and a minimum of 5 years of industry experience."
+                        Candidate Matching and Comparison:
 
-                    Request the best candidates based on your job description parameters, ensuring to include their reference IDs.
-                    Directly compare multiple candidates to identify the best fit for your organization.
-                    Receive curated lists of top candidates based on your specified criteria, each with their reference IDs included.
-                    Sample Requests:
-                    Finding Candidates:
+                        Request the best candidates based on your job description parameters, ensuring to include their reference IDs.
+                        Directly compare multiple candidates to identify the best fit for your organization.
+                        Receive curated lists of top candidates based on your specified criteria, each with their reference IDs included.
+                        Sample Requests:
+                        Finding Candidates:
 
-                    "Identify top candidates for the role of Marketing Manager (Ref ID: MM456)."
-                    "List candidates proficient in project management and finance, each with their respective reference IDs."
-                    Candidate Comparison:
+                        "Identify top candidates for the role of Marketing Manager (Ref ID: MM456)."
+                        "List candidates proficient in project management and finance, each with their respective reference IDs."
+                        Candidate Comparison:
 
-                    "Compare the qualifications of Jane Doe (Ref ID: JD789) and John Smith (Ref ID: JS987) for the Marketing Manager position, focusing on their digital marketing expertise and campaign management experience."
-                    "Provide a side-by-side analysis of candidates with over a decade of data analysis experience, ensuring to include their reference IDs."
-                    Candidate Count:
+                        "Compare the qualifications of Jane Doe (Ref ID: JD789) and John Smith (Ref ID: JS987) for the Marketing Manager position, focusing on their digital marketing expertise and campaign management experience."
+                        "Provide a side-by-side analysis of candidates with over a decade of data analysis experience, ensuring to include their reference IDs."
+                        Candidate Count:
 
-                    "How many candidates match the criteria for the Data Scientist position?"
-                    "What's the total number of candidates with expertise in machine learning, and could you please provide their reference IDs?"
-                    Tips for Optimal Results:
-                    Detailed Descriptions: The more detailed your job descriptions, the better we can match candidates to your specific requirements.
-                    Consistent Naming/IDs: To ensure accurate responses, please refer to candidates consistently by their names or reference IDs.
-                    Additional Resources:
-                    For additional assistance or inquiries, feel free to reach out at any time. We're committed to your satisfaction and dedicated to helping you find the perfect candidate for your team.
-                    """},
+                        "How many candidates match the criteria for the Data Scientist position?"
+                        "What's the total number of candidates with expertise in machine learning, and could you please provide their reference IDs?"
+                        Tips for Optimal Results:
+                        Detailed Descriptions: The more detailed your job descriptions, the better we can match candidates to your specific requirements.
+                        Consistent Naming/IDs: To ensure accurate responses, please refer to candidates consistently by their names or reference IDs.
+                        Additional Resources:
+                        For additional assistance or inquiries, feel free to reach out at any time. We're committed to your satisfaction and dedicated to helping you find the perfect candidate for your team.
+                        """},
             {"role": "user", "content": prompt}
         ]
 
         if 'how many' in query.lower() and is_truncated:
             download_link = f"https://yourbestcandidate.ai/download_csv/{user_id}_results.csv"
             messages = [
-            {"role": "system", "content": f"""Welcome to YourBestCandidateAI!
+                {"role": "system", "content": f"""Welcome to YourBestCandidateAI!
 
-                    Just answer : "We have large data and because of token limitation I am not able to respond, but here is the download button of that data in CSV: [Download CSV]({download_link})" on user query 'how many'
-                    """},
+                                    Just answer : "We have large data and because of token limitation I am not able to respond, but here is the download button of that data in CSV: [Download CSV]({download_link})" on user query 'how many'
+                                    """},
                 {"role": "user", "content": prompt}
             ]
+            print('  - Using specific prompt for truncated "how many" query with download link')
 
-        # Start streaming        
-        print('Using chat completions for general query. 2')
+        # Start streaming
+        print('  - Using chat completions for general query. 2')
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
+            messages=messages,
+            temperature=0.1,
+            stream=True
+        )
+        print('  - OpenAI response received, starting to yield chunks')
+
+        # Yield each chunk as it is received
+        for message in response:
+            chunk = message.choices[0].delta.content if message.choices[0].delta.content is not None else ""
+            finish_res = message.choices[0].finish_reason
+            yield chunk, finish_res
+            print('  - Yielded chunk:', chunk)
+    except Exception as e:
+        print('Error in execute_query2 (general query):', e)
+
+
+def execute_query3(query, user_id, temp=False, continuation_token=None, user_conversation=[]):
+    print(" -- execute_query is called --")
+    print(f"   - Query: {query}")
+    print(f"   - User ID: {user_id}")
+    print(f"   - Temp: {temp}")
+    print(f"   - Continuation Token: {continuation_token}")
+    print(f"   - Current File Path from Session: {session.get('current_file_path')}")
+    print(f"   - Current Data Source from Session: {session.get('current_data_source')}")
+
+    mongo_results_str = ""
+    csv_results_str = ""
+    fetched_from_csv = False
+
+    try:
+        # Dynamic query generation based on user input for MongoDB
+        if "dsasaasasd" in query.lower():
+            print("Inside how many query")
+            mongo_client = get_mongo_client()
+            ses_data_collection = mongo_client['user_db']['SES_data']
+            sample_document = ses_data_collection.find_one()
+            sample_document = convert_objectid_to_str(sample_document)
+            sample_document_str = json.dumps(sample_document, indent=2)
+            prompt = f"Based on the following sample document:\n{sample_document_str}\nGenerate a MongoDB query filter for the user query: '{query}' and give me only query filter in the response no other text"
+            messages = [
+                {"role": "model", "parts": "You are an AI that generates MongoDB query filters based on user queries and sample documents. Use regex for search more efficiently"},
+                {"role": "user", "parts": prompt}
+            ]
+            response = model.generate_content(messages)
+            json_match = re.search(r'```json\n(.*?)```', response.text, re.DOTALL)
+            json_str = json_match.group(1) if json_match else '{}'
+            results = ses_data_collection.find(json.loads(json_str))
+            results = [convert_objectid_to_str(result) for result in list(results)]
+            mongo_results_str = json.dumps(results)
+            csv_file_path = f"tmp/{user_id}_results.csv"
+            print(f"Step 1 CSV File path is: {csv_file_path}")
+            with open(csv_file_path, mode='w', newline='') as file:
+                print("Step 2 writing in csv")
+                writer = csv.writer(file, escapechar='\\')
+                if results:
+                    writer.writerow(results[0].keys())
+                    for result in results:
+                        writer.writerow(result.values())
+
+        # Fetch from CSV if the current data source is CSV and a path exists
+        if session.get('current_data_source') == 'csv' and session.get('current_file_path'):
+            
+            fetched_from_csv = True
+            csv_file_path = session.get('current_file_path')
+            try:
+                with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
+                    reader = csv.DictReader(file)
+                    csv_data = list(reader)
+
+                # Basic filtering (adapt as needed)
+                # relevant_candidates = [
+                #     candidate for candidate in csv_data
+                #     if any(keyword.lower() in ' '.join(candidate.values()).lower() for keyword in query.lower().split())
+                # ]
+
+    
+                # Or 
+
+                # --- Improved Filtering Logic ---
+                relevant_candidates = []
+                if csv_data:
+                    query_lower = query.lower()
+                    nationality_keywords = [kw.strip() for kw in re.findall(r"(?:nationality:|are|who are|from)\s*([a-zA-Z]+)", query_lower)]
+                    language_keywords = [kw.strip() for kw in re.findall(r"(?:speak|speaks|language:|who speak)\s*([a-zA-Z]+)", query_lower)]
+                    skill_keywords = [kw.strip() for kw in re.findall(r"(?:skills:|have skills|with skills|skill:)\s*([a-zA-Z]+)", query_lower)]
+                    job_title_keywords = [kw.strip() for kw in re.findall(r"(?:role of|for the role of|job title:)\s*([a-zA-Z\s]+)", query_lower)]
+
+                    for candidate in csv_data:
+                        nationality_match = not nationality_keywords or any(kw.lower() in candidate.get("Nationality", "").lower() for kw in nationality_keywords) or any(kw.lower() in candidate.get("nationalities", "").lower() for kw in nationality_keywords) # Check both 'Nationality' and 'nationalities' if they exist
+                        language_match = not language_keywords or any(kw.lower() in candidate.get("Languages", "").lower() for kw in language_keywords) or any(kw.lower() in candidate.get("languages", "").lower() for kw in language_keywords) # Check both 'Languages' and 'languages' if they exist
+                        skill_match = not skill_keywords or any(kw.lower() in candidate.get("Skills", "").lower() for kw in skill_keywords) or any(kw.lower() in candidate.get("Skills", "").lower() for kw in skill_keywords) # Check 'Skills'
+                        job_title_match = not job_title_keywords or any(kw.lower() in candidate.get("Job Title", "").lower() for kw in job_title_keywords) or any(kw.lower() in candidate.get("jobTitle", "").lower() for kw in job_title_keywords) # Check both 'Job Title' and 'jobTitle' if they exist
+
+                        if nationality_match and language_match and skill_match and job_title_match:
+                            relevant_candidates.append(candidate)
+
+                # Format relevant candidates for the prompt
+                formatted_candidates = []
+                for candidate in relevant_candidates:
+                    candidate_info = "\n".join(f"{key}: {value}" for key, value in candidate.items())
+                    formatted_candidates.append(candidate_info)
+
+                csv_results_str = "\n\n".join(formatted_candidates)
+                print("<><><><> Fetched from CSV (Session Path):\n", csv_results_str)
+
+               
+
+            except FileNotFoundError:
+                csv_results_str = "Uploaded CSV file not found."
+                print("Error: Uploaded CSV file not found.")
+            except Exception as e:
+                csv_results_str = f"Error reading uploaded CSV file: {e}"
+                print(f"Error reading uploaded CSV file: {e}")
+
+        # Process the job description for embedding (for vector database)
+        job_desc = job_query.get('job_profile')
+        embedding_query = ''.join(job_desc['documents']) if job_desc['documents'] else 'give me top candidates'
+
+        # Generate embeddings for the query (for vector database)
+        vector = get_embedding(query)
+        vector_results = None
+        if temp and not fetched_from_csv: # Only query vector DB if not using CSV
+            print(' Query Using collection 2  ')
+            vector_results = collection2.query(query_embeddings=vector, n_results=4000, include=["documents"])
+        elif not fetched_from_csv:
+            print(' Query Using collection 1  ')
+            vector_results = collection.query(query_embeddings=vector, n_results=4000, include=["documents"])
+
+        vector_results_str = "".join(str(item) for item in vector_results['documents'][0]) if vector_results and vector_results['documents'] else ""
+
+        available_tokens_for_results = 400000 - len(query)  # Adjust for token limits
+
+        # Determine the candidate information to use in the prompt, prioritizing CSV
+        candidate_info_for_prompt = csv_results_str if fetched_from_csv else vector_results_str.replace("\n", " ")
+        is_truncated = len(candidate_info_for_prompt) > available_tokens_for_results
+        if is_truncated:
+            candidate_info_for_prompt = candidate_info_for_prompt[:available_tokens_for_results]
+
+        # Prepare the prompt for the AI model
+        if continuation_token:
+            prompt = f"Continuing: {continuation_token.replace('Context', candidate_info_for_prompt)} and answer the query: {query}"
+        else:
+            prompt = f"""
+                You are required to act as a specialized expert in matching job candidates with job descriptions.
+                Your task is to analyze the provided job description and candidate information, then answer specific queries regarding the candidate's suitability for the role.
+
+                Job Description: {embedding_query}
+                Candidate Information: {candidate_info_for_prompt}
+
+                Guidelines for responses:
+                1. Carefully read and understand both the job description and candidate information.
+                2. If the query includes greetings, respond briefly in one line.
+                3. Base your response on the provided job description and candidate details.
+                4. Offer concise, relevant answers that address the query directly.
+                5. If the query is unclear, ask the candidate for further clarification.
+                6. Responses should be professional, unbiased, and tailored to the specific query and information provided.
+                7. If the job description is missing, base your response solely on the candidate's information.
+                8. If all information is missing, provide a general yet focused response related to job seeking or recruitment without highlighting the lack of details.
+                9. Ensure the response is professional yet easy to understand.
+                10. Always review the last few messages and base your reply on them.
+                11. If candidate names are mentioned, use those and avoid introducing new ones, unless the user requests new candidates.
+                12. Return the candidate information in the following structured format, describing only the available details:
+
+                    Full Name: [Full Name]
+                    Job Title: [Job Title]
+                    email: [email]
+                    Skills: [List of Skills]
+                    Experience & Overview: [Summary of Experience]
+                    Location: [Location]
+                    languages: [languages]
+                    Nationality: [nationalities]
+
+                Last conversation: {str(user_conversation)}
+                Reply to this query: {query}
+            """
+
+        messages = [
+            {"role": "system", "content": "You answer questions about job candidates."},
+            {"role": "user", "content": prompt}
+        ]
+
+        # Start streaming the response
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
             messages=messages,
             temperature=0.1,
             stream=True
@@ -575,10 +755,12 @@ def execute_query2(query, user_id, temp=False, continuation_token=None):
         # Yield each chunk as it is received
         for message in response:
             chunk = message.choices[0].delta.content if message.choices[0].delta.content is not None else ""
-            finish_res = message.choices[0].finish_reason 
+            finish_res = message.choices[0].finish_reason
             yield chunk, finish_res
+
     except Exception as e:
-        print('Error in execute_query2:', e)
+        print('Error in execute_query', e)
+        print("Error in execute_query")
 
 def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)

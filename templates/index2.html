@@ -36,7 +36,7 @@
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
             -webkit-font-smoothing: auto;
         }
-        
+
         .hover-box-not-allowed {
             cursor: not-allowed;
         }
@@ -453,6 +453,7 @@
             display: block;
             transition: .5s;
         }
+
         /* @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
@@ -1487,7 +1488,7 @@
                 })
                     .then(response => response.json())
                     .then(chatHistory => {
-                        console.log("Chat history",chatHistory); // Process and display the chat history
+                        console.log("Chat history", chatHistory); // Process and display the chat history
                         displayChatHistory(chatHistory); // Assuming you have a function to display chat history
                     })
                     .catch(error => {
@@ -1536,14 +1537,14 @@
                 var recruitlydatacheckbox = document.getElementById('recruitly-data');
 
                 if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
-                    if(recruitlydatacheckbox){
-                        if (recruitlydatacheckbox.checked){
+                    if (recruitlydatacheckbox) {
+                        if (recruitlydatacheckbox.checked) {
                             console.log("pass");
-                        }else{
+                        } else {
                             alert('Please upload a CSV or JSON file, or check the company data checkbox.');
                             return;
                         }
-                    }else{
+                    } else {
                         alert('Please upload a CSV or JSON file, or check the company data checkbox.');
                         return;
                     }
@@ -1558,7 +1559,7 @@
                 cancelBtn.style.display = 'inline';
                 document.getElementById('ask-btn').disabled = true;
                 document.getElementById('ask-btn').classList.add('hover-box-not-allowed');
-                
+
                 // Check if the bot response div already exists, if not create it
                 var botMessageTemplate = `
             <div class="chat-message bot">
@@ -1670,7 +1671,7 @@
                 botResponseDiv.appendChild(tableContainer);
 
                 // Initialize DataTable
-                $(document).ready(function() {
+                $(document).ready(function () {
                     $('#csvDataTable').DataTable({
                         data: flattenedRows,
                         columns: Object.keys(flattenedRows[0]).map(key => ({ title: key, data: key })),

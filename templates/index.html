@@ -7,7 +7,7 @@
     <title>Yourbestcandidateai</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="shortcut icon" href="https://www.yourbestcandidate.ai/static/images/Yourbestcandidateai-white-logo.png">
+    <link rel="shortcut icon" href="https://www.yourbestcandidate.ai/static/images/favion2.png">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
         rel="stylesheet">
@@ -155,6 +155,7 @@
         }
 
         .app-container .content {
+            position: relative;
             display: flex;
             flex-direction: column;
             width: 100%;
@@ -714,9 +715,12 @@
                         <input type="file" id="json-upload" accept=".json" style="display: none;">
                         <label for="json-upload" class="browse-btn btn">Upload JSON</label>
                         <div id="json-upload-name" class="file-name-container"></div>
-                    </div> {% if session.get('company') is not none and session.get('company').strip() != '' %} <input
-                        type="checkbox" id="recruitly-data" required><label for="recruitly-data">Use {{
-                        session.get('company') }} data</label><br> {% endif %}
+                    </div>
+
+                    {% if session.get('company') is not none and session.get('company').strip() != '' %}
+                    <input type="checkbox" id="recruitly-data" required><label for="recruitly-data"> Use
+                        SES data</label><br>
+                    {% endif %}
                     <!-- <button class="btn" id="process-btn">Process</button><br> -->
                     <div class="small-loader-container" id="small-loader-container">
                         <div class="small-loader" id="small-loader"></div>
@@ -764,6 +768,7 @@
             var recruitlyDataCheckbox = document.getElementById('recruitly-data');
             var company = '{{ session.get('company') }}'
             var selected_chat_id = "{{ session.get('chat_id') }}"
+            var recruitly;
 
             document.getElementById('question-input').addEventListener('keypress', function (event) {
                 if (event.key === 'Enter') {
@@ -830,19 +835,23 @@
                     csvTemp = true;
                     file = csvInput.files[0];
                     type = 'csv';
+                    recruitly = false;
                     formData.append('file', file);
                     formData.append('type', type);
                 }
                 if (jsonInput.files.length > 0 && jsonTemp == false) {
                     jsonTemp = true;
                     file = jsonInput.files[0];
-                    type = 'jsonfile';
+                    type = 'json';
+                    recruitly = true;
+                    recrutlyTemp = true
                     formData.append('file', file);
                     formData.append('type', type);
                 }
 
                 // Append additional data if the checkbox is checked
                 if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked && recrutlyTemp == false) {
+                    recruitly = true;
                     recrutlyTemp = true;
                     formData.append('type', 'json');
                 }
@@ -912,17 +921,17 @@
                 var question = questionInput.value.trim(); // Trim whitespace
                 var messagesDiv = document.getElementById('messages'); // Get the messages div
                 questionInput.value = '';
-                var recruitly = false;
 
-                if (!recruitlyDataCheckbox) {
-                    recruitly = false;
-                } else {
-                    if (recruitlyDataCheckbox.checked) {
-                        recruitly = true;
-                    } else {
-                        recruitly = false;
-                    }
-                }
+
+                // if (!recruitlyDataCheckbox) {
+                //     recruitly = false;
+                // } else {
+                //     if (recruitlyDataCheckbox.checked) {
+                //         recruitly = true;
+                //     } else {
+                //         recruitly = false;
+                //     }
+                // }
 
                 // if (!(csvInput.files.length > 0 || jsonInput.files.length > 0 || (recruitlyDataCheckbox && recruitlyDataCheckbox.checked))) {
                 //     alert('Please upload a CSV or JSON file, or check the company data checkbox.');
@@ -971,6 +980,13 @@
                     chat_id: selected_chat_id
                 });
 
+                console.log(
+                    "\nquestion : ", question,
+                    "\nrecruitly_data", recruitly,
+                    "\nuser_id", "{{ session.get('user_id') }}",
+                    "\nchat_id", selected_chat_id
+                );
+
                 // Listen for the 'message' event to receive the response
                 socket.on('message', function (data) {
                     if (botResponseDiv) {
@@ -982,7 +998,7 @@
                         document.getElementById('ask-btn').disabled = false;
                     } else {
                         // Append the new data to the bot response
-                        console.log("data ======= ", data);
+                        // console.log("data ======= ", data);
                         // botResponseDiv.innerHTML += `${data}`;
                     }
                 }
