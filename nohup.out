@@ -47251,3 +47251,276 @@ KeyboardInterrupt:
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 129-739-149
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+days since ---- >>>>  3
+Collection cleared successfully for user_id: assaalupuri@pariag.com
+company =>  
+selected_chat_id =>  1b5d4ae2-8f3d-4180-b213-e524f7b6c217
+Traceback (most recent call last):
+  File "/home/ubuntu/SES_Flask/flask_app.py", line 1148, in <module>
+    socketio.run(app, host="0.0.0.0", port=8501)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_socketio/__init__.py", line 684, in run
+    run_server()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/flask_socketio/__init__.py", line 678, in run_server
+    eventlet.wsgi.server(eventlet_socket, app,
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/wsgi.py", line 1055, in server
+    pool.waitall()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/greenpool.py", line 125, in waitall
+    self.no_coros_running.wait()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/event.py", line 124, in wait
+    result = hub.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt
+Exception ignored in atexit callback: <bound method Client.join of <posthog.client.Client object at 0x7f93df06e440>>
+Traceback (most recent call last):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/posthog/client.py", line 416, in join
+    consumer.join()
+  File "/usr/lib/python3.10/threading.py", line 1096, in join
+    self._wait_for_tstate_lock()
+  File "/usr/lib/python3.10/threading.py", line 1116, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/semaphore.py", line 115, in acquire
+    hubs.get_hub().switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt: 
+Exception ignored in atexit callback: <function _shutdown_resources at 0x7f93f2723250>
+Traceback (most recent call last):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/monitor.py", line 475, in _shutdown_resources
+    shutdown()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/periodic_executor.py", line 199, in _shutdown_executors
+    executor.join(1)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/pymongo/periodic_executor.py", line 117, in join
+    self._thread.join(timeout)
+  File "/usr/lib/python3.10/threading.py", line 1100, in join
+    self._wait_for_tstate_lock(timeout=max(timeout, 0))
+  File "/usr/lib/python3.10/threading.py", line 1116, in _wait_for_tstate_lock
+    if lock.acquire(block, timeout):
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/semaphore.py", line 107, in acquire
+    hubs.get_hub().switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 310, in switch
+    return self.greenlet.switch()
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/hub.py", line 362, in run
+    self.wait(sleep_time)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/poll.py", line 80, in wait
+    presult = self.do_poll(seconds)
+  File "/home/ubuntu/flask_env/lib/python3.10/site-packages/eventlet/hubs/epolls.py", line 31, in do_poll
+    return self.poll.poll(seconds)
+KeyboardInterrupt: 
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/flask_app.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/htmlTemplates.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cromadbTest.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+ * Detected change in '/home/ubuntu/SES_Flask/cronjob.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149
+/home/ubuntu/flask_env/lib/python3.10/site-packages/langchain/chat_models/__init__.py:31: LangChainDeprecationWarning: Importing chat models from langchain is deprecated. Importing from langchain will no longer be supported as of langchain==0.2.0. Please import from langchain-community instead:
+
+`from langchain_community.chat_models import ChatOpenAI`.
+
+To install langchain-community run `pip install -U langchain-community`.
+  warnings.warn(
+Invalid session MLI15npxMrQ2kRleAAAA (further occurrences of this error will be logged with level INFO)
+ * Detected change in '/home/ubuntu/SES_Flask/scrap.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 129-739-149

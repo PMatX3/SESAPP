@@ -205,7 +205,7 @@ def chat():
             # if days_since_join >= days:
             #     return redirect(url_for('pricing'))
             # else:
-            return render_template('index.html')
+            return render_template('index3.html')
         else:
             return redirect('/')
     else:
@@ -555,7 +555,7 @@ def new_chat():
             session['chat_id'] = chat_id
             print("chat_id from new_chat ===== ", chat_id)
             # response.headers['Location'] += '?new_chat=false'  # Optionally set new_chat to false
-            return render_template('index.html')
+            return render_template('index3.html')
             # response = redirect(url_for('index'))  # Redirect to index without new_chat in URL
             return response
         else:
@@ -943,6 +943,7 @@ def handle_cancel_task():
     cancellation_flag.set()  # Set the flag to signal cancellation
     emit('task_cancelled', {'data': 'Task cancellation requested'})
 
+
 @app.route('/get_chat_history', methods=['GET'])
 def api_get_chat_history():
     with app.app_context():
@@ -950,17 +951,25 @@ def api_get_chat_history():
         chat_id = session.get('chat_id')
     
         if not user_id or not chat_id:
-            return jsonify({'error': 'Missing user_id or chat_id'}), 400
-        
+            return jsonify([]), 200  # Return empty list instead of error
+    
         chat_history = get_chat_history(user_id, chat_id)
         
         if chat_history:
             for message in chat_history:
                 message['_id'] = str(message['_id'])  # Convert ObjectId to string
-            formatted_history = [{'user': user_template.replace('{{MSG}}', message['message']), 'ai': bot_template.replace('{{MSG}}', message['response'] if isinstance(message['response'], str) else "CSV preview is not displayed in the chat history.")} for message in chat_history]
+            
+            formatted_history = [
+                {
+                    'user': user_template.replace('{{MSG}}', message['message']),
+                    'ai': bot_template.replace('{{MSG}}', message['response'] if isinstance(message['response'], str) else "CSV preview is not displayed in the chat history.")
+                } 
+                for message in chat_history
+            ]
             return jsonify(formatted_history), 200
         else:
-            return jsonify({'error': 'Chat history not found'}), 404
+            return jsonify([]), 200  # Also return empty array here
+
 
 @app.route('/delete_chat/<chat_id>', methods=['DELETE','POST'])
 def delete_chat(chat_id):

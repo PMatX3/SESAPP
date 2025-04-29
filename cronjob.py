@@ -2,7 +2,7 @@ import requests
 import pandas as pd
 import schedule
 import time, json
-from exatrcat_cvs import fetch_and_store_data
+from extract_data import fetch_and_store_data
 from cromadbTest import load_json_data
 
 def job():
