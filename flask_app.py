@@ -1,8 +1,12 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, Response, send_file
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
+from langchain_community.chat_models import ChatOpenAI
 import os,json
-from cromadbTest import load_data, execute_query, execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message, clear_collection
+from cromadbTest import load_data, execute_query, execute_query3,execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message, clear_collection
 # from test import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
 # from test import execute_query
 from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email, send_demo_email
@@ -23,7 +27,6 @@ from flask_cors import CORS
 from flask_session import Session
 import gc
 from mongo_connection import get_mongo_client
-import eventlet
 from cromadbTest import job_query
 import logging
 import html2text
@@ -31,15 +34,14 @@ import re
 from flask_migrate import Migrate
 from models import db  # Assuming 'db' is your SQLAlchemy instance
 
-eventlet.monkey_patch()
 
 app = Flask(__name__)
 
 
 # Initialize SQLAlchemy
 # Import the models
-from models import db, BookingAppointment
-from flask_app import app
+from models import BookingAppointment
+
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/ubuntu/SES_Flask/bookings_storage.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -618,7 +620,12 @@ def load_new_data():
     data_types = data_types.getlist('type')
     user_id = session.get('user_id')
     message = None
+
+    if not user_id:
+            return jsonify({'error': 'User ID not found in session'}), 401
+    
     if files:
+        print(" inside -- files :")
         files_list = files.getlist('file')
         for i,file in enumerate(files_list):
             filename = secure_filename(file.filename)
@@ -631,42 +638,81 @@ def load_new_data():
                 raw_text = get_pdf_text(pdf_docs)  # Extract text from the PDF
                 text_chunks = get_text_chunks(raw_text)  # Split the text into chunks
                 load_pdf_data(raw_text)  # Process the extracted text as needed
+                session['current_data_source'] = 'pdf'
+                session['current_file_path'] = file_path
+                message = "PDF File Successfully Processed"
             elif file_ext == '.csv':
                 # CSV processing logic
                 load_and_cache_file_data(file_path)
+                session['current_data_source'] = 'csv'
+                session['current_file_path'] = file_path
                 # load_data(file_path)
                 time.sleep(20)
+                message = "CSV File Successfully Processed"
             elif file_ext == '.json':
                 starttime = datetime.now()
                 load_and_cache_json_data(file_path, True)
+                session['current_data_source'] = 'json_upload'
+                session['current_file_path'] = 'csvdata/json_data.csv'
                 endtime = datetime.now()
                 print(f"Time taken: {endtime - starttime}")
+                message = "JSON File Successfully Processed"
+
+            else:
+                return jsonify({'error': f'Invalid file type for {filename}'}), 400
+        print("=========== session current_file_path - ", session.get('current_file_path'))
+        print("=========== session current_data_source - ", session.get('current_data_source'))
+            
         session['recrutly_id'] = False
         message = "File Successfully Processed"
+        return jsonify({'message': message, 'current_data_source': session.get('current_data_source'), 'current_file_path': session.get('current_file_path')}), 200
 
-    if 'json' in data_types:
-        user_id = session.get('user_id')
-        session['recrutly_id'] = True
-        user = mongo.users.find_one({'app_name': user_id})
-        if user:
-            company_name = user.get('company', None)
-        
-        file_path = check_for_file(company_name) if company_name not in ['', None] else None
+    elif not files :
+        print(" == == == use SES Data ::")
+        file_path = 'company_data/SES.json'
+
         if file_path:
             load_and_cache_json_data(file_path, True)
-        else:
-            return "You don't have any data loaded into the database", 404 
-        if message is not None:
-            message += ' and '+f'{company_name} data processed.'
-        else:
-            message = f'{company_name} data processed.'
+            session['current_data_source'] = 'json_existing'
+            session['current_file_path'] = 'csvdata/json_data.csv'  # Store path for existing data too
+            print("=========== session current_file_path - ", session.get('current_file_path'))
+            print("=========== session current_data_source - ", session.get('current_data_source'))
+            return jsonify({'message': message, 'current_data_source': session.get('current_data_source'), 'current_file_path': session.get('current_file_path')}), 200
         
-    return jsonify({'message':message}), 200
+
+
+    # if 'json' in data_types:
+    #     user_id = session.get('user_id')
+    #     session['recrutly_id'] = True
+    #     user = mongo.users.find_one({'app_name': user_id})
+    #     if user:
+    #         company_name = user.get('company', None)
+        
+    #     if company_name:
+
+    #         file_path = check_for_file(company_name) if company_name not in ['', None] else None
+    #         if file_path:
+    #                 load_and_cache_json_data(file_path, True)
+    #                 session['current_data_source'] = 'json_existing'
+    #                 session['current_file_path'] = file_path  # Store path for existing data too
+    #                 if message:
+    #                     message += f' and {company_name} data processed.'
+    #                 else:
+    #                     message = f'{company_name} data processed.'
+    #         else:
+    #             return jsonify({'error': f"No data found for company: {company_name}"}), 404 
+
+    #         if message is not None:
+    #             message += ' and '+f'{company_name} data processed.'
+    #         else:
+    #             message = f'{company_name} data processed.'
+    # print(" ============== Session : ", session)          
+    # return jsonify({'message': message, 'current_data_source': session.get('current_data_source'), 'current_file_path': session.get('current_file_path')}), 200
 
 # Flask route to handle CSV download
 @app.route('/download_csv/<filename>', methods=['GET'])
 def download_csv(filename):
-    file_path = f"/tmp/{filename}"
+    file_path = f"tmp/{filename}"
     return send_file(file_path, as_attachment=True)
 
 # Create a global dictionary to store user conversations
@@ -674,7 +720,7 @@ user_conversations = {}
 
 @socketio.on('ask')
 def handle_ask(json):
-
+    # print("handle_ask called with data:", json)
     try:
         global cancellation_flag
         cancellation_flag.clear()
@@ -683,7 +729,7 @@ def handle_ask(json):
         chat_id = json.get('chat_id')
         recruitly_data = json.get('recruitly_data', False)
         message_id = str(uuid.uuid4())
-        print('recruitly_data => ',recruitly_data)
+        print('recruitly_data => ', recruitly_data)
         try:
             # Use test_client to make a request to the local API
             with app.test_client() as client:
@@ -691,24 +737,26 @@ def handle_ask(json):
                 with client.session_transaction() as sess:
                     sess['chat_id'] = str(chat_id)  # Use session variable
                     sess['user_id'] = str(user_id)  # Use session variable
-                
-                # Make a GET request to the local API endpoint
-                response = client.get('/get_chat_history')
 
-            chat_history = response.json
+                # Make a GET request to the local API endpoint
+                print("Making GET request to /get_chat_history")
+                response = client.get('/get_chat_history')
+                print("Received response for chat history:")
+                chat_history = response.json
         except Exception as e:
-            print("No chat history found")
-            print(e)
+            print("Error fetching chat history:", e)
             chat_history = []
 
-
         if not user_id or not chat_id:
-            emit('error', {'error': 'User ID or Chat ID missing from session'})
+            error_message = 'User ID or Chat ID missing from session'
+            print("Error:", error_message)
+            emit('error', {'error': error_message})
             return
-        
+
         # Initialize conversation history for the user if not already present
         if user_id not in user_conversations:
             user_conversations[user_id] = []
+            print(f"Initialized conversation history for user: {user_id}")
 
         entire_response = ''
         continuation_token = None
@@ -716,41 +764,53 @@ def handle_ask(json):
 
         # Append the current question to the user's conversation history
         user_conversations[user_id].append({'question': user_question})
+        print(f"Appended user question to history for user {user_id}: {user_question}")
 
         # remove Html, \\ , and links from the conversation
         if 'error' in chat_history:
+            print("Chat history contains an error, clearing it.")
             chat_history = []
 
         for chat in chat_history:
-            chat['ai'] = html2text.html2text(chat['ai'])
-            chat['ai'] = chat['ai'].replace('\n', '').replace('*', '')
-            chat['ai'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['ai'])
-            chat['ai'] = chat['ai'].replace('\\', '')
-
-            chat['user'] = html2text.html2text(chat['user'])
-            chat['user'] = chat['user'].replace('\n', '').replace('*', '')
-            chat['user'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['user'])
-            chat['user'] = chat['user'].replace('\\', '')
+            # print("Processing chat history item:", chat)
+            if 'ai' in chat:
+                chat['ai'] = html2text.html2text(chat['ai'])
+                chat['ai'] = chat['ai'].replace('\n', '').replace('*', '')
+                chat['ai'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['ai'])
+                chat['ai'] = chat['ai'].replace('\\', '')
+                print("Processed AI response:",)
+            if 'user' in chat:
+                chat['user'] = html2text.html2text(chat['user'])
+                chat['user'] = chat['user'].replace('\n', '').replace('*', '')
+                chat['user'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['user'])
+                chat['user'] = chat['user'].replace('\\', '')
+                print("Processed user question from history:")
 
         while True:
             finish_res = None  # Initialize finish_res at the start of the loop
-            for chunk, temp_finish_res in execute_query(user_question, user_id, recruitly_data, continuation_token, user_conversation = chat_history):
+            print("Entering query execution loop.")
+            for chunk, temp_finish_res in execute_query3(user_question, user_id, recruitly_data, continuation_token, user_conversation=chat_history):
                 if cancellation_flag.is_set():
+                    print("Cancellation flag is set, breaking the inner loop.")
                     break
                 if retry:
+                    print("Retry is True, removing last 400 characters from entire_response.")
                     entire_response = entire_response[:-400]
                     retry = False
                 entire_response += chunk
                 rendered_response = md.render(entire_response)
+                # print("Rendered response:", rendered_response)
 
                 # Store the response in the user's conversation history
                 text_content = html2text.html2text(rendered_response)
                 text_content = text_content.replace('\n', '').replace('*', '')
 
                 # Spawn a new thread to handle message saving
+                
                 threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
-                print(f"----------------------- \n\n ------------------------- {rendered_response} \n\n ------------------------- \n\n -----------------------")
+                # print(f"----------------------- \n\n ------------------------- {rendered_response} \n\n ------------------------- \n\n -----------------------")
                 emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
+                # print("Emitted message to the client.")
 
                 # Clear the chunk to free memory
                 del chunk
@@ -758,9 +818,11 @@ def handle_ask(json):
                 gc.collect()
                 finish_res = temp_finish_res  # Update finish_res from the loop variable
             user_conversations[user_id][-1]['response'] = text_content
+            # print(f"Updated user conversation history with response for user {user_id}.")
             if finish_res == 'length':
                 retry = True
                 continuation_token = f'Your response : {rendered_response} got cut off, because you only have limited response space. Continue writing exactly where you left off based on context : Context. Do not repeat yourself. Start your response exact with: "{entire_response[-400:]}", don\'t forget to respect format of response based on previous response and don\'t start with like "Here is response" or anything just start from where you left'
+                print("Response length limit reached, setting up for continuation.")
                 continue  # Continue the loop to process the next part of the query
             # elif finish_res == 'csv_download':
             #     print('done hrer')
@@ -770,18 +832,22 @@ def handle_ask(json):
             #     emit('message', {'data': rendered_response, 'is_complete': 'stop'})
             #     break
             else:
+                print("Query execution finished with status:", finish_res)
                 break
 
         # Clear entire_response if no longer needed
         del entire_response
         gc.collect()
-    
+        print("Cleaned up entire_response and triggered garbage collection.")
+
     except Exception as e:
-        emit('error', {'error': str(e)})
+        error_message = str(e)
+        print("Exception in handle_ask:", error_message)
+        emit('error', {'error': error_message})
 
 @socketio.on('ask2')
 def handle_ask2(json):
-    print("handle_ask2 called")
+    # print("handle_ask2 called with data:", json)
     try:
         global cancellation_flag
         cancellation_flag.clear()
@@ -797,23 +863,22 @@ def handle_ask2(json):
                 with client.session_transaction() as sess:
                     sess['chat_id'] = session['chat_id']  # Use session variable
                     sess['user_id'] = session['user_id']  # Use session variable
-                
+
                 # Make a GET request to the local API endpoint
+                print("Making GET request to /get_chat_history")
                 response = client.get('/get_chat_history')
-            print("chat history ===== \n\n")
-            print(response.json)
-            print("chat history ===== \n\n")
-            chat_history = response.json
+                print("Chat history response ===== \n\n", response.json, "\n\n =====")
+                chat_history = response.json
         except Exception as e:
-            print("No chat history found")
-            print(e)
+            print("Error fetching chat history in handle_ask2:", e)
             chat_history = []
 
-
         message_id = str(uuid.uuid4())
-        print("question ===> ", user_question)
+        print("Question received in handle_ask2 ===> ", user_question)
         if not user_id or not chat_id:
-            emit('error', {'error': 'User ID or Chat ID missing from session'})
+            error_message = 'User ID or Chat ID missing from session'
+            print("Error in handle_ask2:", error_message)
+            emit('error', {'error': error_message})
             return
         entire_response = ''
         continuation_token = None
@@ -821,21 +886,30 @@ def handle_ask2(json):
 
         while True:
             finish_res = None  # Initialize finish_res at the start of the loop
+            print("Entering query execution loop in handle_ask2.")
             for chunk, temp_finish_res in execute_query2(user_question, user_id, recruitly_data, continuation_token):
+                
                 if temp_finish_res == 'csv':
+                    print("Received CSV data, emitting message.")
+                    
                     emit('message', {'csv_data': chunk, 'is_complete': 'csv'})
-                    add_chat_message(user_id, user_question, chunk, chat_id, message_id)
+                    print("Spawning thread to save CSV chat message.")
+                    threading.Thread(target=add_chat_message, args=(user_id, user_question, chunk, chat_id, message_id)).start()
                     break
                 if cancellation_flag.is_set():
+                    print("Cancellation flag is set, breaking the inner loop in handle_ask2.")
                     break
                 if retry:
+                    print("Retry is True, removing last 400 characters from entire_response in handle_ask2.")
                     entire_response = entire_response[:-400]
                     retry = False
                 entire_response += chunk
                 rendered_response = md.render(entire_response)
                 # Spawn a new thread to handle message saving
+                print("Spawning thread to save chat message in handle_ask2.")
                 threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
-                emit('message', {'data': rendered_response, 'is_complete':temp_finish_res})
+                emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
+                print("Emitted message to the client in handle_ask2.")
 
                 # Clear the chunk to free memory
                 del chunk
@@ -843,19 +917,24 @@ def handle_ask2(json):
                 gc.collect()
                 finish_res = temp_finish_res  # Update finish_res from the loop variable
 
-            if finish_res=='length':
+            if finish_res == 'length':
                 retry = True
                 continuation_token = f'Your response : {rendered_response} got cut off, because you only have limited response space. Continue writing exactly where you left off based on context : Context. Do not repeat yourself. Start your response exact with: "{entire_response[-400:]}", don\'t forgot to respect format of response based on previous response and don\'t start with like "Here is response" or anything just start from where you left'  # Update the continuation token for the next iteration
+                print("Response length limit reached in handle_ask2, setting up for continuation.")
                 continue  # Continue the loop to process the next part of the query
             else:
+                print("Query execution finished in handle_ask2 with status:", finish_res)
                 break
 
         # Clear entire_response if no longer needed
         del entire_response
         gc.collect()
-    
+        print("Cleaned up entire_response and triggered garbage collection in handle_ask2.")
+
     except Exception as e:
-        emit('error', {'error': str(e)})
+        error_message = str(e)
+        print("Exception in handle_ask2:", error_message)
+        emit('error', {'error': error_message})
 
 @socketio.on('cancel_task')
 def handle_cancel_task():
