@@ -23,7 +23,7 @@
         }
 
         body {
-            overflow-x: hidden;
+            overflow: hidden;
             margin: 0px;
             font-family: "Source Sans 3", sans-serif;
             font-weight: 400;
@@ -34,10 +34,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        .sidebar-content {
-            overflow-y: auto;
-            height: calc(100vh - 50px);
-        }
+
 
         .hover-box-not-allowed {
             cursor: not-allowed;
@@ -61,24 +58,7 @@
             }
         }
 
-        /* Ensure scrollbar is always visible */
-        .sidebar-content::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
 
-        .sidebar-content::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-
-        .sidebar-content::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 6px;
-        }
-
-        .sidebar-content::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
 
         .chat-message-container {
             max-width: 800px;
@@ -169,29 +149,6 @@
         }
 
         @media (max-width: 768px) {
-            #sidebar {
-                position: fixed;
-                left: -100%;
-                z-index: 40;
-                width: 80%;
-                max-width: 300px;
-                height: calc(100vh - 48px);
-            }
-
-            #sidebar.active {
-                left: 0;
-            }
-
-            .sidebar-toggle-btn {
-                top: 14px;
-                left: 10px;
-                z-index: 50;
-            }
-
-            .sidebar-toggle-btn.active {
-                left: calc(80% - 20px);
-                max-left: 280px;
-            }
 
             .chat-message-container {
                 width: 100%;
@@ -222,12 +179,172 @@
 
         /* Tablet styles */
         @media (min-width: 769px) and (max-width: 1024px) {
-            #sidebar {
-                width: 250px;
-            }
+
 
             .chat-message-container {
                 max-width: 90%;
+            }
+        }
+
+        button:disabled {
+            background-color: #a5b4fc;
+            /* lighter indigo */
+        }
+
+        /* General Sidebar Styles */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background-color: #f7f7f7;
+            border-right: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+
+        /* Sidebar Content */
+        .sidebar-content {
+            padding: 16px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Sidebar Header */
+        .sidebar-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Sidebar Links */
+        .sidebar-links {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-links li {
+            padding: 12px;
+            font-size: 14px;
+            color: #555;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sidebar-links li:hover {
+            background-color: #e6e6e6;
+            cursor: pointer;
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 16px;
+            left: 260px;
+            /* Default position when sidebar is visible */
+            z-index: 60;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .sidebar-toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #333;
+            transition: transform 0.3s ease;
+        }
+
+        /* Collapsed sidebar state */
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        /* When sidebar is collapsed, move toggle button */
+        #sidebar.collapsed+.sidebar-toggle-btn,
+        .sidebar-toggle-btn.collapsed {
+            left: 16px;
+        }
+
+        /* Rotate arrow icon when collapsed */
+        .sidebar-toggle-btn.collapsed svg {
+            transform: rotate(180deg);
+        }
+
+        /* Sidebar Scrollbar Styling */
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Links and button styling in sidebar */
+        .sidebar-link {
+            padding: 10px;
+            font-size: 14px;
+            color: #555;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar-link:hover {
+            background-color: #e6e6e6;
+            cursor: pointer;
+        }
+
+        /* Adjust main content when sidebar collapses */
+        .flex-1 {
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar-collapsed .flex-1 {
+            margin-left: 0;
+        }
+
+        /* Mobile and tablet-friendly design */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 80%;
+                max-width: 300px;
+            }
+
+            /* Keep the toggle button visible and in a fixed position on mobile */
+            .sidebar-toggle-btn {
+                left: 16px;
+            }
+
+            #sidebar:not(.collapsed)+.sidebar-toggle-btn,
+            .sidebar-toggle-btn:not(.collapsed) {
+                left: calc(80% + 16px);
+                max-left: 316px;
+            }
+
+            /* Optional styles for hiding specific content on mobile */
+            .sidebar-header,
+            .sidebar-link {
+                font-size: 14px;
             }
         }
     </style>
@@ -243,7 +360,7 @@
     </div>
 
     <!-- SES Data Processing Popup -->
-    <div id="ses-processing-popup"
+    <!-- <div id="ses-processing-popup"
         class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center max-w-md mx-auto">
             <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
@@ -255,7 +372,7 @@
             </div>
             <p id="ses-progress-text" class="text-sm text-gray-500">Processing: 0%</p>
         </div>
-    </div>
+    </div> -->
 
     <!-- Popup Loader -->
     <div id="popup-loader" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
@@ -283,8 +400,7 @@
     <!-- Main container -->
     <div class="flex h-[calc(100vh-48px)]">
         <!-- Sidebar -->
-        <div id="sidebar"
-            class="bg-gray-100 w-64 transition-all duration-300 flex-shrink-0 relative border-r border-gray-200">
+        <div id="sidebar" class="bg-gray-100 w-64 flex-shrink-0 relative border-r border-gray-200 ">
             <div class="sidebar-content p-4">
                 <div class="mb-6">
                     <h5 class="font-semibold text-lg mb-4">Your documents</h5>
@@ -328,14 +444,16 @@
                 </div>
 
                 <!-- SES Data Checkbox -->
+                {% if session.get('company') is not none and session.get('company').strip() != '' %}
                 <div class="mb-6">
                     <label class="inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="recruitly-data"
+                        <input type="checkbox" name="useSES" value="true" id="recruitly-data"
                             class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
                             required>
                         <span class="ml-2 text-sm text-gray-700">Use SES data</span>
                     </label>
                 </div>
+                {% endif %}
 
                 <!-- Loader and success message -->
                 <div id="small-loader-container"
@@ -366,8 +484,7 @@
         </div>
 
         <!-- Sidebar toggle button -->
-        <button
-            class="sidebar-toggle-btn fixed top-14 left-64 z-10 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 focus:outline-none transition-all duration-300">
+        <button id="sidebar-toggle" class=" sidebar-toggle-btn">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd"
                     d="M15.707 4.293a1 1 0 010 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0z"
@@ -376,8 +493,8 @@
         </button>
 
         <!-- Main content -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <div class="flex-1 overflow-y-auto bg-white px-4 py-6 md:px-10">
+        <div class="flex-1 flex flex-col ">
+            <div class="flex-1 overflow-y-auto bg-white px-4 py-6 md:px-10" id="chat-container">
                 <div class="max-w-3xl mx-auto step3">
                     <h1 class="text-3xl font-bold mb-8 text-gray-800">Your Best Candidate AI</h1>
 
@@ -391,7 +508,7 @@
                 <div class="max-w-3xl mx-auto relative">
                     <label class="block text-sm font-medium text-gray-700 mb-2">Type your question about your documents
                         here:</label>
-                    <div class="flex items-center">
+                    <div class="flex items-center" style="margin-bottom: 2rem;">
                         <input type="text" id="question-input" placeholder="Ask about your candidate..."
                             class="flex-grow px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                             autocomplete="off">
@@ -410,6 +527,22 @@
                     </div>
                 </div>
             </div>
+
+
+            <!-- Custom popup notification (hidden by default) -->
+            <div id="customPopup" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 01-1-1v-4a1 1 0 112 0v4a1 1 0 01-1 1z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="popupMessage" class="text-sm font-medium"></span>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -441,12 +574,12 @@
             }, 1000);
 
             // Add default candidate reference functionality
-            document.getElementById('question-input').addEventListener('focus', function () {
-                // Check if input already has candidate reference prefixed
-                if (!this.value.trim().startsWith('Candidate:') && !this.value.trim()) {
-                    this.value = 'Show me candidates: ';
-                }
-            });
+            // document.getElementById('question-input').addEventListener('focus', function () {
+            //     // Check if input already has candidate reference prefixed
+            //     if (!this.value.trim().startsWith('Candidate:') && !this.value.trim()) {
+            //         this.value = 'Show me candidates: ';
+            //     }
+            // });
 
             document.getElementById('question-input').addEventListener('keypress', function (event) {
                 if (event.key === 'Enter') {
@@ -458,13 +591,20 @@
 
             function load_data_api(formData, countdownSeconds) {
                 console.log("Load Data API called");
+                const recruitlyDataCheckbox = document.getElementById('recruitly-data');
+                const useSES = recruitlyDataCheckbox ? recruitlyDataCheckbox.checked : false;
 
                 var popup = document.getElementById('popup-loader');
                 var countdownDisplay = document.getElementById('countdown');
 
+                if (useSES) {
+                    formData.append('useSES', useSES);
+                    console.log("Appending useSES to formData:", useSES);
+                }
+
                 if (popup) {
                     popup.style.display = 'flex';
-                    startCountdown(countdownSeconds, popup, countdownDisplay);
+                    startCountdown(5, popup, countdownDisplay);
                 }
 
                 // Send the formData to the server
@@ -475,11 +615,15 @@
                     .then(response => {
                         if (response.status === 404) {
                             return response.text().then(text => {
-                                alert(text);
+                                showPopup(text);
                                 document.getElementById('recruitly-data').checked = false; // Uncheck the checkbox
                             });
                         }
-                        return response.json();
+
+                        return response.json().catch(error => {
+                            console.error('Error parsing JSON:', error);
+                            return response.text(); // Fallback to text if JSON parsing fails
+                        });
                     })
                     .then(data => {
                         isProcessed = true;
@@ -498,6 +642,25 @@
                         console.error('Error:', error);
                     });
             }
+
+            const input = document.getElementById("question-input");
+            const askBtn = document.getElementById("ask-btn");
+
+            // Disable Ask button by default
+            askBtn.disabled = true;
+            askBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            input.addEventListener("input", () => {
+                const trimmed = input.value.trim();
+
+                if (trimmed.length > 0) {
+                    askBtn.disabled = false;
+                    askBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    askBtn.disabled = true;
+                    askBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
 
             // Countdown function
             function startCountdown(seconds, popup, countdownDisplay) {
@@ -552,6 +715,7 @@
                 if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked && recrutlyTemp == false) {
                     recruitly = true;
                     recrutlyTemp = true;
+                    formData.append('useSES', true);
                     formData.append('type', 'json');
                     load_data_api(formData, 20); // Set timer to 20 seconds
                 } else {
@@ -629,12 +793,15 @@
                 document.getElementById('question-input').value = '';
             }
 
+
+
             fetchChatHistory();
 
             function displayChatHistory2(chatHistory) {
                 const chatHistoryList = document.getElementById('chat-history');
                 chatHistoryList.innerHTML = ''; // Clear existing entries
                 if (!chatHistory.chat_list) return;
+
                 chatHistory.chat_list.forEach(chat => {
                     const listItem = document.createElement('li');
                     listItem.textContent = chat.first_question;
@@ -642,6 +809,7 @@
                     listItem.style.display = 'flex';
                     listItem.style.alignItems = 'center';
                     listItem.style.justifyContent = 'space-between';
+                    listItem.style.padding = '8px 0'; // Add padding for better spacing
 
                     listItem.onclick = function () {
                         postChat(chat.chat_id);
@@ -650,12 +818,12 @@
                     // Create delete button with SVG
                     const deleteButton = document.createElement('button');
                     deleteButton.innerHTML = `
-<svg class="w-6 h-6 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14m-9 3v8m4-8v8M10 3h4a1 1 0 0 1 1 1v3H9V4a1 1 0 0 1 1-1ZM6 7h12v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7Z"/>
+<svg class="w-5 h-5 text-gray-500 hover:text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
 </svg>
         `;
                     deleteButton.style.border = 'none';
-                    deleteButton.style.background = 'transparent ';
+                    deleteButton.style.background = 'transparent';
                     deleteButton.style.cursor = 'pointer';
                     deleteButton.style.marginLeft = '10px';
 
@@ -667,8 +835,17 @@
 
                     listItem.appendChild(deleteButton);
                     chatHistoryList.appendChild(listItem);
+
+                    // Add horizontal line
+                    const hr = document.createElement('hr');
+                    hr.style.border = '0';
+                    hr.style.height = '1px';
+                    hr.style.backgroundColor = '#e2e8f0'; // light gray color
+                    hr.style.margin = '4px 0'; // small margin
+                    chatHistoryList.appendChild(hr);
                 });
             }
+
 
             function deleteChat(chatId) {
                 console.log(chatId);
@@ -707,6 +884,8 @@
             }
 
 
+            // var socket = io('https://www.yourbestcandidate.ai', {
+            // console.log(window.location.origin)
             var socket = io('https://www.yourbestcandidate.ai', {
                 reconnection: true,
                 reconnectionAttempts: Infinity,
@@ -714,6 +893,12 @@
                 reconnectionDelayMax: 5000,
                 timeout: 20000,
             });
+            console.log("============socket => ", socket)
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+            console.log("socket.on('connect') => ", socket.on('connect'))
+
             var botResponseDiv; // Reference to the bot response div
             var cancelBtn = document.getElementById('cancel-btn');
 
@@ -747,7 +932,11 @@
 
                     // Check if the response is structured (starts with "Full Name:")
                     let botMessageContent = '';
-                    if (question.trim().startsWith('Full Name:')) {
+
+                    if (question === '') {
+                        botMessageContent = `<div class="text-gray-700"><em>Generating Response...</em></div>`;
+                    }
+                    else if (question.trim().startsWith('Full Name:')) {
                         // Format candidate information
                         const lines = question.split('\n').map(line => line.trim()).filter(line => line.length > 0);
                         let candidateDetails = '';
@@ -770,6 +959,8 @@
                         // Normal AI text
                         botMessageContent = `<div class="text-gray-700">${question}</div>`;
                     }
+
+
 
                     const botMessageTemplate = `
         <div class="chat-message bot fade-in p-4 bg-gray-100 rounded-lg shadow-sm mb-4">
@@ -796,14 +987,14 @@
                 scrollToBottom();
             }
 
-
+            socket.on('connect', function () {
+                console.log('WebSocket is connected!');
+            });
 
             // Function to auto-scroll to the bottom of the messages
             function scrollToBottom() {
-                const messagesContainer = document.getElementById('messages');
-                if (messagesContainer) {
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }
+                const container = document.getElementById('chat-container');
+                container.scrollTop = container.scrollHeight;
             }
 
             document.getElementById('ask-btn').addEventListener('click', function () {
@@ -813,42 +1004,7 @@
                 var jsonInput = document.getElementById('json-upload');
                 var recruitlydatacheckbox = document.getElementById('recruitly-data');
 
-                if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
-                    if (recruitlydatacheckbox) {
-                        if (recruitlydatacheckbox.checked) {
-                            console.log("pass");
 
-                            // Show SES data processing popup
-                            const sesPopup = document.getElementById('ses-processing-popup');
-                            sesPopup.style.display = 'flex';
-
-                            // Animate progress bar for visual feedback
-                            const progressBar = document.getElementById('ses-progress-bar');
-                            const progressText = document.getElementById('ses-progress-text');
-                            let progress = 0;
-
-                            const progressInterval = setInterval(() => {
-                                progress += 5;
-                                if (progress > 100) {
-                                    clearInterval(progressInterval);
-                                    setTimeout(() => {
-                                        sesPopup.style.display = 'none';
-                                    }, 500);
-                                    return;
-                                }
-                                progressBar.style.width = `${progress}%`;
-                                progressText.textContent = `Processing: ${progress}%`;
-                            }, 200);
-
-                        } else {
-                            alert('Please upload a CSV or JSON file, or check the company data checkbox.');
-                            return;
-                        }
-                    } else {
-                        alert('Please upload a CSV or JSON file, or check the company data checkbox.');
-                        return;
-                    }
-                }
 
                 var recruitlyDataCheckbox = document.getElementById('recruitly-data');
                 var questionInput = document.getElementById('question-input');
@@ -856,8 +1012,24 @@
                 var messagesDiv = document.getElementById('messages'); // Get the messages div
                 questionInput.value = '';
 
+
+                if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
+                    if (recruitlydatacheckbox) {
+                        if (recruitlydatacheckbox.checked) {
+                            console.log("pass");
+                        } else {
+                            showPopup('Please upload a CSV or JSON file.');
+                            return;
+                        }
+                    } else {
+                        showPopup('Please upload a CSV or JSON file.');
+                        return;
+                    }
+                }
+
+
                 if (question === '') {
-                    alert('Please enter a question.');
+                    showPopup('Please enter a question.');
                     return;
                 }
 
@@ -889,8 +1061,12 @@
                     "\nchat_id", selected_chat_id
                 );
 
+
+
                 // Listen for the 'message' event to receive the response
                 socket.on('message', function (data) {
+
+                    console.log(" ---------- spocket is on -------", data.data);
                     if (botResponseDiv) {
                         botResponseDiv.innerHTML = data.data; // Update the content of the bot response
                     }
@@ -911,14 +1087,19 @@
 
             // Sidebar toggle logic
             const sidebar = document.getElementById('sidebar');
-            const sidebarToggleBtn = document.querySelector('.sidebar-toggle-btn');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
 
-            if (sidebar && sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', function () {
-                    sidebar.classList.toggle('active');
-                    sidebarToggleBtn.classList.toggle('active');
-                });
-            }
+            sidebar.classList.remove('collapsed');
+            sidebarToggle.classList.remove('collapsed');
+
+
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                sidebarToggle.classList.toggle('collapsed');
+
+
+            });
+
 
             // Add this after your other event listeners
             cancelBtn.addEventListener('click', function () {
@@ -972,7 +1153,7 @@
                             // Update file name display
                             updateFileNameDisplay(fileInput, fileNameDisplayId);
                         } else {
-                            alert('Invalid file type. Please drop the correct file type.');
+                            showPopup('Invalid file type. Please drop the correct file type.');
                         }
                     }
                 });
@@ -1008,6 +1189,23 @@
                     displayElement.innerHTML = '';
                 }
             };
+
+            // Function to show the custom popup
+            function showPopup(message) {
+                const popup = document.getElementById('customPopup');
+                const popupMessage = document.getElementById('popupMessage');
+
+                // Set the message
+                popupMessage.textContent = message;
+
+                // Show the popup
+                popup.classList.remove('hidden');
+
+                // Auto-hide after 3 seconds
+                setTimeout(function () {
+                    popup.classList.add('hidden');
+                }, 3000);
+            }
 
             setupDragAndDrop('drop-zone-pdf', 'pdf-upload', 'pdf-upload-name', ['application/pdf']);
             setupDragAndDrop('drop-zone-csv', 'csv-upload', 'csv-upload-name', ['text/csv']);

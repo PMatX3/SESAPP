@@ -1,6 +1,6 @@
 import eventlet
 eventlet.monkey_patch()
-
+import fitz
 from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, Response, send_file
 from pymongo import MongoClient
 from werkzeug.utils import secure_filename
@@ -74,7 +74,11 @@ mongo = client['user_db']
 app.secret_key = '31dee9b85d3be7513eda6e3bb1b2e22edd923194d18b3cf8'
 
 UPLOAD_FOLDER = 'uploads'
+JOB_DESCRIPTION_FOLDER = 'job_descriptions'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+
+
 DOMAIN = 'https://www.yourbestcandidate.ai'
 
 md = (
@@ -183,6 +187,10 @@ def chat():
     if 'user_id' in session:
         user_id = session['user_id']
         try:
+            session.pop('current_data_source', None)
+            session.pop('current_file_path',None)
+            session.pop('job_description_text',None)
+            session.pop('pdf_file_path',None)
             clear_collection(user_id)
         except Exception as e:
             print("error in clear collection => ",e)
@@ -545,6 +553,10 @@ def new_chat():
         if 'user_id' in session:
             user_id = session.get('user_id')
             try:
+                session.pop('current_data_source', None)
+                session.pop('current_file_path',None)
+                session.pop('job_description_text',None)
+                session.pop('pdf_file_path',None)
                 clear_collection(user_id)
             except Exception as e:
                 print("error in clear collection => ",e)
@@ -609,76 +621,200 @@ def reset_password():
     else:
         return render_template('reset_password.html')
 
+
+def extract_text_from_pdf(pdf_path):
+    try:
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+        return text.strip()
+    except Exception as e:
+        return f"Error: {e}"
+
+# @app.route('/load_data', methods=['POST'])
+# def load_new_data():
+#     print(" Load data clled \n")
+#     user_id = session.get('user_id')
+#     if not user_id:
+#         return jsonify({'error': 'User ID not found in session'}), 401
+    
+#     files = request.files.getlist('file')
+#     use_ses = request.form.get('useSES') == 'true'
+#     job_description_folder = 'job_descriptions'
+    
+#     if not os.path.exists(UPLOAD_FOLDER):
+#         os.makedirs(UPLOAD_FOLDER)
+
+#     if not os.path.exists(job_description_folder):
+#         os.makedirs(job_description_folder)
+    
+#     if files and files[0].filename:
+#         for file in files:
+#             filename = secure_filename(file.filename)
+#             _, file_ext = os.path.splitext(filename)
+#             unique_id = f"{uuid.uuid4()}-{user_id}"
+#             filepath = os.path.join(UPLOAD_FOLDER, f"{unique_id}{file_ext}")
+
+#             try:
+#                 file.save(filepath)
+#             except Exception as e:
+#                 return jsonify({'error': f'Error saving file {filename}: {e}'}), 500    
+
+    
+#             if file_ext.lower() == 'pdf':
+#                 pdf_file_path = os.path.join(job_description_folder,  secure_filename(file.filename))
+#                 file.save(pdf_file_path)  # Save the PDF to the upload folder
+#                 session['pdf_file_path'] = pdf_file_path  # Store the path in session
+#                 job_description = extract_text_from_pdf(pdf_file_path)
+#                 session['job_description'] = job_description  # Save the extracted job description
+#                 message=  "PDF uploaded and processed successfully!"
+
+#             if use_ses:
+#                 session['ses_data'] = True
+#                 session['current_data_source'] = 'ses'
+#                 session.pop('current_file_path', None)
+#                 return jsonify({"message": "SES data loaded successfully!"}), 200
+
+#             if not file:
+#                 return jsonify({"message": "No file uploaded"}), 400
+            
+#             if file_ext.lower() == 'csv':
+#                 print(" inside csv upload  \n")
+#                 csv_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
+#                 file.save(csv_path)
+#                 load_and_cache_file_data(csv_path)
+#                 session['current_file_path'] = csv_path
+#                 session['current_data_source'] = 'csv'
+#                 session.pop('ses_data', None)
+#                 return jsonify({"message": "CSV data loaded successfully!"}), 200
+
+#             if file_ext.lower() == 'json':
+#                 json_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
+#                 file.save(json_path)
+#                 load_and_cache_json_data(json_path, True)
+#                 json_converted_path = 'csvdata/json_data.csv'
+#                 session['current_file_path'] = json_converted_path
+#                 session['current_data_source'] = 'json_data'
+#                 session.pop('ses_data', None)
+#                 return jsonify({"message": "JSON data loaded successfully!"}), 200   
+            
+#     print(" ======= Session ======== ", session)        
+#     return jsonify({"message": "Invalid file type provided."}), 400
+
+
+
 #AI Part
 @app.route('/load_data', methods=['POST'])
 def load_new_data():
-    try:
-        files = request.files
-    except:
-        files = None
-    data_types = request.form
-    data_types = data_types.getlist('type')
+    print("============ Load data api called =============")
     user_id = session.get('user_id')
-    message = None
-
+    message = ''
     if not user_id:
-            return jsonify({'error': 'User ID not found in session'}), 401
+        return jsonify({'error': 'User ID not found in session'}), 401
+
     
-    if files:
-        print(" inside -- files :")
-        files_list = files.getlist('file')
-        for i,file in enumerate(files_list):
-            filename = secure_filename(file.filename)
-            _, file_ext = os.path.splitext(filename)  # Extract the file extension
-            anonymous_filename = str(uuid.uuid4())+ user_id + file_ext  # Generate a unique filename
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], anonymous_filename)
-            file.save(file_path)
-            if file_ext == '.pdf':
-                pdf_docs = [file_path]  # Adjusted to work with a single file
-                raw_text = get_pdf_text(pdf_docs)  # Extract text from the PDF
-                text_chunks = get_text_chunks(raw_text)  # Split the text into chunks
-                load_pdf_data(raw_text)  # Process the extracted text as needed
-                session['current_data_source'] = 'pdf'
-                session['current_file_path'] = file_path
-                message = "PDF File Successfully Processed"
-            elif file_ext == '.csv':
-                # CSV processing logic
-                load_and_cache_file_data(file_path)
-                session['current_data_source'] = 'csv'
-                session['current_file_path'] = file_path
-                # load_data(file_path)
-                time.sleep(20)
-                message = "CSV File Successfully Processed"
-            elif file_ext == '.json':
-                starttime = datetime.now()
-                load_and_cache_json_data(file_path, True)
-                session['current_data_source'] = 'json_upload'
-                session['current_file_path'] = 'csvdata/json_data.csv'
-                endtime = datetime.now()
-                print(f"Time taken: {endtime - starttime}")
-                message = "JSON File Successfully Processed"
 
-            else:
-                return jsonify({'error': f'Invalid file type for {filename}'}), 400
-        print("=========== session current_file_path - ", session.get('current_file_path'))
-        print("=========== session current_data_source - ", session.get('current_data_source'))
-            
-        session['recrutly_id'] = False
-        message = "File Successfully Processed"
-        return jsonify({'message': message, 'current_data_source': session.get('current_data_source'), 'current_file_path': session.get('current_file_path')}), 200
+    clear_collection(user_id)
+    
+    errors = []
 
-    elif not files :
-        print(" == == == use SES Data ::")
-        file_path = 'company_data/SES.json'
+    files = request.files.getlist('file')
+    use_ses_from_form = request.form.get('useSES')
+    
+    if use_ses_from_form == 'true':
+        session['useSES'] = True
+        session['current_data_source'] = 'SES'
+        session['current_file_path'] = None
+    else:
+        message = "No files uploaded and not using SES data."
+        session['useSES'] = False
 
-        if file_path:
-            load_and_cache_json_data(file_path, True)
-            session['current_data_source'] = 'json_existing'
-            session['current_file_path'] = 'csvdata/json_data.csv'  # Store path for existing data too
-            print("=========== session current_file_path - ", session.get('current_file_path'))
-            print("=========== session current_data_source - ", session.get('current_data_source'))
-            return jsonify({'message': message, 'current_data_source': session.get('current_data_source'), 'current_file_path': session.get('current_file_path')}), 200
-        
+
+
+    try:
+        if files and files[0].filename:
+            for file in files:
+                filename = secure_filename(file.filename)
+                _, file_ext = os.path.splitext(filename)
+                unique_id = f"{uuid.uuid4()}-{user_id}"
+                filepath = os.path.join(UPLOAD_FOLDER, f"{unique_id}{file_ext}")
+
+                try:
+                    file.save(filepath)
+                except Exception as e:
+                    return jsonify({'error': f'Error saving file {filename}: {e}'}), 500
+
+                # Handle PDF
+                if file_ext.lower() == '.pdf':
+                    print("=============== New PDF Uploaded =========")
+
+                    # Clear previous PDF data from session
+
+                    # Extract text from the new PDF
+                    raw_text = extract_text_from_pdf(filepath)
+
+                    if raw_text.startswith("Error:"):
+                        os.remove(filepath)
+                        return jsonify({'error': f'Error processing PDF: {raw_text}'}), 500
+
+                    # Generate new .txt filename and path
+                    txt_filename = f"{unique_id}.txt"
+                    txt_path = os.path.join(JOB_DESCRIPTION_FOLDER, 'jobdescription.txt')
+
+                    # Save extracted text to the .txt file
+                    with open(txt_path, 'w', encoding='utf-8') as f:
+                        f.write(raw_text)
+
+                    # Update session with the new file path and text
+                    session['job_description_text'] = raw_text
+
+                    message = "PDF successfully processed and converted to text"
+
+                elif file_ext.lower() == '.csv' :
+                    try:
+                        session['current_file_path'] = filepath
+                        session['current_data_source'] = 'csv'
+                        load_and_cache_file_data( filepath)
+                        
+                        session.pop('useSES', None)
+                        
+                        message = "CSV file successfully processed"
+                    except Exception as e:
+                        os.remove(filepath)
+                        return jsonify({'error': f'Error processing CSV: {e}'}), 500
+
+                elif file_ext.lower() == '.json':
+                    try:
+                        session['current_data_source'] = 'json_upload'
+                        session['current_file_path'] ='csvdata/json_data.csv'
+                        load_and_cache_json_data(filepath, True)
+                        session.pop('useSES', None)
+                       
+                        message = "JSON file successfully processed"
+                    except Exception as e:
+                        os.remove(filepath)
+                        return jsonify({'error': f'Error processing JSON: {e}'}), 500
+
+                else:
+                    os.remove(filepath)
+                    return jsonify({'error': f'Invalid or duplicate file uploaded: {filename}'}), 400
+                
+        session.modified = True
+
+        print(" Session ---- ", session )
+        response_data = {
+            'message': message,
+            'errors': errors,
+            'useSES': session.get('useSES', False)
+        }
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        print(" Exception ---- ", e )
+        return jsonify({'error': f'Unexpected error: {e}'}), 500
 
 
     # if 'json' in data_types:
@@ -727,6 +863,7 @@ def handle_ask(json):
         user_question = json['question']
         user_id = json.get('user_id')
         chat_id = json.get('chat_id')
+        
         recruitly_data = json.get('recruitly_data', False)
         message_id = str(uuid.uuid4())
         print('recruitly_data => ', recruitly_data)
@@ -761,6 +898,7 @@ def handle_ask(json):
         entire_response = ''
         continuation_token = None
         retry = False
+        text_content = ''
 
         # Append the current question to the user's conversation history
         user_conversations[user_id].append({'question': user_question})
@@ -789,7 +927,7 @@ def handle_ask(json):
         while True:
             finish_res = None  # Initialize finish_res at the start of the loop
             print("Entering query execution loop.")
-            for chunk, temp_finish_res in execute_query3(user_question, user_id, recruitly_data, continuation_token, user_conversation=chat_history):
+            for chunk, temp_finish_res in execute_query3(user_question, user_id, continuation_token, user_conversation=chat_history):
                 if cancellation_flag.is_set():
                     print("Cancellation flag is set, breaking the inner loop.")
                     break
@@ -833,11 +971,13 @@ def handle_ask(json):
             #     break
             else:
                 print("Query execution finished with status:", finish_res)
+                
                 break
 
         # Clear entire_response if no longer needed
         del entire_response
         gc.collect()
+        socketio.emit('task_cancelled', {'data': 'Task cancellation requested'})
         print("Cleaned up entire_response and triggered garbage collection.")
 
     except Exception as e:
@@ -907,6 +1047,7 @@ def handle_ask2(json):
                 rendered_response = md.render(entire_response)
                 # Spawn a new thread to handle message saving
                 print("Spawning thread to save chat message in handle_ask2.")
+                logging.INFO(f"response data : {rendered_response}")
                 threading.Thread(target=add_chat_message, args=(user_id, user_question, rendered_response, chat_id, message_id)).start()
                 emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
                 print("Emitted message to the client in handle_ask2.")
