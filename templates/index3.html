@@ -347,6 +347,54 @@
                 font-size: 14px;
             }
         }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            font-size: 13px;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+
+        thead {
+            background-color: #2c3e50;
+            color: #ffffff;
+        }
+
+        thead th {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        tbody tr {
+            background-color: #ffffff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody td {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+
+        tbody tr:hover {
+            background-color: #eef6ff;
+        }
+
+        @media screen and (max-width: 600px) {
+            table {
+                font-size: 12px;
+                min-width: 600px;
+            }
+        }
     </style>
 </head>
 
@@ -378,7 +426,11 @@
     <div id="popup-loader" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
         <div class="bg-white p-6 rounded-lg shadow-lg text-center">
             <p class="text-lg mb-2">Processing.. Please wait</p>
-            <div id="countdown" class="text-2xl font-bold mt-2">20</div>
+            <div style="width: 100%; background-color: #f3f3f3; border-radius: 8px; overflow: hidden;">
+                <div id="progress-bar"
+                    style="width: 0%; height: 20px; background-color: #4caf50; text-align: center; color: white; line-height: 20px;">
+                    0%</div>
+            </div>
         </div>
     </div>
 
@@ -402,13 +454,17 @@
         <!-- Sidebar -->
         <div id="sidebar" class="bg-gray-100 w-64 flex-shrink-0 relative border-r border-gray-200 ">
             <div class="sidebar-content p-4">
+
                 <div class="mb-6">
-                    <h5 class="font-semibold text-lg mb-4">Your documents</h5>
-                    <p class="text-sm text-gray-600 mb-1">Upload your PDFs here and click on 'Process'</p>
+                    <h5 class="font-semibold text-lg mb-1">Document Management</h5>
+                    <p class="text-sm text-gray-500">Import your data to start matching the best candidates.</p>
+
                 </div>
 
                 <!-- PDF Upload -->
+                <li class="text-lg text-left font-semibold text-gray-900 mb-2">Upload Job Description</li>
                 <div class="bg-white p-4 rounded-lg shadow-sm mb-4 step1" id="drop-zone-pdf">
+
                     <span class="font-medium text-gray-800">Drag and drop PDF files here</span>
                     <p class="text-xs text-gray-500 mt-1 mb-3">Limit 200MB per file • PDF</p>
                     <input type="file" id="pdf-upload" accept="application/pdf" class="hidden">
@@ -419,8 +475,11 @@
                     <div id="pdf-upload-name" class="file-name-container"></div>
                 </div>
 
+
                 <!-- CSV Upload -->
-                <div class="bg-white p-4 rounded-lg shadow-sm mb-4 step2" id="drop-zone-csv">
+                <li class="text-lg text-left font-semibold text-gray-900 mt-3 mb-2" style="margin-top: 2.4rem;">
+                    Upload Candidate Data</li>
+                <div class="bg-white p-4 mt-4 rounded-lg shadow-sm mb-4 step2" id="drop-zone-csv">
                     <span class="font-medium text-gray-800">Drag and drop CSV files here</span>
                     <p class="text-xs text-gray-500 mt-1 mb-3">Limit 200MB per file • CSV</p>
                     <input type="file" id="csv-upload" accept=".csv" class="hidden">
@@ -443,14 +502,15 @@
                     <div id="json-upload-name" class="file-name-container"></div>
                 </div>
 
+
                 <!-- SES Data Checkbox -->
                 {% if session.get('company') is not none and session.get('company').strip() != '' %}
                 <div class="mb-6">
-                    <label class="inline-flex items-center cursor-pointer">
+                    <label class="inline-flex items-center cursor-pointer text-lg"> <!-- Increased text size here -->
                         <input type="checkbox" name="useSES" value="true" id="recruitly-data"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                            required>
-                        <span class="ml-2 text-sm text-gray-700">Use SES data</span>
+                            class="w-5 h-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <!-- Increased checkbox size -->
+                        <span class="ml-3 text-gray-700">Use SES data</span>
                     </label>
                 </div>
                 {% endif %}
@@ -460,7 +520,7 @@
                     class="hidden bg-blue-100 text-blue-800 p-3 rounded-lg mb-4 flex items-center">
                     <div id="small-loader"
                         class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-3"></div>
-                    <span class="text-sm font-medium">Processing...</span>
+                    <span class="text-sm font-medium">Processing file...</span>
                 </div>
 
                 <div id="success-message-container" class="hidden bg-green-100 text-green-800 p-3 rounded-lg mb-4">
@@ -469,7 +529,8 @@
 
                 <!-- New Chat Button -->
                 <button id="new-chat-btn" onclick="location.href='{{ url_for('new_chat') }}'"
-                    class="w-full mb-6 inline-flex justify-center items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition duration-200">
+                    class="w-full mb-6 inline-flex justify-center items-center px-4 py-2 text-white font-medium rounded-lg transition duration-200"
+                    style="background-color: #216fed;">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -529,6 +590,7 @@
             </div>
 
 
+
             <!-- Custom popup notification (hidden by default) -->
             <div id="customPopup" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
                 <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg">
@@ -563,6 +625,7 @@
             var company = '{{ session.get('company') }}'
             var selected_chat_id = "{{ session.get('chat_id') }}"
             var recruitly;
+            var dataSource = '';
 
             // Add pulse highlight to question input on page load
             setTimeout(function () {
@@ -588,23 +651,49 @@
                 }
             });
 
+            let interval;
+            function showLoader() {
+                let seconds = 0;
+                document.getElementById('popup-loader').style.display = 'flex';
+                const bar = document.getElementById("progress-bar");
+                progress = 0;
+                bar.style.width = "0%";
+                bar.textContent = "0%";
+                interval = setInterval(() => {
+                    if (progress < 95) {
+                        progress += 1;
+                        bar.style.width = progress + "%";
+                        bar.textContent = progress + "%";
+                    }
+                }, 100); // Smooth fill over ~10s
+            }
+
+            function hideLoader(finalSeconds) {
+                clearInterval(interval);
+                const bar = document.getElementById("progress-bar");
+                bar.style.width = "100%";
+                bar.textContent = "100%";
+
+                setTimeout(() => {
+                    document.getElementById('popup-loader').style.display = 'none';
+                    bar.style.width = "0%";
+                    bar.textContent = "0%";
+                }, 1500); // Delay to let user see full progress
+            }
+
 
             function load_data_api(formData, countdownSeconds) {
                 console.log("Load Data API called");
                 const recruitlyDataCheckbox = document.getElementById('recruitly-data');
                 const useSES = recruitlyDataCheckbox ? recruitlyDataCheckbox.checked : false;
 
-                var popup = document.getElementById('popup-loader');
-                var countdownDisplay = document.getElementById('countdown');
+                showLoader();
+
+
 
                 if (useSES) {
                     formData.append('useSES', useSES);
                     console.log("Appending useSES to formData:", useSES);
-                }
-
-                if (popup) {
-                    popup.style.display = 'flex';
-                    startCountdown(5, popup, countdownDisplay);
                 }
 
                 // Send the formData to the server
@@ -629,16 +718,19 @@
                         isProcessed = true;
                         var successContainer = document.getElementById('success-message-container');
                         var successMessage = document.getElementById('success-message');
+
                         successMessage.textContent = data.message;
                         if (data.message != null) {
                             successContainer.style.display = 'flex';
                         }
 
+                        hideLoader(data.load_time_seconds || undefined);
                         setTimeout(() => {
                             successContainer.style.display = 'none';
                         }, 3000);
                     })
                     .catch(error => {
+                        hideLoader();
                         console.error('Error:', error);
                     });
             }
@@ -696,6 +788,7 @@
                 if (csvInput.files.length > 0 && csvTemp == false) {
                     csvTemp = true;
                     file = csvInput.files[0];
+                    dataSource = 'CSV'
                     type = 'csv';
                     recruitly = false;
                     formData.append('file', file);
@@ -704,6 +797,7 @@
                 if (jsonInput.files.length > 0 && jsonTemp == false) {
                     jsonTemp = true;
                     file = jsonInput.files[0];
+                    dataSource = 'JSON_UPLOAD'
                     type = 'json';
                     recruitly = true;
                     recrutlyTemp = true
@@ -715,6 +809,7 @@
                 if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked && recrutlyTemp == false) {
                     recruitly = true;
                     recrutlyTemp = true;
+                    dataSource = 'SES'
                     formData.append('useSES', true);
                     formData.append('type', 'json');
                     load_data_api(formData, 20); // Set timer to 20 seconds
@@ -729,6 +824,9 @@
             jsonInput.addEventListener('change', handleFileUploadOrCheckboxChange);
             if (recruitlyDataCheckbox) {
                 recruitlyDataCheckbox.addEventListener('change', handleFileUploadOrCheckboxChange);
+                dataSource = 'SES'
+            } else {
+                dataSource = ''
             }
 
             function getChatHistory() {
@@ -1051,7 +1149,9 @@
                     question: question,
                     recruitly_data: recruitly,
                     user_id: "{{ session.get('user_id') }}",
-                    chat_id: selected_chat_id
+                    chat_id: selected_chat_id,
+                    dataSource: dataSource
+
                 });
 
                 console.log(

@@ -12,6 +12,8 @@ from cromadbTest import load_data, execute_query, execute_query3,execute_query2,
 from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email, send_demo_email
 import pandas as pd
 import uuid
+from io import BytesIO
+
 import threading
 from datetime import datetime,timedelta
 import markdown
@@ -33,7 +35,7 @@ import html2text
 import re
 from flask_migrate import Migrate
 from models import db  # Assuming 'db' is your SQLAlchemy instance
-
+import time
 
 app = Flask(__name__)
 
@@ -94,21 +96,24 @@ import logging
 # Setup logging with a file name
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def load_and_cache_json_data(filename=None, temp=False):
-    def load_json():
-        if filename and temp:
-            with open(filename, 'r', encoding='utf-8') as file:
-                data = json.load(file)
-                load_json_data(data)
-        else:
-            with open(filename, 'r', encoding='utf-8') as file:
-                data = json.load(file)
-                load_json_data(data)
-        
+def load_and_cache_json_data(user_id, filename=None, temp=False):
 
-    # Start a new thread for loading JSON data
+    result_holder = {}
+
+    def load_json():
+        with open(filename, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            csv_filename = os.path.splitext(filename)[0] + '.csv'
+            update_user_file_reference(user_id, 'data_file', csv_filename)
+            result = load_json_data(csv_filename, data, temp=temp)
+            result_holder.update(result)
+
     thread = threading.Thread(target=load_json)
     thread.start()
+    thread.join()
+
+    return result_holder
+
 # def load_and_cache_json_data(filename=None, user_id=None, temp=False):
 #     def load_json():
 #         if filename and temp:
@@ -499,15 +504,15 @@ def login():
 @app.route('/logout')
 def logout():
     user_id = session.get('user_id')
-    if user_id:
-        for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-            if user_id in filename:
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                try:
-                    os.remove(file_path)
-                    print(f"Deleted {file_path}")
-                except FileNotFoundError:
-                    print(f"File not found: {file_path}")
+    # if user_id:
+    #     for filename in os.listdir(app.config['UPLOAD_FOLDER']):
+    #         if user_id in filename:
+    #             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    #             try:
+    #                 os.remove(file_path)
+    #                 print(f"Deleted {file_path}")
+    #             except FileNotFoundError:
+    #                 print(f"File not found: {file_path}")
     # Clear the session
     session.clear()
     # Redirect to login page
@@ -710,22 +715,25 @@ def extract_text_from_pdf(pdf_path):
 def load_new_data():
     print("============ Load data api called =============")
     user_id = session.get('user_id')
-    message = ''
     if not user_id:
         return jsonify({'error': 'User ID not found in session'}), 401
 
-    
+    # Create user directory if it doesn't exist
+    user_dir = os.path.join(UPLOAD_FOLDER, user_id)
+    if not os.path.exists(user_dir):
+        os.makedirs(user_dir)
 
     clear_collection(user_id)
     
+    message = ''
     errors = []
+    start_time = time.time()
 
     files = request.files.getlist('file')
     use_ses_from_form = request.form.get('useSES')
     
     if use_ses_from_form == 'true':
         session['useSES'] = True
-        session['current_data_source'] = 'SES'
         session['current_file_path'] = None
     else:
         message = "No files uploaded and not using SES data."
@@ -738,8 +746,8 @@ def load_new_data():
             for file in files:
                 filename = secure_filename(file.filename)
                 _, file_ext = os.path.splitext(filename)
-                unique_id = f"{uuid.uuid4()}-{user_id}"
-                filepath = os.path.join(UPLOAD_FOLDER, f"{unique_id}{file_ext}")
+                unique_filename  = f"{uuid.uuid4()}-{file_ext}"
+                filepath = os.path.join(user_dir, unique_filename)
 
                 try:
                     file.save(filepath)
@@ -760,8 +768,9 @@ def load_new_data():
                         return jsonify({'error': f'Error processing PDF: {raw_text}'}), 500
 
                     # Generate new .txt filename and path
-                    txt_filename = f"{unique_id}.txt"
-                    txt_path = os.path.join(JOB_DESCRIPTION_FOLDER, 'jobdescription.txt')
+                    txt_filename = f"jobdescription_{user_id}.txt"
+                    txt_path = os.path.join(JOB_DESCRIPTION_FOLDER, txt_filename)
+                    update_pdf_file_reference(user_id, 'job_description', txt_path)
 
                     # Save extracted text to the .txt file
                     with open(txt_path, 'w', encoding='utf-8') as f:
@@ -774,10 +783,8 @@ def load_new_data():
 
                 elif file_ext.lower() == '.csv' :
                     try:
-                        session['current_file_path'] = filepath
-                        session['current_data_source'] = 'csv'
                         load_and_cache_file_data( filepath)
-                        
+                        update_user_file_reference(user_id, 'data_file', filepath)
                         session.pop('useSES', None)
                         
                         message = "CSV file successfully processed"
@@ -787,11 +794,9 @@ def load_new_data():
 
                 elif file_ext.lower() == '.json':
                     try:
-                        session['current_data_source'] = 'json_upload'
-                        session['current_file_path'] ='csvdata/json_data.csv'
-                        load_and_cache_json_data(filepath, True)
+                        load_and_cache_json_data(user_id, filepath, True)
                         session.pop('useSES', None)
-                       
+                        
                         message = "JSON file successfully processed"
                     except Exception as e:
                         os.remove(filepath)
@@ -801,20 +806,38 @@ def load_new_data():
                     os.remove(filepath)
                     return jsonify({'error': f'Invalid or duplicate file uploaded: {filename}'}), 400
                 
+        elapsed = round(time.time() - start_time, 2)
         session.modified = True
 
         print(" Session ---- ", session )
-        response_data = {
+        print(" load_time_seconds ---- ", elapsed )
+
+        return jsonify({
             'message': message,
             'errors': errors,
-            'useSES': session.get('useSES', False)
-        }
-
-        return jsonify(response_data), 200
+            'useSES': session.get('useSES', False),
+            'load_time_seconds': elapsed
+        }), 200
 
     except Exception as e:
         print(" Exception ---- ", e )
         return jsonify({'error': f'Unexpected error: {e}'}), 500
+
+def update_pdf_file_reference(user_id,file_type , file_path):
+        mongo.users.update_one(
+        {'app_name': user_id},
+        {'$set': {file_type: file_path}},
+        upsert=True
+    )
+
+def update_user_file_reference(user_id, file_type, file_path):
+    
+    # Using MongoDB as an example - adjust based on your database
+    mongo.users.update_one(
+        {'app_name': user_id},
+        {'$set': {file_type: file_path}},
+        upsert=True
+    )
 
 
     # if 'json' in data_types:
@@ -863,6 +886,9 @@ def handle_ask(json):
         user_question = json['question']
         user_id = json.get('user_id')
         chat_id = json.get('chat_id')
+        current_data_source = json.get('dataSource')
+
+        print("\n ============================= Current Data source =========================\n", current_data_source)
         
         recruitly_data = json.get('recruitly_data', False)
         message_id = str(uuid.uuid4())
@@ -878,7 +904,7 @@ def handle_ask(json):
                 # Make a GET request to the local API endpoint
                 print("Making GET request to /get_chat_history")
                 response = client.get('/get_chat_history')
-                print("Received response for chat history:")
+                # print("Received response for chat history:")
                 chat_history = response.json
         except Exception as e:
             print("Error fetching chat history:", e)
@@ -902,7 +928,7 @@ def handle_ask(json):
 
         # Append the current question to the user's conversation history
         user_conversations[user_id].append({'question': user_question})
-        print(f"Appended user question to history for user {user_id}: {user_question}")
+        # print(f"Appended user question to history for user {user_id}: {user_question}")
 
         # remove Html, \\ , and links from the conversation
         if 'error' in chat_history:
@@ -916,18 +942,18 @@ def handle_ask(json):
                 chat['ai'] = chat['ai'].replace('\n', '').replace('*', '')
                 chat['ai'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['ai'])
                 chat['ai'] = chat['ai'].replace('\\', '')
-                print("Processed AI response:",)
+                
             if 'user' in chat:
                 chat['user'] = html2text.html2text(chat['user'])
                 chat['user'] = chat['user'].replace('\n', '').replace('*', '')
                 chat['user'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['user'])
                 chat['user'] = chat['user'].replace('\\', '')
-                print("Processed user question from history:")
+                
 
         while True:
             finish_res = None  # Initialize finish_res at the start of the loop
             print("Entering query execution loop.")
-            for chunk, temp_finish_res in execute_query3(user_question, user_id, continuation_token, user_conversation=chat_history):
+            for chunk, temp_finish_res in execute_query3(user_question, user_id, continuation_token, user_conversation=user_conversations, current_data_source = current_data_source):
                 if cancellation_flag.is_set():
                     print("Cancellation flag is set, breaking the inner loop.")
                     break
@@ -956,6 +982,7 @@ def handle_ask(json):
                 gc.collect()
                 finish_res = temp_finish_res  # Update finish_res from the loop variable
             user_conversations[user_id][-1]['response'] = text_content
+            print(" ================ temp response : ",temp_finish_res )
             # print(f"Updated user conversation history with response for user {user_id}.")
             if finish_res == 'length':
                 retry = True

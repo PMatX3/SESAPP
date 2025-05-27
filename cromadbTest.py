@@ -21,6 +21,11 @@ from unstructured.partition.auto import partition
 from pdf2image import convert_from_path
 import pytesseract
 import fitz  # PyMuPDF
+import openpyxl
+from io import BytesIO
+import time
+
+
 
 
 load_dotenv()
@@ -28,6 +33,8 @@ load_dotenv()
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 
 m_client = get_mongo_client()
+
+current_filepath = None
 
 def text_embedding(text):
         response = openai.embeddings.create(model="text-embedding-ada-002", input=text[:8000])
@@ -115,10 +122,10 @@ def load_pdf_data(text):
         ids=["job_profile"]
     )
 
-def load_data(file_name, temp=False):
-    print('file_name ===>',file_name, temp)
+def load_data(csv_filepath, temp=False):
+    print('file_name ===>',csv_filepath, temp)
     
-    df=pd.read_csv(file_name)
+    df=pd.read_csv(csv_filepath)
     df.head()
     
     df['text'] = df.apply(lambda row: '\n'.join([f"{col}: {row[col]}" for col in df.columns]), axis=1)
@@ -144,35 +151,29 @@ def load_data(file_name, temp=False):
                 documents=batch_docs,
                 ids=batch_ids
             )
-    if file_name:
-        df.to_csv(file_name, index=False)
-        # session['current_data_source'] = file_name
-        print(f"Data saved to::: {file_name}")
-
-
-def load_json_data(json_data, file=False):
-    """
-    Converts JSON data to a DataFrame, then generates a new DataFrame with a 'text' column
-    that concatenates all column names and data, and finally stores this data into Cromadb.
-    Before storing into Cromadb, it saves the DataFrame as a CSV file in the 'csvdata' folder with the name 'json_data.csv'.
-
-    Args:
-    - json_data: A list of dictionaries, where each dictionary represents a document to be stored in Cromadb.
-    """
-    # Convert JSON data to DataFrame
-    df = pd.DataFrame(json_data)
-
-    # Save the DataFrame to a CSV file in the 'csvdata' folder
-    csv_file_path = 'csvdata/json_data.csv'
-    os.makedirs(os.path.dirname(csv_file_path), exist_ok=True)  # Ensure the directory exists
-    df.to_csv(csv_file_path, index=False, escapechar='\\')
-    print(f"JSON data saved to {csv_file_path} successfully.")
     
-    if not file:
-        load_data(csv_file_path, temp=True)
-    else:
-        load_data(csv_file_path, temp=False)
-    print("JSON data loaded into Cromadb successfully.")
+    df.to_csv(csv_filepath, index=False)
+    # session['current_data_source'] = file_name
+        
+
+
+def load_json_data(csv_filepath, json_data, temp=False):
+    start = time.time()
+
+    try:
+        df = pd.json_normalize(json_data, sep='.') if isinstance(json_data, list) else pd.DataFrame(json_data)
+    except Exception as e:
+        return {'success': False, 'message': f"Error converting JSON: {e}"}
+
+    os.makedirs(os.path.dirname(csv_filepath), exist_ok=True)
+    df.to_csv(csv_filepath, index=False, escapechar='\\')
+    print(f"JSON saved to {csv_filepath}")
+
+    load_data(csv_filepath, temp=temp)
+    print("JSON loaded into ChromaDB")
+
+    elapsed = round(time.time() - start, 2)
+    return {'success': True, 'message': 'Loaded successfully', 'load_time_seconds': elapsed}
 
 
 from bson import ObjectId
@@ -785,33 +786,40 @@ def execute_query2(query, user_id, temp=False, continuation_token=None):
 
 
 def extract_structured_data_with_ai(candidates=[], query="", embedding_query=""):
+
+    print(" =========================== Candiates in AI model ============= :::::  ", len(candidates))
    
     prompt = f"""
-You are an AI expert in matching job candidates with job descriptions. You will receive a list of candidate profiles and a user query. Your job is to return structured candidate details based on the query, or ask the user for clarification if the query is ambiguous.
+            You are an AI expert designed to process and display structured candidate information. You will receive a list of candidate profiles and a user query. Your job is to return well-formatted, structured candidate details based on the query, or ask for clarification if the query is ambiguous.
+            
+            Context:
+            Candidates: {candidates}
 
-Context:
-Candidates: {candidates}
 
-Your guidelines:
-1. Understand both the job description and candidate details.
-2. If the query includes greetings or small talk, respond briefly and politely in one line.
-3. Focus your response only on the given information.
-4. If the query is unclear, ask the user to rephrase or clarify it instead of guessing.
-5. If the job description is missing, rely only on candidate data.
-6. If no candidate data is present, respond generally about job matching or career advice without stating the lack of data.
-7. Return candidate info in this structured format for all relevant candidates:
-8. Consider 'reference' field as the candidate identifier (e.g., reference = candidate ID).
 
-Remember
- - if candidates array  is blank  write No candidate profiles found for this request else not.
- - Ensure the data is displayed in a well-structured format on your website Preserve Preserve paragraph spacing, headings, subheadings, bold case titles, and proper indentation for fields
-    - **Candidate ID :** [reference]
-    - **Full Name:** [Full Name]
-    - **Job Title:** [Current Job Title]
-    - **Email:** [Email]
-    - **Location:** [Address City or County/Region or Country]
-    - **Languages:** [Leave blank if not available]
-    - **Nationality:** [Nationality]
+            Your guidelines:
+            1. Understand the user query and relate it to the candidate data.
+            2. If the query includes greetings or small talk, respond briefly and politely in one line.
+            3. Focus your response only on the given candidate information.
+            4. If the query is unclear, ask the user to rephrase or clarify it instead of guessing. Give small    examples 
+            5. If the job description is missing, rely only on candidate data.
+            6. If no candidate data is present (i.e., the candidate list is empty or blank), respond generally about job matching or career advice. **Do not say "No candidate profiles found" if the list is not empty.**
+            7. When users ask for more candidates (e.g., 'continue', 'give me more', 'I need more'), return the next unique candidates in the list.
+            8. Consider 'reference' field as the candidate identifier (e.g., reference = candidate ID).
+
+Remember:
+- Only write "No candidate profiles found for this request." if the candidates list is completely empty.
+- Ensure the data is displayed in a well-structured format on your website. Preserve paragraph spacing, headings, subheadings, bold case titles, and proper indentation for fields.
+- Do not repeat candidates already shown in previous responses. Always return only **unique** candidates from the provided list.
+
+    1.**Candidate ID :** [reference]
+      **Full Name:** [Full Name]
+      **Gender:** [Gender]
+      **Job Title:** [Current Job Title or headlineLower]
+      **Email:** [Email]
+      **Location:** [Address City or County/Region or Country]
+      **Languages:** [Leave blank if not available]
+      **Nationality:** [Nationality]
 
 Respond to this query: "{query}"
 """
@@ -889,20 +897,21 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
         {user_conversation if user_conversation else "None"}
 
         Your task:
-        Generate a valid MongoDB query filter (as a JSON object only) that best matches the user's query, using the job description and prior conversation context.
+        Generate a valid MongoDB query filter (as a JSON object only) that best matches the user's query and provided Job Description's job title, using the Job Description and prior conversation context.
 
         **Instructions:**
         1. Return only the MongoDB query filter – no explanation.
         2. Use only field names from the document structure.
-        3. Use $regex for flexible text fields like job title, location, or skills.
+        3. Use $regex for flexible text fields like  headlineLower, job title, , location.
         4. If the user is asking for **more candidates** (e.g., "show more", "give me 10 more", "find 13 more candidates"):
         - Treat it as a continuation.
-        - Extract the most recent filterable criteria (e.g., job title, experience, skills) from the previous conversation.
+        - Extract the most recent filterable criteria (e.g., headlineLower , job title,) from the previous conversation.
         - Reuse those same criteria in the new filter.
         - Do not modify or expand criteria unless the current query specifies changes.
         5. Do NOT include "$limit" in the filter.
-        6. Interpret "recruiter" broadly to include "HR Executive", "Human Resource", "Talent Acquisition", etc.
-
+        6. match candidates with query and give sample MongoDB document structure headlineLower, 
+        6. Interpret "recruiter" broadly to include titles such as "HR Officer and Recruiter", "Human Resources Coordinator/Recruiter","HR Executive", "Human Resource", "Talent Acquisition", "Recruitment Specialist", "HR Recruiter", "Technical Recruiter", "Staffing Consultant", "Sourcing Specialist", "Talent Partner", "Hiring Partner", "People Operations", "Campus Recruiter", "Executive Search Consultant", "Headhunter", "HR Manager", "Director of Talent Acquisition", "VP of People", "Chief People Officer", "CHRO", and other similar roles involved in hiring and talent acquisition.
+    
         **Your output must only be the MongoDB filter in JSON.**
         """
     
@@ -932,7 +941,71 @@ def is_continuation_query(query):
     keywords = ['more', 'next', 'another', 'additional', 'continue']
     return any(kw in query.lower() for kw in keywords)
 
-def execute_query3(query, user_id, temp=False, continuation_token=None, user_conversation=[] ):
+def extract_candidate_count(query):
+    """Extracts the number of candidates requested from the query in a more flexible way."""
+    patterns = [
+        r"(\d+)\s+(?:more|additional|other) (?:candidate|profile)s?",
+        r"(?:show|give|need|find)\s+(?:me)?\s*(\d+)\s+(?:more|additional|other) (?:candidate|profile)s?",
+        r"(?:show|give|need|find)\s+(?:me)?\s*(\d+)\s+(?:candidate|profile)s?",
+        r"(\d+)\s+(?:candidate|profile)s?\s+(?:more|please)?",
+        r"(?:I want|I'd like)\s+(\d+)\s+more",
+        r"(?:get|fetch)\s+(\d+)\s+more"
+        # Add more patterns as you identify common phrasing
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, query, re.IGNORECASE)
+        if match:
+
+            return int(match.group(1))
+    return None
+
+def create_excel_file(data, filename="candidates.xlsx"):
+    """
+    Creates an Excel file from a list of dictionaries, handling nested dictionaries.
+    """
+    if not data:
+        return None
+
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    try:
+        # Determine all unique headers, including keys from nested dictionaries
+        all_headers = set()
+        for row_data in data:
+            all_headers.update(row_data.keys())
+            for value in row_data.values():
+                if isinstance(value, dict):
+                    all_headers.update(value.keys())
+
+        headers = list(all_headers)
+        sheet.append(headers)
+
+        # Write data
+        for row_data in data:
+            row = []
+            for header in headers:
+                value = row_data.get(header)
+                if isinstance(value, dict):
+                    # If the value is a dictionary, concatenate its key-value pairs into a string
+                    cell_value = ", ".join(f"{k}: {v}" for k, v in value.items())
+                    row.append(cell_value)
+                else:
+                    row.append(value if value is not None else "")
+            sheet.append(row)
+
+        # Save the workbook to a BytesIO object (in-memory file)
+        excel_file = BytesIO()
+        workbook.save(excel_file)
+        excel_file.seek(0)  # Reset the file pointer to the beginning
+
+        return excel_file
+
+    except Exception as e:
+        print(f"Error creating Excel file: {e}")
+        return None  # Explicitly return None on error
+
+def execute_query3(query, user_id, temp=False, continuation_token=None, user_conversation=[], current_data_source=None ):
     job_description = ''
     print(" -- execute_query3 is called --")
     print(f"   - Query: {query}")
@@ -941,12 +1014,20 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
     print(f"   - Temp: {temp}")
     print(f"   - Continuation Token: {continuation_token}")
     print(f"   - User Conversation: {user_conversation}")
-    print(f"   - Current File Path from Session: {session.get('current_file_path')}")
-    print(f"   - Current Data Source from Session: {session.get('current_data_source')}")
-    print(f"   - Current PDF File path from Session: {session.get('pdf_file_path')}")
-    print(f"   - useSES from Session: {session.get('useSES')}")
+    print(f"   - Current File Path from Session: ")
+    print(f"   - Current Data Source from Session:")
+    print(f"   - Current PDF File path from Session: ")
+    print(f"   - useSES from Session: ")
 
-    job_description_path = 'job_descriptions/jobdescription.txt'
+    result = db.users.find_one(
+        { "app_name": user_id },
+        { "job_description": 1, "data_file": 1, "_id": 0 }
+    )
+
+    if result:
+        job_description_path = result.get("job_description")
+
+    print("============= job_description_path ===============  ",job_description_path )
     data_source = session.get('current_data_source')
 
     if data_source == 'json_upload':
@@ -958,11 +1039,11 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
     if job_description_path:
         job_description = get_job_description_from_file(job_description_path)
-        print(" job description ---\n\n ", job_description )
+        # print(" job description ---\n\n ", job_description )
     else:
         None
 
-    if not data_source:
+    if not current_data_source:
         yield "No candidate data source available. Please wait a minute, or re-upload/select SES, CSV, or JSON.", "error"
         return
 
@@ -972,7 +1053,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
     candidates = []  # List to store candidate dictionaries.
 
     try:
-        if session.get('useSES'):
+        if current_data_source == 'SES':
             print(" ============== Processing with useSES ============= ")
             mongo_client = get_mongo_client()
             ses_data_collection = mongo_client['user_db']['SES_data']
@@ -980,9 +1061,10 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             sample_document = ses_data_collection.aggregate([{"$sample": {"size": 1}}]).next()
             if sample_document:
                 sample_document = convert_objectid_to_str(sample_document)
-                print(" -------- converted object to str ------------ ", sample_document)
+                # print(" -------- converted object to str ------------ ", sample_document)
 
                 if is_continuation_query(query):
+                    print(" === inside is continuation query :: === ")
                     mongodb_query = session.get('last_mongodb_query')
                     if not mongodb_query:
                         print("No stored filter for continuation. Falling back to new query.")
@@ -996,6 +1078,46 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
                 session['last_mongodb_query'] = mongodb_query
                 offset = session.get('pagination_offset', 0)
+
+                requested_count  = extract_candidate_count(query)
+
+                if requested_count:
+                    
+                    if requested_count > 20:
+                        try:
+                            print(f"Fetching all {requested_count} candidates...")
+                            results = ses_data_collection.find(mongodb_query).limit(requested_count)
+                            candidates = [{k: v for k, v in result.items() if not isinstance(v, ObjectId)} for result in list(results)]
+                            print(f"Found {len(candidates)} candidates.")
+
+                            csv_file_path = f"tmp/{user_id}_results.csv"
+                            csv_data = []
+
+                            with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+                                print("  - Step 2 writing -- csv_file_path --", csv_file_path)
+                                writer = csv.writer(file, escapechar='\\')
+
+                                if candidates:
+                                    # Write the header row using the keys of the first candidate (dictionary)
+                                    writer.writerow(candidates[0].keys())
+
+                                    # Iterate through each candidate (dictionary) in the list
+                                    for candidate in candidates:
+                                        # Write the values of the current candidate
+                                        writer.writerow(candidate.values())
+                                        csv_data.append(list(candidate.values())) # Append the list of values
+
+                                    print('CSV file generated successfully')
+                                    yield candidates, 'csv'
+                                    return
+                                else:
+                                    print('No results found for the "how many" query, CSV not generated.')
+                                    yield ['CSV not generated'], 'stop' # Or some other appropriate finish signal
+                                    return
+
+                        except Exception as e:
+                            print(f"Error : {e}")
+                            return None     
 
                 try:
                     print(f"Final MongoDB Query: {mongodb_query} with offset: {offset}")
@@ -1024,10 +1146,15 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 print(response_text)
                 return
 
-        if session.get('current_data_source') in ['csv', 'json_upload'] and session.get('current_file_path'):
+        if current_data_source == 'CSV' or current_data_source == 'JSON_UPLOAD':
             print(" ============== Processing CSV Data ============= ")
             fetched_from_csv = True
-            csv_file_path = session.get('current_file_path')
+            db_result = db.users.find_one({"app_name": user_id}, {"data_file": 1, "_id": 0})
+
+            if db_result:
+                csv_file_path = db_result.get('data_file')
+
+            print(" ==================== current csv file path :: == ", csv_file_path)
             try:
                 with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
@@ -1043,6 +1170,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 # Or 
 
                 # --- Improved Filtering Logic ---
+                
                 relevant_candidates = []
                 if csv_data:
                     query_lower = query.lower()
@@ -1085,27 +1213,35 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             # Generate embeddings for the query (for vector database)
             vector = get_embedding(query)
             vector_results = None
-            if temp and not fetched_from_csv: # Only query vector DB if not using CSV
+            if temp : # Only query vector DB if not using CSV
                 print(' Query Using collection 2  ')
                 vector_results = collection2.query(query_embeddings=vector, n_results=4000, include=["documents"])
-            elif not fetched_from_csv:
+            else :
                 print(' Query Using collection 1  ')
                 vector_results = collection.query(query_embeddings=vector, n_results=4000, include=["documents"])
+                # print("vector_results : ", vector_results)
+                # print(" Line 1112 Number of results found:", vector_results["documents"])
 
             vector_results_str = "".join(str(item) for item in vector_results['documents'][0]) if vector_results and vector_results['documents'] else ""
 
+            # print(" Line 1115 ======= vector_results_str === : ",vector_results_str )
             available_tokens_for_results = 400000 - len(query)  # Adjust for token limits
 
             # Determine the candidate information to use in the prompt, prioritizing CSV
             candidate_info_for_prompt = csv_results_str if fetched_from_csv else vector_results_str.replace("\n", " ")
+            
             is_truncated = len(candidate_info_for_prompt) > available_tokens_for_results
             if is_truncated:
+                
                 candidate_info_for_prompt = candidate_info_for_prompt[:available_tokens_for_results]
+                # print(" is_truncated : candidate_info_for_prompt:  ", candidate_info_for_prompt)
 
             # Prepare the prompt for the AI model
             if continuation_token:
+                print(" Line 1128 ========= inside continuation token ========== : ", )
                 prompt = f"Continuing: {continuation_token.replace('Context', candidate_info_for_prompt)} and answer the query: {query}"
             else:
+                # print(" Line 1131 ========= Not  continuation token Direct ly prompt  ========== : ", )
                 prompt = f"""
                     You are required to act as a specialized expert in matching job candidates with job descriptions.
                     Your task is to analyze the provided job description and candidate information, then answer specific queries regarding the candidate's suitability for the role.
@@ -1117,6 +1253,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                     1. Carefully read and understand both the job description and candidate information.
                     2. fetch candidates exect match with job description 
                     2. If the query includes greetings, respond briefly in one line.
+                    3. If the query includes a language requirement, match it with the 'Languages' field in the candidate data. Consider variations in phrasing (e.g., "Arabic-speaking", "knows Hindi", "fluent in English") and match against standardized English language names only.
                     3. Base your response on the provided job description and candidate details.
                     4. Offer concise, relevant answers that address the query directly.
                     5. If the query is unclear, ask the candidate for further clarification.
@@ -1139,7 +1276,8 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                         - Present data in a structured, readable format for the web. Use proper paragraph spacing, bolded section titles, and indentations.
 
                     Remember
-                    - *Fetch candidates only if their profile closely aligns with the job description title and core responsibilities.*  
+                    - *Fetch candidates only if their profile closely aligns with the job description title and core responsibilities.*
+                    - *If the user explicitly asks to fetch all candidates, then return all candidates matching the job title, even if their profiles are not closely aligned with the full job description.*   
                     - *Avoid job title mismatches or overly broad interpretations.*  
                     - If candidate count is less than 3, state the count along with candidate details (e.g., “There are 2 candidates matching the job description”).   
                     - **All responses should be in a well-structured, professional document format, suitable for direct display or reporting.**  
@@ -1147,6 +1285,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
                       1.**Candidate ID :** [reference]
                         **Full Name:** [Full Name]
+                        **Gender:** [Gender]
                         **Job Title:** [Current Job Title]
                         **Email:** [Email]
                         **Skills:** [Skills]
@@ -1176,6 +1315,8 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 chunk = message.choices[0].delta.content if message.choices[0].delta.content is not None else ""
                 finish_res = message.choices[0].finish_reason
                 yield chunk, finish_res
+
+
 
         
     except Exception as e:
