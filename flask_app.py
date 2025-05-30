@@ -36,15 +36,16 @@ import re
 from flask_migrate import Migrate
 from models import db  # Assuming 'db' is your SQLAlchemy instance
 import time
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-
+load_dotenv()
 # Initialize SQLAlchemy
 # Import the models
 from models import BookingAppointment
 
-
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/ubuntu/SES_Flask/bookings_storage.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # db = SQLAlchemy(app)
@@ -72,8 +73,6 @@ stripe.api_key = stripe_keys["secret_key"]
 
 client = get_mongo_client()
 mongo = client['user_db']
-
-app.secret_key = '31dee9b85d3be7513eda6e3bb1b2e22edd923194d18b3cf8'
 
 UPLOAD_FOLDER = 'uploads'
 JOB_DESCRIPTION_FOLDER = 'job_descriptions'
@@ -209,7 +208,7 @@ def chat():
             session['days'] = days
             session['company'] = company
             session['login_attempt'] = login_attempts
-            print("company => ",company)
+            # print("company => ",company)
             if company == 'SES':
                 print("in if")
                 file_path = check_for_file(company)
@@ -794,7 +793,7 @@ def load_new_data():
 
                 elif file_ext.lower() == '.json':
                     try:
-                        load_and_cache_json_data(user_id, filepath, True)
+                        load_and_cache_json_data(user_id, filepath, False)
                         session.pop('useSES', None)
                         
                         message = "JSON file successfully processed"
@@ -955,7 +954,7 @@ def handle_ask(json):
             print("Entering query execution loop.")
             for chunk, temp_finish_res in execute_query3(user_question, user_id, continuation_token, user_conversation=user_conversations, current_data_source = current_data_source):
                 if cancellation_flag.is_set():
-                    print("Cancellation flag is set, breaking the inner loop.")
+                    # print("Cancellation flag is set, breaking the inner loop.")
                     break
                 if retry:
                     print("Retry is True, removing last 400 characters from entire_response.")
@@ -989,6 +988,13 @@ def handle_ask(json):
                 continuation_token = f'Your response : {rendered_response} got cut off, because you only have limited response space. Continue writing exactly where you left off based on context : Context. Do not repeat yourself. Start your response exact with: "{entire_response[-400:]}", don\'t forget to respect format of response based on previous response and don\'t start with like "Here is response" or anything just start from where you left'
                 print("Response length limit reached, setting up for continuation.")
                 continue  # Continue the loop to process the next part of the query
+            
+            if finish_res == 'error':
+                retry = True
+                rendered_response = "I couldn't find any candidates for that search. To help me narrow it down, could you try a new query with different skills, locations, or job titles?"
+                emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
+                continue
+
             # elif finish_res == 'csv_download':
             #     print('done hrer')
             #     download_link = f"https://yourbestcandidate.ai/download_csv/{user_id}_results.csv"
@@ -1005,7 +1011,7 @@ def handle_ask(json):
         del entire_response
         gc.collect()
         socketio.emit('task_cancelled', {'data': 'Task cancellation requested'})
-        print("Cleaned up entire_response and triggered garbage collection.")
+        # print("Cleaned up entire_response and triggered garbage collection.")
 
     except Exception as e:
         error_message = str(e)
@@ -1106,7 +1112,7 @@ def handle_ask2(json):
 
 @socketio.on('cancel_task')
 def handle_cancel_task():
-    print("task cancel ===== > ")
+    # print("task cancel ===== > ")
     global cancellation_flag
     cancellation_flag.set()  # Set the flag to signal cancellation
     emit('task_cancelled', {'data': 'Task cancellation requested'})

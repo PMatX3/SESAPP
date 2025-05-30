@@ -349,6 +349,7 @@
         }
 
 
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -387,6 +388,14 @@
 
         tbody tr:hover {
             background-color: #eef6ff;
+        }
+
+        input[type="file"]:disabled {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
 
         @media screen and (max-width: 600px) {
@@ -488,6 +497,13 @@
                         Upload CSV
                     </label>
                     <div id="csv-upload-name" class="file-name-container"></div>
+                </div>
+
+                <!-- OR Separator -->
+                <div class="flex items-center my-6">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="mx-4 text-gray-700 font-semibold text-sm">OR</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
                 </div>
 
                 <!-- JSON Upload -->
@@ -636,6 +652,7 @@
                 }, 2000);
             }, 1000);
 
+
             // Add default candidate reference functionality
             // document.getElementById('question-input').addEventListener('focus', function () {
             //     // Check if input already has candidate reference prefixed
@@ -777,6 +794,8 @@
                 var type;
                 var countdownSeconds = 5; // Default 5 seconds
 
+
+
                 // Check which input has a file and set the appropriate type
                 if (pdfInput.files.length > 0 && pdfTemp == false) {
                     pdfTemp = true;
@@ -812,16 +831,40 @@
                     dataSource = 'SES'
                     formData.append('useSES', true);
                     formData.append('type', 'json');
+                    csvInput.disabled = true;
+                    jsonInput.disabled = true;
+                    if (csvInput.files.length > 0) {
+                        window.removeFileSelection('csv-upload', 'csv-upload-name');
+                    }
+                    if (jsonInput.files.length > 0) {
+                        window.removeFileSelection('json-upload', 'json-upload-name');
+                    }
                     load_data_api(formData, 20); // Set timer to 20 seconds
                 } else {
                     load_data_api(formData, 10)
+                    csvInput.disabled = false;
+
+                    jsonInput.disabled = false;
                 }
             }
 
             // Attach event listeners to file inputs and checkbox
-            pdfInput.addEventListener('change', handleFileUploadOrCheckboxChange);
-            csvInput.addEventListener('change', handleFileUploadOrCheckboxChange);
-            jsonInput.addEventListener('change', handleFileUploadOrCheckboxChange);
+            pdfInput.addEventListener('change', () => {
+                updateFileNameDisplay(pdfInput, 'pdf-upload-name');
+                handleFileUploadOrCheckboxChange();
+            });
+
+            csvInput.addEventListener('change', () => {
+                updateFileNameDisplay(csvInput, 'csv-upload-name');
+                handleEnableDisableOnChange(csvInput);
+                handleFileUploadOrCheckboxChange();
+            });
+
+            jsonInput.addEventListener('change', () => {
+                updateFileNameDisplay(jsonInput, 'json-upload-name');
+                handleEnableDisableOnChange(jsonInput);
+                handleFileUploadOrCheckboxChange();
+            });
             if (recruitlyDataCheckbox) {
                 recruitlyDataCheckbox.addEventListener('change', handleFileUploadOrCheckboxChange);
                 dataSource = 'SES'
@@ -1126,6 +1169,14 @@
                 }
 
 
+
+
+                if (pdfInput.files.length == 0) {
+                    showPopup('Please Upload a Job Description.');
+                    return;
+                }
+
+
                 if (question === '') {
                     showPopup('Please enter a question.');
                     return;
@@ -1260,6 +1311,8 @@
 
                 fileInput.addEventListener('change', () => {
                     updateFileNameDisplay(fileInput, fileNameDisplayId);
+                    handleEnableDisableOnChange(fileInput);
+                    handleFileUploadOrCheckboxChange();
                 });
             };
 
@@ -1280,15 +1333,44 @@
                 const file = inputElement.files[0];
                 const displayElement = document.getElementById(displayElementId);
                 if (file) {
-                    // Show the container and display the file name and 'X' button
-                    displayElement.style.display = 'flex'; // Ensure the container is visible
+                    displayElement.style.display = 'flex';
                     displayElement.innerHTML = `<span>${file.name}</span> <button onclick="window.removeFileSelection('${inputElement.id}', '${displayElementId}');">X</button>`;
                 } else {
-                    // Hide the container if no file is selected
                     displayElement.style.display = 'none';
                     displayElement.innerHTML = '';
                 }
             };
+
+            function handleEnableDisableOnChange(changedInput) {
+                const csvInput = document.getElementById('csv-upload');
+                const jsonInput = document.getElementById('json-upload');
+
+                if (changedInput.id === 'csv-upload') {
+                    if (changedInput.files.length > 0) {
+                        jsonInput.disabled = true;
+                        if (recruitlyDataCheckbox) {
+                            recruitlyDataCheckbox.disabled = true;
+                            recruitlyDataCheckbox.checked = false;
+                        }
+                    } else {
+                        jsonInput.disabled = false;
+                    }
+                }
+
+                if (changedInput.id === 'json-upload') {
+                    if (changedInput.files.length > 0) {
+                        csvInput.disabled = true;
+                        if (recruitlyDataCheckbox) {
+                            recruitlyDataCheckbox.disabled = true;
+                            recruitlyDataCheckbox.checked = false;
+                        }
+
+                    } else {
+                        csvInput.disabled = false;
+                    }
+                }
+            }
+
 
             // Function to show the custom popup
             function showPopup(message) {
@@ -1314,24 +1396,46 @@
             window.removeFileSelection = function (inputId, displayElementId) {
                 const inputElement = document.getElementById(inputId);
                 const displayElement = document.getElementById(displayElementId);
-                var loader = document.getElementById('small-loader-container');
+
+                const loader = document.getElementById('small-loader-container');
                 if (loader) loader.style.display = 'none';
-                inputElement.value = ''; // Clear the input
-                displayElement.style.display = 'none'; // Hide the container
-                displayElement.innerHTML = ''; // Clear the display
-                if (inputId == 'pdf-upload') {
+
+                displayElement.style.display = 'none';
+                displayElement.innerHTML = '';
+
+                // Clone input to reset fully
+                const newInputElement = inputElement.cloneNode(true);
+                inputElement.parentNode.replaceChild(newInputElement, inputElement);
+
+                // Re-attach event listener on cloned input
+                newInputElement.addEventListener('change', () => {
+                    updateFileNameDisplay(newInputElement, displayElementId);
+                    handleEnableDisableOnChange(newInputElement);
+                    handleFileUploadOrCheckboxChange();
+                });
+
+                // Reset state flags
+                if (inputId === 'pdf-upload') {
                     pdfTemp = false;
                 }
-                if (inputId == 'csv-upload') {
+                if (inputId === 'csv-upload') {
                     csvTemp = false;
                 }
-                if (inputId == 'json-upload') {
+                if (inputId === 'json-upload') {
                     jsonTemp = false;
                 }
-                if (inputId == 'recruitly-data') {
+                if (inputId === 'recruitly-data') {
                     recrutlyTemp = false;
                 }
+
+                // Re-enable CSV and JSON inputs always on removal
+                const csvInput = document.getElementById('csv-upload');
+                const jsonInput = document.getElementById('json-upload');
+                csvInput.disabled = false;
+                jsonInput.disabled = false;
+                recruitlyDataCheckbox.disabled = false;
             };
+
 
             function startTour() {
                 var intro = introJs();

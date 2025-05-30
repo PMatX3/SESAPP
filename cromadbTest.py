@@ -24,7 +24,7 @@ import fitz  # PyMuPDF
 import openpyxl
 from io import BytesIO
 import time
-
+from query_generator import generate_vector_query_and_fetch_results,format_chroma_results
 
 
 
@@ -790,36 +790,37 @@ def extract_structured_data_with_ai(candidates=[], query="", embedding_query="")
     print(" =========================== Candiates in AI model ============= :::::  ", len(candidates))
    
     prompt = f"""
-            You are an AI expert designed to process and display structured candidate information. You will receive a list of candidate profiles and a user query. Your job is to return well-formatted, structured candidate details based on the query, or ask for clarification if the query is ambiguous.
-            
-            Context:
-            Candidates: {candidates}
+You are an AI expert designed to process and display structured candidate information. Your primary goal is to take a given list of candidate profiles and present their details in a clear, well-formatted, and structured manner. You will also handle user queries and provide appropriate responses or seek clarification when needed.
 
+**Context:**
+List of Candidate Profiles to Display: {candidates}
 
+**Your Guidelines:**
+1.  **Output Goal:** Your main objective is to display the provided candidate profiles in the exact structured format specified below.
+2.  **Handle Small Talk:** If the query includes greetings or brief small talk, respond politely and concisely (one line).
+3.  **Focus on Data:** Restrict your response strictly to the provided candidate information. Do not fabricate or infer data.
+5.  **Missing Job Description (from query):** If no job description or specific job role is provided in the user's query, your default action is to display *all* available candidate data from the `List of Candidate Profiles to Display` in the structured format below.
+6.  **Empty Candidate List:**
+    * If the `List of Candidate Profiles to Display` is completely empty or `[]`, respond generally about job matching or career advice (e.g., "It seems I don't have specific candidate profiles matching your current search. Would you like some general advice on optimizing your job search criteria?").
+    * If the `List of Candidate Profiles to Display` is empty or `[]` AND the user's query is unclear or ambiguous, politely ask the user to rephrase or clarify. Provide small examples of what you can process (e.g., "Are you looking for candidates by location, job title, or something else? For example, 'Show candidates in London' or 'Who are the mechanical technicians?'").
+    * **Crucially, do NOT say "No candidate profiles found" if the list provided is not empty.**
+7.  **"More Candidates" Request:** If the user asks for more candidates (e.g., 'continue', 'give me more', 'I need more'), return the next unique candidates from the provided list that haven't been displayed yet.
+8.  **Candidate Identifier:** The 'Candidate ID' field corresponds to the 'reference' field in the raw data.
+9.  **Uniqueness:** Ensure you only return **unique** candidates. Do not repeat candidates from previous turns.
 
-            Your guidelines:
-            1. Understand the user query and relate it to the candidate data.
-            2. If the query includes greetings or small talk, respond briefly and politely in one line.
-            3. Focus your response only on the given candidate information.
-            4. If the query is unclear, ask the user to rephrase or clarify it instead of guessing. Give small    examples 
-            5. If the job description is missing, rely only on candidate data.
-            6. If no candidate data is present (i.e., the candidate list is empty or blank), respond generally about job matching or career advice. **Do not say "No candidate profiles found" if the list is not empty.**
-            7. When users ask for more candidates (e.g., 'continue', 'give me more', 'I need more'), return the next unique candidates in the list.
-            8. Consider 'reference' field as the candidate identifier (e.g., reference = candidate ID).
+**Output Formatting:**
+* Display candidate information in a clear, structured, and easy-to-read format.
+* Preserve paragraph spacing, use headings/subheadings, bold titles, and proper indentation.
+* **For each candidate, display only the fields that are available (not null, empty string, or empty list) using the following structure:**
 
-Remember:
-- Only write "No candidate profiles found for this request." if the candidates list is completely empty.
-- Ensure the data is displayed in a well-structured format on your website. Preserve paragraph spacing, headings, subheadings, bold case titles, and proper indentation for fields.
-- Do not repeat candidates already shown in previous responses. Always return only **unique** candidates from the provided list.
-
-    1.**Candidate ID :** [reference]
-      **Full Name:** [Full Name]
-      **Gender:** [Gender]
-      **Job Title:** [Current Job Title or headlineLower]
-      **Email:** [Email]
-      **Location:** [Address City or County/Region or Country]
-      **Languages:** [Leave blank if not available]
-      **Nationality:** [Nationality]
+    **Candidate ID :** [reference]
+    **Full Name:** [Full Name]
+    **Gender:** [Gender]
+    **Job Title:** [Current Job Title or headline]
+    **Email:** [Email]
+    **Location:** [Address City or County/Region or Country]
+    **Languages:** [knownLanguages]
+    **Nationality:** [Nationality]
 
 Respond to this query: "{query}"
 """
@@ -1014,9 +1015,8 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
     print(f"   - Temp: {temp}")
     print(f"   - Continuation Token: {continuation_token}")
     print(f"   - User Conversation: {user_conversation}")
-    print(f"   - Current File Path from Session: ")
-    print(f"   - Current Data Source from Session:")
-    print(f"   - Current PDF File path from Session: ")
+    print(f"   - Current Data Source from Session: ",current_data_source)
+
     print(f"   - useSES from Session: ")
 
     result = db.users.find_one(
@@ -1027,7 +1027,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
     if result:
         job_description_path = result.get("job_description")
 
-    print("============= job_description_path ===============  ",job_description_path )
+    # print("============= job_description_path ===============  ",job_description_path )
     data_source = session.get('current_data_source')
 
     if data_source == 'json_upload':
@@ -1121,28 +1121,62 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
                 try:
                     print(f"Final MongoDB Query: {mongodb_query} with offset: {offset}")
-                    results = ses_data_collection.find(mongodb_query).skip(offset).limit(20)
-                    candidates = list(results)
-                    print("------------------ result ========= \n\n", candidates)
-                    print("- candidates -- ", len(candidates))
- 
-                    # Updated: yield streaming response
-                    response = extract_structured_data_with_ai(candidates, query=query)
+                    results_list = list(ses_data_collection.find(mongodb_query).skip(offset).limit(20))
 
-                    for message in response:
-                        chunk = message.choices[0].delta.content if message.choices[0].delta.content else ""
-                        finish_reason = message.choices[0].finish_reason
-                        yield chunk, finish_reason
+                    candidates = []
+                    
+                    if results_list:
+                        for result in results_list:
+                            # Reformat the output to match the desired keys
+                            candidate_data = {
+                                "Candidate ID": result.get("reference"),
+                                "Full Name": result.get("fullName"),
+                                "Gender": result.get("gender"),
+                                "Job Title": result.get("headline"),
+                                "Email": result.get("email"),
+                                "Location": result.get("address", {}).get("cityName"), # Handle nested field gracefully
+                                "Languages": result.get("knownLanguages"),
+                                "Nationality": [nat.get("name") for nat in result.get("nationalities", [])] if result.get("nationalities") else []
+                            }
+                            candidates.append(candidate_data)
+                    else:
+                        print("No candidates found for the query or at the current offset.")
+                        response_ = "We didn't find any candidates matching your search. Could you please provide more specific job titles, skills, or locations to refine your search?"
+                        yield response_ ,"error"
+                        
+
+                    print(f"=== Found {len(candidates)} candidates -- ")
+                    # print("- candidates -- ", len(candidates))
+                    # print("------------------ First Candidate Record ========= \n\n", candidates[0])
+
+                    # # Updated: yield streaming response
+                    # response = extract_structured_data_with_ai(candidates, query=query)
+
+                    # for message in response:
+                    #     chunk = message.choices[0].delta.content if message.choices[0].delta.content else ""
+                    #     finish_reason = message.choices[0].finish_reason
+                    #     yield chunk, finish_reason
 
                     if not candidates:
-                        response_text = "No matching candidates found in the database."
-                        print(response_text)
+                        yield "Could you please clarify what specific criteria you are looking for in the best matching candidates? For example, are you interested in candidates by location, job title, or specific skills?","error"
+
+                    else:
+                        total_candidates_count = len(candidates)
+
+                        yield f"Found {total_candidates_count} matching candidate(s):\n\n", None 
+
+                        formatted_output_chunks = format_candidates_for_display(candidates)
+                        for chunk in formatted_output_chunks:
+                            yield chunk, None # Yield chunks, assuming 'None' for finish_reason until the end
+                        yield "", "stop" # Signal completion at the end
 
                 except Exception as e:
                     print(f"Error generating MongoDB query: {e}")
-                    return
+                    response_ = "We didn't find any candidates matching your search. Could you please provide more specific job titles, skills, or locations to refine your search?"
+                    yield response_ ,"error"
             else:
                 response_text = "Sample document not found in SES_data collection."
+                yield response_text, "error"
                 print(response_text)
                 return
 
@@ -1154,7 +1188,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             if db_result:
                 csv_file_path = db_result.get('data_file')
 
-            print(" ==================== current csv file path :: == ", csv_file_path)
+            # print(" ==================== current csv file path :: == ", csv_file_path)
             try:
                 with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
@@ -1202,6 +1236,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             except FileNotFoundError:
                 yield  "Uploaded CSV file not found.", "error"
                 print("Error: Uploaded CSV file not found.")
+
             except Exception as e:
                 yield  f"Error reading uploaded CSV file", "error"
                 
@@ -1218,11 +1253,36 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 vector_results = collection2.query(query_embeddings=vector, n_results=4000, include=["documents"])
             else :
                 print(' Query Using collection 1  ')
-                vector_results = collection.query(query_embeddings=vector, n_results=4000, include=["documents"])
-                # print("vector_results : ", vector_results)
+                print(" - Total documents in collection:", collection.count())
+                
+                vector_results = collection.query(query_embeddings=vector, n_results=200, include=["documents"])
+
+                # Optin 2 get candidates data from collection directly using query
+                # cleaned_query = generate_vector_query_and_fetch_results(user_conversation, query, job_description)
+                # print(" Cleaned query : ",cleaned_query )
+                # results2 = collection.query(
+                #     query_texts= query,
+                #     n_results=10  
+                # )
+                # first_doc = results2.get("documents", [[]])[0][0] if results2.get("documents", [[]])[0] else None
+
+                # if first_doc:
+                #     print("First record:\n", first_doc)
+                # else:
+                #     print("No results found.")
+
+                # formatted_output = format_chroma_results(results2.get("documents", [[]])[0])
+
+                # for _chunk in formatted_output:
+                #     yield _chunk, None 
+                    
+                # yield "", "stop"
+                
+                # print("\n\n ----- formatted_output ---- \n\n : ", formatted_output)
                 # print(" Line 1112 Number of results found:", vector_results["documents"])
 
             vector_results_str = "".join(str(item) for item in vector_results['documents'][0]) if vector_results and vector_results['documents'] else ""
+
 
             # print(" Line 1115 ======= vector_results_str === : ",vector_results_str )
             available_tokens_for_results = 400000 - len(query)  # Adjust for token limits
@@ -1230,6 +1290,8 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             # Determine the candidate information to use in the prompt, prioritizing CSV
             candidate_info_for_prompt = csv_results_str if fetched_from_csv else vector_results_str.replace("\n", " ")
             
+            print(" Line 1265 ======= candidate_info_for_prompt === : ",len(candidate_info_for_prompt) )
+
             is_truncated = len(candidate_info_for_prompt) > available_tokens_for_results
             if is_truncated:
                 
@@ -1251,7 +1313,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
                     Guidelines for responses:
                     1. Carefully read and understand both the job description and candidate information.
-                    2. fetch candidates exect match with job description 
+                    2. fetch candidates exect match with job description's job title
                     2. If the query includes greetings, respond briefly in one line.
                     3. If the query includes a language requirement, match it with the 'Languages' field in the candidate data. Consider variations in phrasing (e.g., "Arabic-speaking", "knows Hindi", "fluent in English") and match against standardized English language names only.
                     3. Base your response on the provided job description and candidate details.
@@ -1268,7 +1330,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                     Special Case – Best Candidate Comparison:
                         - If the query involves comparing candidates or selecting the best one:
                         - Compare based on Experience, Skills, and Education.
-                        - Return the best matching candidate with a brief explanation.
+                        - Return the best matching candidate.
                         - In case of a tie, mention multiple candidates and explain briefly.
 
                         Formatting Rules:
@@ -1283,7 +1345,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                     - **All responses should be in a well-structured, professional document format, suitable for direct display or reporting.**  
                     - Ensure the data is displayed in a clean format: preserve paragraph spacing, headings, subheadings, bold field labels, and proper indentation.
 
-                      1.**Candidate ID :** [reference]
+                        **Candidate ID :** [reference]
                         **Full Name:** [Full Name]
                         **Gender:** [Gender]
                         **Job Title:** [Current Job Title]
@@ -1292,6 +1354,8 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                         **Location:** [Address City or County/Region or Country]
                         **Languages:** [Leave blank if not available]
                         **Nationality:** [Nationality]
+
+                        display only the fields that are available, and omit any that are not specified
 
                     Last conversation: {str(user_conversation)}
                     Reply to this query: {query}
@@ -1315,13 +1379,42 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 chunk = message.choices[0].delta.content if message.choices[0].delta.content is not None else ""
                 finish_res = message.choices[0].finish_reason
                 yield chunk, finish_res
-
-
-
         
     except Exception as e:
         error_message = f"No candidates found in the database matching your query. "
         yield error_message, "error"  #  yield error
+
+
+def format_candidates_for_display(candidates_list):
+    
+    for i, candidate in enumerate(candidates_list):
+        output = []
+        # Add the candidate number at the beginning
+        output.append(f"{i + 1}. ")
+
+        if candidate.get("Candidate ID"):
+            output.append(f"**Candidate ID :** {candidate['Candidate ID']}")
+        if candidate.get("Full Name"):
+            output.append(f"**Full Name:** {candidate['Full Name']}")
+        if candidate.get("Gender"):
+            output.append(f"**Gender:** {candidate['Gender']}")
+        if candidate.get("Job Title"):
+            output.append(f"**Job Title:** {candidate['Job Title']}")
+        if candidate.get("Email"):
+            output.append(f"**Email:** {candidate['Email']}")
+        if candidate.get("Location"):
+            output.append(f"**Location:** {candidate['Location']}")
+        if candidate.get("Languages"):
+            # Join languages with a comma, or handle as needed
+            output.append(f"**Languages:** {', '.join(candidate['Languages'])}")
+        if candidate.get("Nationality"):
+            # Join nationalities with a comma, or handle as needed
+            output.append(f"**Nationality:** {', '.join(candidate['Nationality'])}")
+        
+        # Join the lines for the current candidate and yield
+        # Add a newline after the number for better formatting if it's the first line
+        yield output[0] + '\n'.join(output[1:]) + "\n\n"
+
 
 def cromadb_test(file_name,query):    
     df=pd.read_csv(file_name)

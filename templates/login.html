@@ -137,9 +137,7 @@
                     url: '/login',
                     data: formData,
                     success: function (response) {
-                        if (response.login_attempt === 0) {
-                            window.location.href = '/change_password';  // Redirect to change password if login_attempt is 0
-                        } else if (response.user === 'admin') {
+                        if (response.user === 'admin') {
                             window.location.href = '/admin';  // Redirect to home if login_attempt is not 0
                         } else {
                             window.location.href = '/chat';  // Redirect to home if login_attempt is not 0
