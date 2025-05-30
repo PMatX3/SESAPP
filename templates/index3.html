@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yourbestcandidateai</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="shortcut icon" href="https://www.yourbestcandidate.ai/static/images/favion2.png">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/intro.js/4.1.0/introjs.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.0.10/marked.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+        integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            margin: 0px;
+            font-family: "Source Sans 3", sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            color: #31333f;
+            background-color: rgb(255, 255, 255);
+            -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+            -webkit-font-smoothing: antialiased;
+        }
+
+
+
+        .hover-box-not-allowed {
+            cursor: not-allowed;
+        }
+
+        .pulse-highlight {
+            animation: pulse-border 2s ease-in-out;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+            }
+
+            70% {
+                box-shadow: 0 0 0 8px rgba(79, 70, 229, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+            }
+        }
+
+
+
+        .chat-message-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .file-name-container {
+            display: none;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #f0f2f6;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #31333f;
+            width: 168px;
+            overflow: hidden;
+        }
+
+        .file-name-container span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            max-width: calc(100% - 30px);
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            display: none;
+            position: absolute;
+            cursor: pointer;
+            transform: scale(1);
+            right: 4px;
+            transition: .5s;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.2);
+            transition: .5s;
+        }
+
+        blockquote,
+        dd,
+        dl,
+        figure,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        hr,
+        p,
+        pre {
+            margin-top: 1.5rem !important;
+            margin-bottom: auto !important;
+        }
+
+        /* #messages {
+            max-height: 400px;
+            
+        overflow-y: auto;
+        }
+
+        */
+
+        menu,
+        ol,
+        ul {
+            list-style-type: auto !important;
+        }
+
+        @media (max-width: 768px) {
+
+            .chat-message-container {
+                width: 100%;
+                padding: 0 10px;
+            }
+
+            .chat-message {
+                padding: 12px !important;
+            }
+
+            .input-area {
+                padding: 10px;
+            }
+
+            #question-input {
+                font-size: 14px;
+            }
+
+            #ask-btn {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+
+            .main-content-shifted {
+                margin-left: 0;
+            }
+        }
+
+        /* Tablet styles */
+        @media (min-width: 769px) and (max-width: 1024px) {
+
+
+            .chat-message-container {
+                max-width: 90%;
+            }
+        }
+
+        button:disabled {
+            background-color: #a5b4fc;
+            /* lighter indigo */
+        }
+
+        /* General Sidebar Styles */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 250px;
+            height: 100%;
+            background-color: #f7f7f7;
+            border-right: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+
+        /* Sidebar Content */
+        .sidebar-content {
+            padding: 16px;
+            height: 100%;
+            overflow-y: auto;
+        }
+
+        /* Sidebar Header */
+        .sidebar-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Sidebar Links */
+        .sidebar-links {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar-links li {
+            padding: 12px;
+            font-size: 14px;
+            color: #555;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sidebar-links li:hover {
+            background-color: #e6e6e6;
+            cursor: pointer;
+        }
+
+        /* Sidebar Toggle Button */
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 16px;
+            left: 260px;
+            /* Default position when sidebar is visible */
+            z-index: 60;
+            background-color: #ffffff;
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .sidebar-toggle-btn:hover {
+            background-color: #f0f0f0;
+        }
+
+        .sidebar-toggle-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: #333;
+            transition: transform 0.3s ease;
+        }
+
+        /* Collapsed sidebar state */
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        /* When sidebar is collapsed, move toggle button */
+        #sidebar.collapsed+.sidebar-toggle-btn,
+        .sidebar-toggle-btn.collapsed {
+            left: 16px;
+        }
+
+        /* Rotate arrow icon when collapsed */
+        .sidebar-toggle-btn.collapsed svg {
+            transform: rotate(180deg);
+        }
+
+        /* Sidebar Scrollbar Styling */
+        .sidebar-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 6px;
+        }
+
+        .sidebar-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Links and button styling in sidebar */
+        .sidebar-link {
+            padding: 10px;
+            font-size: 14px;
+            color: #555;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .sidebar-link:hover {
+            background-color: #e6e6e6;
+            cursor: pointer;
+        }
+
+        /* Adjust main content when sidebar collapses */
+        .flex-1 {
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar-collapsed .flex-1 {
+            margin-left: 0;
+        }
+
+        /* Mobile and tablet-friendly design */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 80%;
+                max-width: 300px;
+            }
+
+            /* Keep the toggle button visible and in a fixed position on mobile */
+            .sidebar-toggle-btn {
+                left: 16px;
+            }
+
+            #sidebar:not(.collapsed)+.sidebar-toggle-btn,
+            .sidebar-toggle-btn:not(.collapsed) {
+                left: calc(80% + 16px);
+                max-left: 316px;
+            }
+
+            /* Optional styles for hiding specific content on mobile */
+            .sidebar-header,
+            .sidebar-link {
+                font-size: 14px;
+            }
+        }
+
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: sans-serif;
+            font-size: 13px;
+            margin-top: 10px;
+            table-layout: fixed;
+        }
+
+        thead {
+            background-color: #2c3e50;
+            color: #ffffff;
+        }
+
+        thead th {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        tbody tr {
+            background-color: #ffffff;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tbody td {
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+
+        tbody tr:hover {
+            background-color: #eef6ff;
+        }
+
+        input[type="file"]:disabled {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        @media screen and (max-width: 600px) {
+            table {
+                font-size: 12px;
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Processing Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center">
+            <div class="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-lg font-medium">Processing...</p>
+        </div>
+    </div>
+
+    <!-- SES Data Processing Popup -->
+    <!-- <div id="ses-processing-popup"
+        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center max-w-md mx-auto">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <h3 class="text-xl font-semibold mb-2">Processing SES Data</h3>
+            <p class="text-gray-600 text-center mb-4">This may take a moment as we analyze your candidate data and
+                prepare personalized responses.</p>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+                <div id="ses-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+            <p id="ses-progress-text" class="text-sm text-gray-500">Processing: 0%</p>
+        </div>
+    </div> -->
+
+    <!-- Popup Loader -->
+    <div id="popup-loader" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg text-center">
+            <p class="text-lg mb-2">Processing.. Please wait</p>
+            <div style="width: 100%; background-color: #f3f3f3; border-radius: 8px; overflow: hidden;">
+                <div id="progress-bar"
+                    style="width: 0%; height: 20px; background-color: #4caf50; text-align: center; color: white; line-height: 20px;">
+                    0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-gray-800 text-white p-3 flex justify-between items-center">
+        <span class="text-xl font-semibold">Your Best Candidate AI</span>
+        <button class="bg-gray-700 hover:bg-gray-600 px-4 py-1.5 rounded transition duration-300"
+            onclick="location.href='{{ 'logout' if session.get('user_id') else 'login' }}'">
+            {{ 'Logout' if session.get('user_id') else 'Login' }}
+        </button>
+    </nav>
+
+    <!-- Trial warning banner -->
+    <div
+        class="{{ 'trial-active hidden' if session.get('days', 30) <= 5 else 'trial-active hidden' }} bg-red-500 text-white text-center py-2.5 font-medium">
+        You have now <span id="days-left">{{ session.get('days') }}</span> days left in your free trial.
+    </div>
+
+    <!-- Main container -->
+    <div class="flex h-[calc(100vh-48px)]">
+        <!-- Sidebar -->
+        <div id="sidebar" class="bg-gray-100 w-64 flex-shrink-0 relative border-r border-gray-200 ">
+            <div class="sidebar-content p-4">
+
+                <div class="mb-6">
+                    <h5 class="font-semibold text-lg mb-1">Document Management</h5>
+                    <p class="text-sm text-gray-500">Import your data to start matching the best candidates.</p>
+
+                </div>
+
+                <!-- PDF Upload -->
+                <li class="text-lg text-left font-semibold text-gray-900 mb-2">Upload Job Description</li>
+                <div class="bg-white p-4 rounded-lg shadow-sm mb-4 step1" id="drop-zone-pdf">
+
+                    <span class="font-medium text-gray-800">Drag and drop PDF files here</span>
+                    <p class="text-xs text-gray-500 mt-1 mb-3">Limit 200MB per file • PDF</p>
+                    <input type="file" id="pdf-upload" accept="application/pdf" class="hidden">
+                    <label for="pdf-upload"
+                        class="cursor-pointer inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-gray-50 hover:bg-gray-100 border border-gray-300 hover:border-indigo-500 hover:text-indigo-500 transition-colors duration-200">
+                        Upload PDF
+                    </label>
+                    <div id="pdf-upload-name" class="file-name-container"></div>
+                </div>
+
+
+                <!-- CSV Upload -->
+                <li class="text-lg text-left font-semibold text-gray-900 mt-3 mb-2" style="margin-top: 2.4rem;">
+                    Upload Candidate Data</li>
+                <div class="bg-white p-4 mt-4 rounded-lg shadow-sm mb-4 step2" id="drop-zone-csv">
+                    <span class="font-medium text-gray-800">Drag and drop CSV files here</span>
+                    <p class="text-xs text-gray-500 mt-1 mb-3">Limit 200MB per file • CSV</p>
+                    <input type="file" id="csv-upload" accept=".csv" class="hidden">
+                    <label for="csv-upload"
+                        class="cursor-pointer inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-gray-50 hover:bg-gray-100 border border-gray-300 hover:border-indigo-500 hover:text-indigo-500 transition-colors duration-200">
+                        Upload CSV
+                    </label>
+                    <div id="csv-upload-name" class="file-name-container"></div>
+                </div>
+
+                <!-- OR Separator -->
+                <div class="flex items-center my-6">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="mx-4 text-gray-700 font-semibold text-sm">OR</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <!-- JSON Upload -->
+                <div class="bg-white p-4 rounded-lg shadow-sm mb-4" id="drop-zone-json">
+                    <span class="font-medium text-gray-800">Drag and drop JSON files here</span>
+                    <p class="text-xs text-gray-500 mt-1 mb-3">Limit 200MB per file • JSON</p>
+                    <input type="file" id="json-upload" accept=".json" class="hidden">
+                    <label for="json-upload"
+                        class="cursor-pointer inline-flex items-center px-3 py-2 text-sm font-medium rounded-md bg-gray-50 hover:bg-gray-100 border border-gray-300 hover:border-indigo-500 hover:text-indigo-500 transition-colors duration-200">
+                        Upload JSON
+                    </label>
+                    <div id="json-upload-name" class="file-name-container"></div>
+                </div>
+
+
+                <!-- SES Data Checkbox -->
+                {% if session.get('company') is not none and session.get('company').strip() != '' %}
+                <div class="mb-6">
+                    <label class="inline-flex items-center cursor-pointer text-lg"> <!-- Increased text size here -->
+                        <input type="checkbox" name="useSES" value="true" id="recruitly-data"
+                            class="w-5 h-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                        <!-- Increased checkbox size -->
+                        <span class="ml-3 text-gray-700">Use SES data</span>
+                    </label>
+                </div>
+                {% endif %}
+
+                <!-- Loader and success message -->
+                <div id="small-loader-container"
+                    class="hidden bg-blue-100 text-blue-800 p-3 rounded-lg mb-4 flex items-center">
+                    <div id="small-loader"
+                        class="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500 mr-3"></div>
+                    <span class="text-sm font-medium">Processing file...</span>
+                </div>
+
+                <div id="success-message-container" class="hidden bg-green-100 text-green-800 p-3 rounded-lg mb-4">
+                    <span id="success-message" class="text-sm font-medium">File Processed</span>
+                </div>
+
+                <!-- New Chat Button -->
+                <button id="new-chat-btn" onclick="location.href='{{ url_for('new_chat') }}'"
+                    class="w-full mb-6 inline-flex justify-center items-center px-4 py-2 text-white font-medium rounded-lg transition duration-200"
+                    style="background-color: #216fed;">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Chat
+                </button>
+
+                <!-- Chat History -->
+                <h3 class="font-semibold text-lg mb-3" id="step2">Chat History</h3>
+                <ul id="chat-history" class="space-y-2"></ul>
+            </div>
+        </div>
+
+        <!-- Sidebar toggle button -->
+        <button id="sidebar-toggle" class=" sidebar-toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M15.707 4.293a1 1 0 010 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 0z"
+                    clip-rule="evenodd" />
+            </svg>
+        </button>
+
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col ">
+            <div class="flex-1 overflow-y-auto bg-white px-4 py-6 md:px-10" id="chat-container">
+                <div class="max-w-3xl mx-auto step3">
+                    <h1 class="text-3xl font-bold mb-8 text-gray-800">Your Best Candidate AI</h1>
+
+                    <!-- Chat messages will appear here -->
+                    <div id="messages" class="space-y-6 mb-8"></div>
+                </div>
+            </div>
+
+            <!-- Input area -->
+            <div class="border-t border-gray-200 bg-white p-4">
+                <div class="max-w-3xl mx-auto relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Type your question about your documents
+                        here:</label>
+                    <div class="flex items-center" style="margin-bottom: 2rem;">
+                        <input type="text" id="question-input" placeholder="Ask about your candidate..."
+                            class="flex-grow px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                            autocomplete="off">
+                        <button id="ask-btn"
+                            class="ml-3 px-5 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center">
+                            <span>Ask</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-1" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                        <button id="cancel-btn"
+                            class="hidden ml-3 px-5 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-colors duration-200">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Custom popup notification (hidden by default) -->
+            <div id="customPopup" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 hidden">
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded shadow-lg">
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zm-1 9a1 1 0 01-1-1v-4a1 1 0 112 0v4a1 1 0 01-1 1z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        <span id="popupMessage" class="text-sm font-medium"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intro.js/4.1.0/intro.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var isProcessed = false;
+            var csvTemp = false;
+            var jsonTemp = false;
+            var pdfTemp = false;
+            var recrutlyTemp = false;
+            var loader = document.getElementById('small-loader-container');
+            var pdfInput = document.getElementById('pdf-upload');
+            var csvInput = document.getElementById('csv-upload');
+            var jsonInput = document.getElementById('json-upload');
+            var recruitlyDataCheckbox = document.getElementById('recruitly-data');
+            var company = '{{ session.get('company') }}'
+            var selected_chat_id = "{{ session.get('chat_id') }}"
+            var recruitly;
+            var dataSource = '';
+
+            // Add pulse highlight to question input on page load
+            setTimeout(function () {
+                const questionInput = document.getElementById('question-input');
+                questionInput.classList.add('pulse-highlight');
+                setTimeout(() => {
+                    questionInput.classList.remove('pulse-highlight');
+                }, 2000);
+            }, 1000);
+
+
+            // Add default candidate reference functionality
+            // document.getElementById('question-input').addEventListener('focus', function () {
+            //     // Check if input already has candidate reference prefixed
+            //     if (!this.value.trim().startsWith('Candidate:') && !this.value.trim()) {
+            //         this.value = 'Show me candidates: ';
+            //     }
+            // });
+
+            document.getElementById('question-input').addEventListener('keypress', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevent the default action (form submission)
+                    document.getElementById('ask-btn').click(); // Trigger the click event on the ask button
+                }
+            });
+
+            let interval;
+            function showLoader() {
+                let seconds = 0;
+                document.getElementById('popup-loader').style.display = 'flex';
+                const bar = document.getElementById("progress-bar");
+                progress = 0;
+                bar.style.width = "0%";
+                bar.textContent = "0%";
+                interval = setInterval(() => {
+                    if (progress < 95) {
+                        progress += 1;
+                        bar.style.width = progress + "%";
+                        bar.textContent = progress + "%";
+                    }
+                }, 100); // Smooth fill over ~10s
+            }
+
+            function hideLoader(finalSeconds) {
+                clearInterval(interval);
+                const bar = document.getElementById("progress-bar");
+                bar.style.width = "100%";
+                bar.textContent = "100%";
+
+                setTimeout(() => {
+                    document.getElementById('popup-loader').style.display = 'none';
+                    bar.style.width = "0%";
+                    bar.textContent = "0%";
+                }, 1500); // Delay to let user see full progress
+            }
+
+
+            function load_data_api(formData, countdownSeconds) {
+                console.log("Load Data API called");
+                const recruitlyDataCheckbox = document.getElementById('recruitly-data');
+                const useSES = recruitlyDataCheckbox ? recruitlyDataCheckbox.checked : false;
+
+                showLoader();
+
+
+
+                if (useSES) {
+                    formData.append('useSES', useSES);
+                    console.log("Appending useSES to formData:", useSES);
+                }
+
+                // Send the formData to the server
+                fetch('/load_data', {
+                    method: 'POST',
+                    body: formData,
+                })
+                    .then(response => {
+                        if (response.status === 404) {
+                            return response.text().then(text => {
+                                showPopup(text);
+                                document.getElementById('recruitly-data').checked = false; // Uncheck the checkbox
+                            });
+                        }
+
+                        return response.json().catch(error => {
+                            console.error('Error parsing JSON:', error);
+                            return response.text(); // Fallback to text if JSON parsing fails
+                        });
+                    })
+                    .then(data => {
+                        isProcessed = true;
+                        var successContainer = document.getElementById('success-message-container');
+                        var successMessage = document.getElementById('success-message');
+
+                        successMessage.textContent = data.message;
+                        if (data.message != null) {
+                            successContainer.style.display = 'flex';
+                        }
+
+                        hideLoader(data.load_time_seconds || undefined);
+                        setTimeout(() => {
+                            successContainer.style.display = 'none';
+                        }, 3000);
+                    })
+                    .catch(error => {
+                        hideLoader();
+                        console.error('Error:', error);
+                    });
+            }
+
+            const input = document.getElementById("question-input");
+            const askBtn = document.getElementById("ask-btn");
+
+            // Disable Ask button by default
+            askBtn.disabled = true;
+            askBtn.classList.add('opacity-50', 'cursor-not-allowed');
+
+            input.addEventListener("input", () => {
+                const trimmed = input.value.trim();
+
+                if (trimmed.length > 0) {
+                    askBtn.disabled = false;
+                    askBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    askBtn.disabled = true;
+                    askBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            });
+
+            // Countdown function
+            function startCountdown(seconds, popup, countdownDisplay) {
+                let remainingSeconds = seconds;
+                countdownDisplay.textContent = remainingSeconds;
+
+                let interval = setInterval(() => {
+                    remainingSeconds--;
+                    countdownDisplay.textContent = remainingSeconds;
+
+                    if (remainingSeconds <= 0) {
+                        clearInterval(interval);
+                        popup.style.display = 'none';
+                    }
+                }, 1000);
+            }
+
+            // Function to handle file upload or checkbox change
+            function handleFileUploadOrCheckboxChange() {
+                var formData = new FormData(); // Recreate formData each time to ensure it's empty
+                var file;
+                var type;
+                var countdownSeconds = 5; // Default 5 seconds
+
+
+
+                // Check which input has a file and set the appropriate type
+                if (pdfInput.files.length > 0 && pdfTemp == false) {
+                    pdfTemp = true;
+                    file = pdfInput.files[0];
+                    type = 'pdf';
+                    formData.append('file', file);
+                    formData.append('type', type);
+                }
+                if (csvInput.files.length > 0 && csvTemp == false) {
+                    csvTemp = true;
+                    file = csvInput.files[0];
+                    dataSource = 'CSV'
+                    type = 'csv';
+                    recruitly = false;
+                    formData.append('file', file);
+                    formData.append('type', type);
+                }
+                if (jsonInput.files.length > 0 && jsonTemp == false) {
+                    jsonTemp = true;
+                    file = jsonInput.files[0];
+                    dataSource = 'JSON_UPLOAD'
+                    type = 'json';
+                    recruitly = true;
+                    recrutlyTemp = true
+                    formData.append('file', file);
+                    formData.append('type', type);
+                }
+
+                // Append additional data if the checkbox is checked
+                if (recruitlyDataCheckbox && recruitlyDataCheckbox.checked && recrutlyTemp == false) {
+                    recruitly = true;
+                    recrutlyTemp = true;
+                    dataSource = 'SES'
+                    formData.append('useSES', true);
+                    formData.append('type', 'json');
+                    csvInput.disabled = true;
+                    jsonInput.disabled = true;
+                    if (csvInput.files.length > 0) {
+                        window.removeFileSelection('csv-upload', 'csv-upload-name');
+                    }
+                    if (jsonInput.files.length > 0) {
+                        window.removeFileSelection('json-upload', 'json-upload-name');
+                    }
+                    load_data_api(formData, 20); // Set timer to 20 seconds
+                } else {
+                    load_data_api(formData, 10)
+                    csvInput.disabled = false;
+
+                    jsonInput.disabled = false;
+                }
+            }
+
+            // Attach event listeners to file inputs and checkbox
+            pdfInput.addEventListener('change', () => {
+                updateFileNameDisplay(pdfInput, 'pdf-upload-name');
+                handleFileUploadOrCheckboxChange();
+            });
+
+            csvInput.addEventListener('change', () => {
+                updateFileNameDisplay(csvInput, 'csv-upload-name');
+                handleEnableDisableOnChange(csvInput);
+                handleFileUploadOrCheckboxChange();
+            });
+
+            jsonInput.addEventListener('change', () => {
+                updateFileNameDisplay(jsonInput, 'json-upload-name');
+                handleEnableDisableOnChange(jsonInput);
+                handleFileUploadOrCheckboxChange();
+            });
+            if (recruitlyDataCheckbox) {
+                recruitlyDataCheckbox.addEventListener('change', handleFileUploadOrCheckboxChange);
+                dataSource = 'SES'
+            } else {
+                dataSource = ''
+            }
+
+            function getChatHistory() {
+                fetch('/get_chat_history', {
+                    method: 'GET',
+                })
+                    .then(response => response.json())
+                    .then(chatHistory => {
+                        console.log(chatHistory); // Process and display the chat history
+                        displayChatHistory(chatHistory); // Assuming you have a function to display chat history
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            }
+
+            // Call getChatHistory when the page loads to fetch chat history immediately
+            getChatHistory();
+
+            function fetchChatHistory() {
+                fetch('/chats', {
+                    method: 'GET'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("data ===== ", data);
+                        displayChatHistory2(data);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching chat history:', error);
+                    });
+            }
+
+            function displayChatHistory(data) {
+                const messagesDiv = document.getElementById('messages');
+                messagesDiv.innerHTML = ''; // Clear existing messages
+
+                // Ensure data is an array
+                if (Array.isArray(data)) {
+                    data.forEach(entry => {
+                        // For each entry, create a message for the user and the AI
+                        const userMessage = entry.user;
+                        const aiMessage = entry.ai;
+
+                        // User message box
+                        const userMessageBox = document.createElement('div');
+                        userMessageBox.className = "chat-message user fade-in p-4 bg-indigo-50 rounded-lg shadow-sm mb-4";
+                        userMessageBox.innerHTML = `<div class="font-medium text-gray-900 mb-1">You</div><div class="text-gray-700">${userMessage}</div>`;
+                        messagesDiv.appendChild(userMessageBox);
+
+                        // AI message box
+                        const aiMessageBox = document.createElement('div');
+                        aiMessageBox.className = "chat-message bot fade-in p-4 bg-gray-100 rounded-lg shadow-sm mb-4";
+                        aiMessageBox.innerHTML = `<div class="font-medium text-gray-900 mb-1">Assistant</div><div class="text-gray-700">${aiMessage}</div>`;
+                        messagesDiv.appendChild(aiMessageBox);
+                    });
+                } else {
+                    console.error('Expected data to be an array, but got:', data);
+                }
+
+                // Optionally, clear the input field after displaying the messages
+                document.getElementById('question-input').value = '';
+            }
+
+
+
+            fetchChatHistory();
+
+            function displayChatHistory2(chatHistory) {
+                const chatHistoryList = document.getElementById('chat-history');
+                chatHistoryList.innerHTML = ''; // Clear existing entries
+                if (!chatHistory.chat_list) return;
+
+                chatHistory.chat_list.forEach(chat => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = chat.first_question;
+                    listItem.style.cursor = 'pointer';
+                    listItem.style.display = 'flex';
+                    listItem.style.alignItems = 'center';
+                    listItem.style.justifyContent = 'space-between';
+                    listItem.style.padding = '8px 0'; // Add padding for better spacing
+
+                    listItem.onclick = function () {
+                        postChat(chat.chat_id);
+                    };
+
+                    // Create delete button with SVG
+                    const deleteButton = document.createElement('button');
+                    deleteButton.innerHTML = `
+<svg class="w-5 h-5 text-gray-500 hover:text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+</svg>
+        `;
+                    deleteButton.style.border = 'none';
+                    deleteButton.style.background = 'transparent';
+                    deleteButton.style.cursor = 'pointer';
+                    deleteButton.style.marginLeft = '10px';
+
+                    deleteButton.onclick = function (event) {
+                        event.stopPropagation(); // Prevent triggering li's onclick
+                        console.log(chat.chat_id);
+                        deleteChat(chat.chat_id);
+                    };
+
+                    listItem.appendChild(deleteButton);
+                    chatHistoryList.appendChild(listItem);
+
+                    // Add horizontal line
+                    const hr = document.createElement('hr');
+                    hr.style.border = '0';
+                    hr.style.height = '1px';
+                    hr.style.backgroundColor = '#e2e8f0'; // light gray color
+                    hr.style.margin = '4px 0'; // small margin
+                    chatHistoryList.appendChild(hr);
+                });
+            }
+
+
+            function deleteChat(chatId) {
+                console.log(chatId);
+                fetch(`/delete_chat/${chatId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Delete response:', data);
+                        if (data.success) { // Assuming the server sends back a success status
+                            fetchChatHistory(); // Refresh the chat history list after successful deletion
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error deleting chat:', error);
+                    });
+            }
+
+            function postChat(chatId) {
+                console.log('Inner chat id', chatId)
+                fetch('/chats', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ chat_id: chatId })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        displayChatHistory(data.chat_history)
+                        selected_chat_id = data.selected_chat_id;
+                    })
+                    .catch(error => {
+                        console.error('Error posting chat:', error);
+                    });
+            }
+
+
+            // var socket = io('https://www.yourbestcandidate.ai', {
+            // console.log(window.location.origin)
+            var socket = io('https://www.yourbestcandidate.ai', {
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                timeout: 20000,
+            });
+            console.log("============socket => ", socket)
+            socket.on('connect', () => {
+                console.log('Connected to server');
+            });
+            console.log("socket.on('connect') => ", socket.on('connect'))
+
+            var botResponseDiv; // Reference to the bot response div
+            var cancelBtn = document.getElementById('cancel-btn');
+
+            let botMessageCounter = 0;
+
+            function displayMessage(question, isUser) {
+                var messagesDiv = document.getElementById('messages');
+
+                if (isUser) {
+                    // User message template
+                    const userMessageTemplate = `
+        <div class="chat-message user fade-in p-4 bg-indigo-50 rounded-lg shadow-sm mb-4">
+            <div class="flex space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-gray-700 flex items-center justify-center text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <div class="font-medium text-gray-900 mb-1">You</div>
+                    <div class="text-gray-700">${question}</div>
+                </div>
+            </div>
+        </div>`;
+                    messagesDiv.insertAdjacentHTML('beforeend', userMessageTemplate);
+                } else {
+                    botMessageCounter++;
+                    const botResponseId = `bot-response-${botMessageCounter}`;
+
+                    // Check if the response is structured (starts with "Full Name:")
+                    let botMessageContent = '';
+
+                    if (question === '') {
+                        botMessageContent = `<div class="text-gray-700"><em>Generating Response...</em></div>`;
+                    }
+                    else if (question.trim().startsWith('Full Name:')) {
+                        // Format candidate information
+                        const lines = question.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                        let candidateDetails = '';
+                        let counter = 1;
+
+                        // Iterate through each line and properly structure the content
+                        for (let i = 0; i < lines.length; i++) {
+                            if (lines[i].trim().startsWith('Full Name:')) {
+                                // Start a new candidate block
+                                if (candidateDetails !== '') {
+                                    botMessageContent += `<div class="mb-4">${candidateDetails}</div>`;
+                                }
+                                candidateDetails = `<div class="font-semibold text-gray-900"> ${counter++}. ${lines[i]}</div>`;
+                            } else {
+                                candidateDetails += `<div class="text-gray-700">${lines[i]}</div>`;
+                            }
+                        }
+                        botMessageContent += `<div class="mb-4">${candidateDetails}</div>`; // Add the last candidate block
+                    } else {
+                        // Normal AI text
+                        botMessageContent = `<div class="text-gray-700">${question}</div>`;
+                    }
+
+
+
+                    const botMessageTemplate = `
+        <div class="chat-message bot fade-in p-4 bg-gray-100 rounded-lg shadow-sm mb-4">
+            <div class="flex space-x-4">
+                <div class="flex-shrink-0">
+                    <div class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-grow">
+                    <div class="font-medium text-gray-900 mb-1">Assistant</div>
+                    <div id="${botResponseId}">${botMessageContent}</div>
+                </div>
+            </div>
+        </div>`;
+
+                    messagesDiv.insertAdjacentHTML('beforeend', botMessageTemplate);
+                    botResponseDiv = document.getElementById(botResponseId);
+                }
+
+                // Auto-scroll to bottom
+                scrollToBottom();
+            }
+
+            socket.on('connect', function () {
+                console.log('WebSocket is connected!');
+            });
+
+            // Function to auto-scroll to the bottom of the messages
+            function scrollToBottom() {
+                const container = document.getElementById('chat-container');
+                container.scrollTop = container.scrollHeight;
+            }
+
+            document.getElementById('ask-btn').addEventListener('click', function () {
+                console.log("-- ask button disabled -- ");
+
+                var csvInput = document.getElementById('csv-upload');
+                var jsonInput = document.getElementById('json-upload');
+                var recruitlydatacheckbox = document.getElementById('recruitly-data');
+
+
+
+                var recruitlyDataCheckbox = document.getElementById('recruitly-data');
+                var questionInput = document.getElementById('question-input');
+                var question = questionInput.value.trim(); // Trim whitespace
+                var messagesDiv = document.getElementById('messages'); // Get the messages div
+                questionInput.value = '';
+
+
+                if (csvInput.files.length == 0 && jsonInput.files.length == 0) {
+                    if (recruitlydatacheckbox) {
+                        if (recruitlydatacheckbox.checked) {
+                            console.log("pass");
+                        } else {
+                            showPopup('Please upload a CSV or JSON file.');
+                            return;
+                        }
+                    } else {
+                        showPopup('Please upload a CSV or JSON file.');
+                        return;
+                    }
+                }
+
+
+
+
+                if (pdfInput.files.length == 0) {
+                    showPopup('Please Upload a Job Description.');
+                    return;
+                }
+
+
+                if (question === '') {
+                    showPopup('Please enter a question.');
+                    return;
+                }
+
+                cancelBtn.style.display = 'inline-flex';
+                document.getElementById('ask-btn').disabled = true;
+                document.getElementById('ask-btn').classList.add('hover-box-not-allowed');
+                document.getElementById('ask-btn').classList.add('bg-indigo-400');
+                document.getElementById('ask-btn').classList.remove('bg-indigo-600');
+
+                displayMessage(question, true);
+                displayMessage('', false);
+
+                if (typeof selected_chat_id === 'undefined') {
+                    selected_chat_id = "{{ session.get('chat_id') }}"
+                }
+
+                // Send the question to the server using Socket.IO
+                socket.emit('ask', {
+                    question: question,
+                    recruitly_data: recruitly,
+                    user_id: "{{ session.get('user_id') }}",
+                    chat_id: selected_chat_id,
+                    dataSource: dataSource
+
+                });
+
+                console.log(
+                    "\nquestion : ", question,
+                    "\nrecruitly_data", recruitly,
+                    "\nuser_id", "{{ session.get('user_id') }}",
+                    "\nchat_id", selected_chat_id
+                );
+
+
+
+                // Listen for the 'message' event to receive the response
+                socket.on('message', function (data) {
+
+                    console.log(" ---------- spocket is on -------", data.data);
+                    if (botResponseDiv) {
+                        botResponseDiv.innerHTML = data.data; // Update the content of the bot response
+                    }
+                    if (data.is_complete == 'stop' || data.is_complete == 'length') {
+                        cancelBtn.style.display = 'none';
+                        document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                        document.getElementById('ask-btn').classList.remove('bg-indigo-400');
+                        document.getElementById('ask-btn').classList.add('bg-indigo-600');
+                        // Reset the button state after receiving the response
+                        document.getElementById('ask-btn').disabled = false;
+                    }
+                    scrollToBottom(); // Ensure scroll after each update
+                });
+
+
+            });
+
+
+            // Sidebar toggle logic
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+
+            sidebar.classList.remove('collapsed');
+            sidebarToggle.classList.remove('collapsed');
+
+
+            sidebarToggle.addEventListener('click', function () {
+                sidebar.classList.toggle('collapsed');
+                sidebarToggle.classList.toggle('collapsed');
+
+
+            });
+
+
+            // Add this after your other event listeners
+            cancelBtn.addEventListener('click', function () {
+                // Option 1: If your backend supports a 'cancel' event, emit it:
+                socket.emit('cancel_task')
+
+
+                // Option 2: If not, forcibly disconnect and reconnect the socket to stop streaming
+                socket.disconnect();
+                setTimeout(() => socket.connect(), 500);
+
+                // Hide the cancel button and re-enable the ask button
+                cancelBtn.style.display = 'none';
+                document.getElementById('ask-btn').classList.remove('hover-box-not-allowed');
+                document.getElementById('ask-btn').classList.remove('bg-indigo-400');
+                document.getElementById('ask-btn').classList.add('bg-indigo-600');
+                document.getElementById('ask-btn').disabled = false;
+            });
+
+
+            const setupDragAndDrop = (dropZoneId, inputId, fileNameDisplayId, acceptedTypes) => {
+                const dropZone = document.getElementById(dropZoneId);
+                const fileInput = document.getElementById(inputId);
+                const fileNameDisplay = document.getElementById(fileNameDisplayId);
+
+                dropZone.addEventListener('dragover', (event) => {
+                    event.preventDefault(); // Prevent default drag behaviors
+                    dropZone.classList.add('dragging'); // Optional: add a style class
+                });
+
+                dropZone.addEventListener('dragleave', (event) => {
+                    dropZone.classList.remove('dragging'); // Optional: remove style class
+                });
+
+                dropZone.addEventListener('drop', (event) => {
+                    event.preventDefault(); // Prevent the file from being opened
+                    dropZone.classList.remove('dragging');
+
+                    const files = event.dataTransfer.files;
+                    if (files.length) {
+                        const file = files[0];
+                        if (acceptedTypes.includes(file.type)) {
+                            // Create a new DataTransfer to set files programmatically
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            fileInput.files = dataTransfer.files;
+
+                            // Trigger change event so all listeners run
+                            fileInput.dispatchEvent(new Event('change'));
+
+                            // Update file name display
+                            updateFileNameDisplay(fileInput, fileNameDisplayId);
+                        } else {
+                            showPopup('Invalid file type. Please drop the correct file type.');
+                        }
+                    }
+                });
+
+                fileInput.addEventListener('change', () => {
+                    updateFileNameDisplay(fileInput, fileNameDisplayId);
+                    handleEnableDisableOnChange(fileInput);
+                    handleFileUploadOrCheckboxChange();
+                });
+            };
+
+            document.getElementById('pdf-upload').addEventListener('change', function () {
+                updateFileNameDisplay(this, 'pdf-upload-name');
+            });
+
+            document.getElementById('csv-upload').addEventListener('change', function () {
+                isProcessed = false;
+                updateFileNameDisplay(this, 'csv-upload-name');
+            });
+
+            document.getElementById('json-upload').addEventListener('change', function () {
+                updateFileNameDisplay(this, 'json-upload-name');
+            });
+
+            window.updateFileNameDisplay = function (inputElement, displayElementId) {
+                const file = inputElement.files[0];
+                const displayElement = document.getElementById(displayElementId);
+                if (file) {
+                    displayElement.style.display = 'flex';
+                    displayElement.innerHTML = `<span>${file.name}</span> <button onclick="window.removeFileSelection('${inputElement.id}', '${displayElementId}');">X</button>`;
+                } else {
+                    displayElement.style.display = 'none';
+                    displayElement.innerHTML = '';
+                }
+            };
+
+            function handleEnableDisableOnChange(changedInput) {
+                const csvInput = document.getElementById('csv-upload');
+                const jsonInput = document.getElementById('json-upload');
+
+                if (changedInput.id === 'csv-upload') {
+                    if (changedInput.files.length > 0) {
+                        jsonInput.disabled = true;
+                        if (recruitlyDataCheckbox) {
+                            recruitlyDataCheckbox.disabled = true;
+                            recruitlyDataCheckbox.checked = false;
+                        }
+                    } else {
+                        jsonInput.disabled = false;
+                    }
+                }
+
+                if (changedInput.id === 'json-upload') {
+                    if (changedInput.files.length > 0) {
+                        csvInput.disabled = true;
+                        if (recruitlyDataCheckbox) {
+                            recruitlyDataCheckbox.disabled = true;
+                            recruitlyDataCheckbox.checked = false;
+                        }
+
+                    } else {
+                        csvInput.disabled = false;
+                    }
+                }
+            }
+
+
+            // Function to show the custom popup
+            function showPopup(message) {
+                const popup = document.getElementById('customPopup');
+                const popupMessage = document.getElementById('popupMessage');
+
+                // Set the message
+                popupMessage.textContent = message;
+
+                // Show the popup
+                popup.classList.remove('hidden');
+
+                // Auto-hide after 3 seconds
+                setTimeout(function () {
+                    popup.classList.add('hidden');
+                }, 3000);
+            }
+
+            setupDragAndDrop('drop-zone-pdf', 'pdf-upload', 'pdf-upload-name', ['application/pdf']);
+            setupDragAndDrop('drop-zone-csv', 'csv-upload', 'csv-upload-name', ['text/csv']);
+            setupDragAndDrop('drop-zone-json', 'json-upload', 'json-upload-name', ['application/json']);
+
+            window.removeFileSelection = function (inputId, displayElementId) {
+                const inputElement = document.getElementById(inputId);
+                const displayElement = document.getElementById(displayElementId);
+
+                const loader = document.getElementById('small-loader-container');
+                if (loader) loader.style.display = 'none';
+
+                displayElement.style.display = 'none';
+                displayElement.innerHTML = '';
+
+                // Clone input to reset fully
+                const newInputElement = inputElement.cloneNode(true);
+                inputElement.parentNode.replaceChild(newInputElement, inputElement);
+
+                // Re-attach event listener on cloned input
+                newInputElement.addEventListener('change', () => {
+                    updateFileNameDisplay(newInputElement, displayElementId);
+                    handleEnableDisableOnChange(newInputElement);
+                    handleFileUploadOrCheckboxChange();
+                });
+
+                // Reset state flags
+                if (inputId === 'pdf-upload') {
+                    pdfTemp = false;
+                }
+                if (inputId === 'csv-upload') {
+                    csvTemp = false;
+                }
+                if (inputId === 'json-upload') {
+                    jsonTemp = false;
+                }
+                if (inputId === 'recruitly-data') {
+                    recrutlyTemp = false;
+                }
+
+                // Re-enable CSV and JSON inputs always on removal
+                const csvInput = document.getElementById('csv-upload');
+                const jsonInput = document.getElementById('json-upload');
+                csvInput.disabled = false;
+                jsonInput.disabled = false;
+                recruitlyDataCheckbox.disabled = false;
+            };
+
+
+            function startTour() {
+                var intro = introJs();
+                intro.setOptions({
+                    steps: [
+                        {
+                            intro: "Welcome to the your best candidate AI!"
+                        },
+                        {
+                            element: document.querySelector('.step1'),
+                            intro: "This is step 1, Upload your job description pdf."
+                        },
+                        {
+                            element: document.querySelector('.step2'),
+                            intro: "This is step 2, Upload your candidate list csv. You can also direct chat with csv without job description."
+                        },
+                        {
+                            element: document.querySelector('.step3'),
+                            intro: "This is step 2, Ask questions and enjoy chat!"
+                        }
+                    ]
+                });
+                intro.start();
+            }
+
+        });
+    </script>
+</body>
+
+</html>
