@@ -710,6 +710,7 @@
 
                 if (useSES) {
                     formData.append('useSES', useSES);
+                    dataSource = 'SES';
                     console.log("Appending useSES to formData:", useSES);
                 }
 
@@ -741,10 +742,11 @@
                             successContainer.style.display = 'flex';
                         }
 
+                        console.log(" ========== Load time seconds recived : ", data.load_time_seconds)
                         hideLoader(data.load_time_seconds || undefined);
                         setTimeout(() => {
                             successContainer.style.display = 'none';
-                        }, 3000);
+                        }, 6000);
                     })
                     .catch(error => {
                         hideLoader();
@@ -829,8 +831,8 @@
                     recruitly = true;
                     recrutlyTemp = true;
                     dataSource = 'SES'
+                    type = '';
                     formData.append('useSES', true);
-                    formData.append('type', 'json');
                     csvInput.disabled = true;
                     jsonInput.disabled = true;
                     if (csvInput.files.length > 0) {
@@ -871,6 +873,8 @@
             } else {
                 dataSource = ''
             }
+
+
 
             function getChatHistory() {
                 fetch('/get_chat_history', {

@@ -217,7 +217,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
             print(" inside how many query")
             # Generate CSV file from MongoDB results
             mongo_client = get_mongo_client()
-            ses_data_collection = mongo_client['user_db']['SES_data']
+            ses_data_collection = mongo_client['user_db']['Updated_SES_data']
             sample_document = ses_data_collection.find_one()
             sample_document = convert_objectid_to_str(sample_document)
     
@@ -232,7 +232,7 @@ def execute_query(query, user_id, temp=False, continuation_token=None, user_conv
                 - Give me only the query filter in the response. No other text.
                 - 
                 - Use only the field names present in the sample document.
-                - Consider semantic matches (e.g., “job title” matches Current Job Title or Job Title/Headline).
+                - Consider semantic matches (e.g., "job title" matches Current Job Title or Job Title/Headline).
                 - Prioritize exact and strong relevance matches over casual mentions.
                 - For gender, location, job title, skills, nationality, experience, certifications, and language—match the correct field as per sample.
                 - If the query includes ranking or limits (e.g., "top 3"), do not include $limit in the filter—just build the query filter only.
@@ -882,6 +882,11 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
     sample_document_str = json.dumps(sample_document, indent=2)
     print("----------------- sample document from DB : --------------- ", sample_document_str)
 
+    ses_nationality_instruction = """
+        **Important:**
+        For SES data source, candidates must be filtered to only those with nationality exactly "Iraqi". No foreign candidates should be included.
+        """
+
     prompt = f"""
         You are an expert assistant for converting user queries into MongoDB filters.
 
@@ -900,6 +905,8 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
         Your task:
         Generate a valid MongoDB query filter (as a JSON object only) that best matches the user's query and provided Job Description's job title, using the Job Description and prior conversation context.
 
+        {ses_nationality_instruction}
+
         **Instructions:**
         1. Return only the MongoDB query filter – no explanation.
         2. Use only field names from the document structure.
@@ -907,12 +914,17 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
         4. If the user is asking for **more candidates** (e.g., "show more", "give me 10 more", "find 13 more candidates"):
         - Treat it as a continuation.
         - Extract the most recent filterable criteria (e.g., headlineLower , job title,) from the previous conversation.
-        - Reuse those same criteria in the new filter.
-        - Do not modify or expand criteria unless the current query specifies changes.
+        - reuse the last valid filter context from previous conversation, unless the new query adds or changes filters.
         5. Do NOT include "$limit" in the filter.
         6. match candidates with query and give sample MongoDB document structure headlineLower, 
-        6. Interpret "recruiter" broadly to include titles such as "HR Officer and Recruiter", "Human Resources Coordinator/Recruiter","HR Executive", "Human Resource", "Talent Acquisition", "Recruitment Specialist", "HR Recruiter", "Technical Recruiter", "Staffing Consultant", "Sourcing Specialist", "Talent Partner", "Hiring Partner", "People Operations", "Campus Recruiter", "Executive Search Consultant", "Headhunter", "HR Manager", "Director of Talent Acquisition", "VP of People", "Chief People Officer", "CHRO", and other similar roles involved in hiring and talent acquisition.
-    
+        6. If the user is asking for recruiters or HR roles, build a filter using $or with $regex that matches the following terms:
+            recruiter, talent acquisition, staffing, hiring manager, hr, human resources, HR Officer and Recruiter, HR Manager, Regional HR Manager, Human Resources Coordinator/Recruiter, HR Executive, Human Resource, Talent Acquisition, Recruitment Specialist, HR Recruiter, Technical Recruiter, Staffing Consultant, Sourcing Specialist, Talent Partner, Hiring Partner, People Operations, Campus Recruiter, Executive Search Consultant, Headhunter, HR Manager, Director of Talent Acquisition, VP of People, Chief People Officer, CHRO, and other similar roles involved in hiring and talent acquisition.
+            Use \\b(...)\\b for precise word boundaries.
+        7. If the user asks for candidates related to a specific industry (e.g., oil, gas, petroleum, recruiting, electrical, mechanical, operations, etc.), generate a MongoDB query with an $or condition that matches any of the related keywords separately using a regex pattern with precise word boundaries, e.g.:
+            \b(keyword1|keyword2|keyword3|...)\b
+
+
+    cond 
         **Your output must only be the MongoDB filter in JSON.**
         """
     
@@ -933,10 +945,30 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
     if json_match:
         mongodb_query_str = json_match.group(1)
         print(" ============== Generated MongoDB Query (Dict): ============= ", mongodb_query_str)
-        return json.loads(mongodb_query_str)
+        mongo_query_filter = apply_iraqi_filter_to_ses_query(json.loads(mongodb_query_str))
+
+        return mongo_query_filter
        
     else:
         raise ValueError(f"Could not extract a valid JSON MongoDB query from the AI response: {ai_response_text}")
+    
+def apply_iraqi_filter_to_ses_query(mongo_query_filter):
+    # The correct filter to check nationality inside 'nationalities' array of objects
+    iraqi_filter = {"nationalities.name": "Iraqi"}
+
+    if "$and" in mongo_query_filter:
+        # Append the iraqi_filter to the existing $and list
+        mongo_query_filter["$and"].append(iraqi_filter)
+    else:
+        # If there's already a nationality filter that is different or incompatible, 
+        # it's safer to override with the iraqi_filter
+        if "nationalities.name" in mongo_query_filter and mongo_query_filter["nationalities.name"] != "Iraqi":
+            mongo_query_filter["nationalities.name"] = "Iraqi"
+        else:
+            # Combine existing filter with Iraqi nationality filter
+            mongo_query_filter = {"$and": [mongo_query_filter, iraqi_filter]}
+    return mongo_query_filter
+
 
 def is_continuation_query(query):
     keywords = ['more', 'next', 'another', 'additional', 'continue']
@@ -1056,7 +1088,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
         if current_data_source == 'SES':
             print(" ============== Processing with useSES ============= ")
             mongo_client = get_mongo_client()
-            ses_data_collection = mongo_client['user_db']['SES_data']
+            ses_data_collection = mongo_client['user_db']['Updated_SES_data']
 
             sample_document = ses_data_collection.aggregate([{"$sample": {"size": 1}}]).next()
             if sample_document:
@@ -1120,6 +1152,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                             return None     
 
                 try:
+                    results_list =[]
                     print(f"Final MongoDB Query: {mongodb_query} with offset: {offset}")
                     results_list = list(ses_data_collection.find(mongodb_query).skip(offset).limit(20))
 
@@ -1136,12 +1169,19 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                                 "Email": result.get("email"),
                                 "Location": result.get("address", {}).get("cityName"), # Handle nested field gracefully
                                 "Languages": result.get("knownLanguages"),
-                                "Nationality": [nat.get("name") for nat in result.get("nationalities", [])] if result.get("nationalities") else []
+                                "Nationality": [nat.get("name") for nat in result.get("nationalities", [])] if result.get("nationalities") else [],
+                                "candidateId": result.get("candidateId")
                             }
                             candidates.append(candidate_data)
+
+                        if not candidates:
+                            # Case 1: No candidates found after processing (even if raw results were there, they might have been filtered out by get())
+                            yield "We searched our entire database, but couldn't find any candidates with those exact attributes. How about trying a similar role or related skills?", "error"
+                            # Return 0 or empty list as per your request implicitly by yielding an error message
+                            return # Exit the generator
                     else:
                         print("No candidates found for the query or at the current offset.")
-                        response_ = "We didn't find any candidates matching your search. Could you please provide more specific job titles, skills, or locations to refine your search?"
+                        response_ = "We searched our entire database, but couldn't find any candidates with those exact attributes. How about trying a similar role or related skills?"
                         yield response_ ,"error"
                         
 
@@ -1172,7 +1212,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
                 except Exception as e:
                     print(f"Error generating MongoDB query: {e}")
-                    response_ = "We didn't find any candidates matching your search. Could you please provide more specific job titles, skills, or locations to refine your search?"
+                    response_ = "We searched our entire database, but couldn't find any candidates with those exact attributes. How about trying a similar role or related skills?"
                     yield response_ ,"error"
             else:
                 response_text = "Sample document not found in SES_data collection."
@@ -1238,7 +1278,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 print("Error: Uploaded CSV file not found.")
 
             except Exception as e:
-                yield  f"Error reading uploaded CSV file", "error"
+                yield  f"Error reading uploaded CSV or JSON file", "error"
                 
 
             # Process the job description for embedding (for vector database)
@@ -1341,7 +1381,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                     - *Fetch candidates only if their profile closely aligns with the job description title and core responsibilities.*
                     - *If the user explicitly asks to fetch all candidates, then return all candidates matching the job title, even if their profiles are not closely aligned with the full job description.*   
                     - *Avoid job title mismatches or overly broad interpretations.*  
-                    - If candidate count is less than 3, state the count along with candidate details (e.g., “There are 2 candidates matching the job description”).   
+                    - If candidate count is less than 3, state the count along with candidate details (e.g., "There are 2 candidates matching the job description").   
                     - **All responses should be in a well-structured, professional document format, suitable for direct display or reporting.**  
                     - Ensure the data is displayed in a clean format: preserve paragraph spacing, headings, subheadings, bold field labels, and proper indentation.
 
@@ -1381,7 +1421,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 yield chunk, finish_res
         
     except Exception as e:
-        error_message = f"No candidates found in the database matching your query. "
+        error_message = f"We searched our entire database, but couldn't find any candidates with those exact attributes. How about trying a similar role or related skills? "
         yield error_message, "error"  #  yield error
 
 
@@ -1410,7 +1450,10 @@ def format_candidates_for_display(candidates_list):
         if candidate.get("Nationality"):
             # Join nationalities with a comma, or handle as needed
             output.append(f"**Nationality:** {', '.join(candidate['Nationality'])}")
-        
+        if candidate.get("candidateId"):
+            # Generate profile URL using candidateId
+            profile_url = f"https://secure.recruitly.io/candidate?id={candidate['candidateId']}"
+            output.append(f"**Profile Link:** <a href='{profile_url}' target='_blank' style='color:#1a0dab; text-decoration:underline;'>View Full Profile</a>")
         # Join the lines for the current candidate and yield
         # Add a newline after the number for better formatting if it's the first line
         yield output[0] + '\n'.join(output[1:]) + "\n\n"

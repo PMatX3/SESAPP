@@ -208,15 +208,18 @@ def chat():
             session['days'] = days
             session['company'] = company
             session['login_attempt'] = login_attempts
-            # print("company => ",company)
+
+            # Get the last chat for this user
+            chat_list = get_chat_list(user_id)
+            if chat_list and not session.get('chat_id'):
+                # If there's a chat history but no current chat_id, set the most recent one
+                session['chat_id'] = chat_list[0]['chat_id']
+            
             if company == 'SES':
                 print("in if")
                 file_path = check_for_file(company)
                 if file_path:
                     load_and_cache_json_data(file_path, True)
-            # if days_since_join >= days:
-            #     return redirect(url_for('pricing'))
-            # else:
             return render_template('index3.html')
         else:
             return redirect('/')
@@ -717,29 +720,36 @@ def load_new_data():
     if not user_id:
         return jsonify({'error': 'User ID not found in session'}), 401
 
-    # Create user directory if it doesn't exist
+    # Step 1: Setup user directory
     user_dir = os.path.join(UPLOAD_FOLDER, user_id)
     if not os.path.exists(user_dir):
         os.makedirs(user_dir)
-
-    clear_collection(user_id)
+    
     
     message = ''
     errors = []
     start_time = time.time()
 
     files = request.files.getlist('file')
-    use_ses_from_form = request.form.get('useSES')
     
+    # Step 2: Check if we're using SES (MongoDB)
+    use_ses_from_form = request.form.get('useSES')    
     if use_ses_from_form == 'true':
         session['useSES'] = True
         session['current_file_path'] = None
-    else:
-        message = "No files uploaded and not using SES data."
-        session['useSES'] = False
+
+        clear_collection(user_id)
+        print(" We are using useSEs Data")
+        message = "SES data loaded successfully!"
+        return jsonify({
+            'message': message,
+            'useSES': True,
+            'load_time_seconds': 0.22
+        }), 200
+    
 
 
-
+    # Step 3: Otherwise process uploaded file(s)
     try:
         if files and files[0].filename:
             for file in files:
@@ -757,8 +767,6 @@ def load_new_data():
                 if file_ext.lower() == '.pdf':
                     print("=============== New PDF Uploaded =========")
 
-                    # Clear previous PDF data from session
-
                     # Extract text from the new PDF
                     raw_text = extract_text_from_pdf(filepath)
 
@@ -767,7 +775,7 @@ def load_new_data():
                         return jsonify({'error': f'Error processing PDF: {raw_text}'}), 500
 
                     # Generate new .txt filename and path
-                    txt_filename = f"jobdescription_{user_id}.txt"
+                    txt_filename = f"jobdescription_{uuid.uuid4()}_{user_id}.txt"
                     txt_path = os.path.join(JOB_DESCRIPTION_FOLDER, txt_filename)
                     update_pdf_file_reference(user_id, 'job_description', txt_path)
 
@@ -781,20 +789,20 @@ def load_new_data():
                     message = "PDF successfully processed and converted to text"
 
                 elif file_ext.lower() == '.csv' :
+                    print("Processing Candidate CSV file...")
                     try:
                         load_and_cache_file_data( filepath)
                         update_user_file_reference(user_id, 'data_file', filepath)
-                        session.pop('useSES', None)
-                        
                         message = "CSV file successfully processed"
                     except Exception as e:
                         os.remove(filepath)
                         return jsonify({'error': f'Error processing CSV: {e}'}), 500
 
                 elif file_ext.lower() == '.json':
+                    print("Processing Candidate JSON file...")
                     try:
                         load_and_cache_json_data(user_id, filepath, False)
-                        session.pop('useSES', None)
+                        update_user_file_reference(user_id, 'data_file', filepath)
                         
                         message = "JSON file successfully processed"
                     except Exception as e:
@@ -803,7 +811,7 @@ def load_new_data():
 
                 else:
                     os.remove(filepath)
-                    return jsonify({'error': f'Invalid or duplicate file uploaded: {filename}'}), 400
+                    return jsonify({'error': f'Unsupported file type: {file_ext}'}), 400
                 
         elapsed = round(time.time() - start_time, 2)
         session.modified = True
@@ -814,7 +822,7 @@ def load_new_data():
         return jsonify({
             'message': message,
             'errors': errors,
-            'useSES': session.get('useSES', False),
+            'useSES': False,
             'load_time_seconds': elapsed
         }), 200
 
@@ -929,6 +937,8 @@ def handle_ask(json):
         user_conversations[user_id].append({'question': user_question})
         # print(f"Appended user question to history for user {user_id}: {user_question}")
 
+        
+
         # remove Html, \\ , and links from the conversation
         if 'error' in chat_history:
             print("Chat history contains an error, clearing it.")
@@ -947,6 +957,8 @@ def handle_ask(json):
                 chat['user'] = chat['user'].replace('\n', '').replace('*', '')
                 chat['user'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['user'])
                 chat['user'] = chat['user'].replace('\\', '')
+
+        
                 
 
         while True:
@@ -989,11 +1001,9 @@ def handle_ask(json):
                 print("Response length limit reached, setting up for continuation.")
                 continue  # Continue the loop to process the next part of the query
             
-            if finish_res == 'error':
-                retry = True
-                rendered_response = "I couldn't find any candidates for that search. To help me narrow it down, could you try a new query with different skills, locations, or job titles?"
-                emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
-                continue
+            if temp_finish_res == 'error':
+                emit('message', {'data': rendered_response, 'is_complete': 'stop'})
+                break 
 
             # elif finish_res == 'csv_download':
             #     print('done hrer')
