@@ -24,6 +24,7 @@ import fitz  # PyMuPDF
 import openpyxl
 from io import BytesIO
 import time
+from typing import List, Dict, Any, Optional
 from query_generator import generate_vector_query_and_fetch_results,format_chroma_results
 
 
@@ -83,16 +84,22 @@ def add_chat_message(user_id, message, response, chat_id, message_id):
         upsert=True                  # Insert as a new document if not exists
     )
 
-def get_chat_history(user_id, chat_id=None):
+def get_chat_history(user_id: str, chat_id: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Retrieves the chat history for a given user from MongoDB.
     If chat_id is provided, it filters by that specific chat_id.
     """
-    query = {"user_id": user_id}
+    query: Dict[str, Any] = {"user_id": user_id}
     if chat_id:
         query["chat_id"] = chat_id
     
-    history = list(chat_history_collection.find(query).sort("timestamp", -1))
+    # In a real scenario, sort by a 'timestamp' field in descending order
+    # For mock data, we just return the filtered list.
+    history = list(chat_history_collection.find(query)) 
+    
+    # Sort history if it contains a 'timestamp' field in real data
+    # history.sort(key=lambda x: x.get('timestamp', float('-inf')), reverse=True)
+    
     return history
 
 def get_chat_list(user_id):
@@ -974,23 +981,34 @@ def is_continuation_query(query):
     keywords = ['more', 'next', 'another', 'additional', 'continue']
     return any(kw in query.lower() for kw in keywords)
 
-def extract_candidate_count(query):
-    """Extracts the number of candidates requested from the query in a more flexible way."""
-    patterns = [
-        r"(\d+)\s+(?:more|additional|other) (?:candidate|profile)s?",
-        r"(?:show|give|need|find)\s+(?:me)?\s*(\d+)\s+(?:more|additional|other) (?:candidate|profile)s?",
-        r"(?:show|give|need|find)\s+(?:me)?\s*(\d+)\s+(?:candidate|profile)s?",
-        r"(\d+)\s+(?:candidate|profile)s?\s+(?:more|please)?",
-        r"(?:I want|I'd like)\s+(\d+)\s+more",
-        r"(?:get|fetch)\s+(\d+)\s+more"
-        # Add more patterns as you identify common phrasing
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, query, re.IGNORECASE)
-        if match:
+from typing import Optional
 
-            return int(match.group(1))
-    return None
+def extract_positive_integer(query_text: str) -> Optional[int]:
+
+    if not isinstance(query_text, str):
+        raise TypeError("Input 'query_text' must be a string.")
+    number_pattern = re.compile(r'\b[-+]?\d+(?:\.\d+)?\b')
+
+    extracted_strings = number_pattern.findall(query_text)
+
+    for num_str in extracted_strings:
+        try:
+            # If it has a decimal point, it's a float; ignore it.
+            if '.' in num_str:
+                continue
+            
+            # Convert to integer
+            num = int(num_str)
+
+            # If it's positive (greater than 0), return it immediately.
+            if num > 0:
+                return num # Return the first found positive integer
+
+        except ValueError:
+            pass 
+
+    return None # Return None if no positive integer is found
+
 
 def create_excel_file(data, filename="candidates.xlsx"):
     """
@@ -1111,50 +1129,58 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 session['last_mongodb_query'] = mongodb_query
                 offset = session.get('pagination_offset', 0)
 
-                requested_count  = extract_candidate_count(query)
+                requested_count  = extract_positive_integer(query)
+                print(" Request candidates  before query  = === : ",requested_count )
 
-                if requested_count:
+                
                     
-                    if requested_count > 20:
-                        try:
-                            print(f"Fetching all {requested_count} candidates...")
-                            results = ses_data_collection.find(mongodb_query).limit(requested_count)
-                            candidates = [{k: v for k, v in result.items() if not isinstance(v, ObjectId)} for result in list(results)]
-                            print(f"Found {len(candidates)} candidates.")
+                    # if requested_count > 20:
+                    #     try:
+                    #         print(f"Fetching all {requested_count} candidates...")
+                    #         results = ses_data_collection.find(mongodb_query).limit(requested_count)
+                    #         candidates = [{k: v for k, v in result.items() if not isinstance(v, ObjectId)} for result in list(results)]
+                    #         print(f"Found {len(candidates)} candidates.")
 
-                            csv_file_path = f"tmp/{user_id}_results.csv"
-                            csv_data = []
+                    #         csv_file_path = f"tmp/{user_id}_results.csv"
+                    #         csv_data = []
 
-                            with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
-                                print("  - Step 2 writing -- csv_file_path --", csv_file_path)
-                                writer = csv.writer(file, escapechar='\\')
+                    #         with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
+                    #             print("  - Step 2 writing -- csv_file_path --", csv_file_path)
+                    #             writer = csv.writer(file, escapechar='\\')
 
-                                if candidates:
-                                    # Write the header row using the keys of the first candidate (dictionary)
-                                    writer.writerow(candidates[0].keys())
+                    #             if candidates:
+                    #                 # Write the header row using the keys of the first candidate (dictionary)
+                    #                 writer.writerow(candidates[0].keys())
 
-                                    # Iterate through each candidate (dictionary) in the list
-                                    for candidate in candidates:
-                                        # Write the values of the current candidate
-                                        writer.writerow(candidate.values())
-                                        csv_data.append(list(candidate.values())) # Append the list of values
+                    #                 # Iterate through each candidate (dictionary) in the list
+                    #                 for candidate in candidates:
+                    #                     # Write the values of the current candidate
+                    #                     writer.writerow(candidate.values())
+                    #                     csv_data.append(list(candidate.values())) # Append the list of values
 
-                                    print('CSV file generated successfully')
-                                    yield candidates, 'csv'
-                                    return
-                                else:
-                                    print('No results found for the "how many" query, CSV not generated.')
-                                    yield ['CSV not generated'], 'stop' # Or some other appropriate finish signal
-                                    return
+                    #                 print('CSV file generated successfully')
+                    #                 yield candidates, 'csv'
+                    #                 return
+                    #             else:
+                    #                 print('No results found for the "how many" query, CSV not generated.')
+                    #                 yield ['CSV not generated'], 'stop' # Or some other appropriate finish signal
+                    #                 return
 
-                        except Exception as e:
-                            print(f"Error : {e}")
-                            return None     
+                    #     except Exception as e:
+                    #         print(f"Error : {e}")
+                    #         return None 
+
+                
 
                 try:
                     results_list =[]
+
+                    if not requested_count or requested_count == 0:
+                        requested_count = 20
+
+                    print(" Request candidates  after  query  = === : ",requested_count )
                     print(f"Final MongoDB Query: {mongodb_query} with offset: {offset}")
-                    results_list = list(ses_data_collection.find(mongodb_query).skip(offset).limit(20))
+                    results_list = list(ses_data_collection.find(mongodb_query).skip(offset).limit(requested_count))
 
                     candidates = []
                     

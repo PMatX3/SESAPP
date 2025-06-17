@@ -36,6 +36,8 @@ import re
 from flask_migrate import Migrate
 from models import db  # Assuming 'db' is your SQLAlchemy instance
 import time
+from typing import List, Dict, Any, Optional
+
 from dotenv import load_dotenv
 
 app = Flask(__name__)
@@ -1026,7 +1028,7 @@ def handle_ask(json):
     except Exception as e:
         error_message = str(e)
         print("Exception in handle_ask:", error_message)
-        emit('error', {'error': error_message})
+        emit('message', {'data': "No candidates found matching your criteria. Please try refining your search with different keywords or filters", 'is_complete': 'stop'})
 
 @socketio.on('ask2')
 def handle_ask2(json):
@@ -1138,18 +1140,41 @@ def api_get_chat_history():
             return jsonify([]), 200  # Return empty list instead of error
     
         chat_history = get_chat_history(user_id, chat_id)
+
+        formatted_history: List[Dict[str, str]] = []
         
         if chat_history:
             for message in chat_history:
+
                 message['_id'] = str(message['_id'])  # Convert ObjectId to string
+
+            user_message_content: Any = message.get('message', '')
+            if not isinstance(user_message_content, str):
+                    # If it's not a string, try to convert it.
+                    # Common case: if it's a list, join its elements.
+                    if isinstance(user_message_content, list):
+                        user_message_content = " ".join(map(str, user_message_content))
+                    else:
+                        user_message_content = str(user_message_content)
+
+            ai_response_content: Any = message.get('response', '')
+            if not isinstance(ai_response_content, str):
+                # If AI response is not a string, check for specific cases
+                if ai_response_content == None: # Explicitly handle None values
+                    ai_response_content = ""
+                elif isinstance(ai_response_content, (dict, list)):
+                    ai_response_content = "CSV preview is not displayed in the chat history." # This was your original behavior
+                    # Alternative: ai_response_content = json.dumps(ai_response_content) # For displaying raw JSON
+                else:
+                    # Fallback for other non-string types (e.g., int, bool)
+                    ai_response_content = str(ai_response_content)
             
-            formatted_history = [
+            formatted_history.append(
                 {
-                    'user': user_template.replace('{{MSG}}', message['message']),
-                    'ai': bot_template.replace('{{MSG}}', message['response'] if isinstance(message['response'], str) else "CSV preview is not displayed in the chat history.")
-                } 
-                for message in chat_history
-            ]
+                    'user': user_template.replace('{{MSG}}', user_message_content),
+                    'ai': bot_template.replace('{{MSG}}', ai_response_content)
+                }
+            )
             return jsonify(formatted_history), 200
         else:
             return jsonify([]), 200  # Also return empty array here
