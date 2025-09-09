@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yourbestcandidateai</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XFPZ1ZM909"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XFPZ1ZM909');
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="shortcut icon" href="https://www.yourbestcandidate.ai/static/images/favion2.png">
@@ -783,6 +790,7 @@
                     pdfTemp = true;
                     file = pdfInput.files[0];
                     type = 'pdf';
+                    gtag('event', 'file_upload', { 'file_type': 'pdf' });
                     formData.append('file', file);
                     formData.append('type', type);
                 }
@@ -791,6 +799,7 @@
                     file = csvInput.files[0];
                     dataSource = 'CSV'
                     type = 'csv';
+                    gtag('event', 'file_upload', { 'file_type': 'csv' });
                     recruitly = false;
                     formData.append('file', file);
                     formData.append('type', type);
@@ -800,6 +809,7 @@
                     file = jsonInput.files[0];
                     dataSource = 'JSON_UPLOAD'
                     type = 'json';
+                    gtag('event', 'file_upload', { 'file_type': 'json' });
                     recruitly = true;
                     recrutlyTemp = true
                     formData.append('file', file);
@@ -812,6 +822,9 @@
                     recrutlyTemp = true;
                     dataSource = 'SES'
                     type = '';
+                    gtag('event', 'select_data_source', {
+                        'data_source': 'Recruitly Database'
+                    });
                     formData.append('useSES', true);
                     csvInput.disabled = true;
                     jsonInput.disabled = true;
@@ -1350,7 +1363,8 @@
 
                 // Show the popup
                 popup.classList.remove('hidden');
-
+                
+                gtag('event', 'show_popup', { 'popup_message': message });
                 // Auto-hide after 3 seconds
                 setTimeout(function () {
                     popup.classList.add('hidden');
