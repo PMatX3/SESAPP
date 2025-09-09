@@ -416,20 +416,7 @@
         </div>
     </div>
 
-    <!-- SES Data Processing Popup -->
-    <!-- <div id="ses-processing-popup"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center max-w-md mx-auto">
-            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <h3 class="text-xl font-semibold mb-2">Processing SES Data</h3>
-            <p class="text-gray-600 text-center mb-4">This may take a moment as we analyze your candidate data and
-                prepare personalized responses.</p>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                <div id="ses-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-            </div>
-            <p id="ses-progress-text" class="text-sm text-gray-500">Processing: 0%</p>
-        </div>
-    </div> -->
+  
 
     <!-- Popup Loader -->
     <div id="popup-loader" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
@@ -653,13 +640,6 @@
             }, 1000);
 
 
-            // Add default candidate reference functionality
-            // document.getElementById('question-input').addEventListener('focus', function () {
-            //     // Check if input already has candidate reference prefixed
-            //     if (!this.value.trim().startsWith('Candidate:') && !this.value.trim()) {
-            //         this.value = 'Show me candidates: ';
-            //     }
-            // });
 
             document.getElementById('question-input').addEventListener('keypress', function (event) {
                 if (event.key === 'Enter') {
@@ -1011,26 +991,10 @@
 
             function postChat(chatId) {
                 console.log('Inner chat id', chatId)
-                fetch('/chats', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ chat_id: chatId })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        displayChatHistory(data.chat_history)
-                        selected_chat_id = data.selected_chat_id;
-                    })
-                    .catch(error => {
-                        console.error('Error posting chat:', error);
-                    });
+                window.location.href = `/chat/${chatId}`;
             }
 
 
-            // var socket = io('https://www.yourbestcandidate.ai', {
-            // console.log(window.location.origin)
             var socket = io('https://www.yourbestcandidate.ai', {
                 reconnection: true,
                 reconnectionAttempts: Infinity,
@@ -1198,7 +1162,7 @@
                 if (typeof selected_chat_id === 'undefined') {
                     selected_chat_id = "{{ session.get('chat_id') }}"
                 }
-
+                console.log("current data source ::",dataSource)
                 // Send the question to the server using Socket.IO
                 socket.emit('ask', {
                     question: question,

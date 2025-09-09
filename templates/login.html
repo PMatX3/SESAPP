@@ -83,7 +83,7 @@
                             </div>
                             <p id="errorMessage" class="text-danger text-center"></p>
                             <button type="submit" class="login-btn w-100">Login</button>
-                            <p class="chage-account">Don’t have an account? <a href="signup">Sign Up</a></p>
+                            <p class="chage-account">Don't have an account? <a href="signup">Sign Up</a></p>
                         </form>
                     </div>
                 </div>
@@ -138,9 +138,9 @@
                     data: formData,
                     success: function (response) {
                         if (response.user === 'admin') {
-                            window.location.href = '/admin';  // Redirect to home if login_attempt is not 0
+                            window.location.href = '/admin';  // Redirect to admin for admins
                         } else {
-                            window.location.href = '/chat';  // Redirect to home if login_attempt is not 0
+                            window.location.href = response.redirect_to || '/new_chat'; // Default to /new_chat if not provided
                         }
                     },
                     error: function (response) {

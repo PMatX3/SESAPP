@@ -9,12 +9,9 @@ from chromadb.utils import embedding_functions
 import os
 import chromadb
 from chromadb.utils import embedding_functions
-from datetime import datetime
+from datetime import datetime, date
 import json
 from mongo_connection import get_mongo_client
-from langchain.agents.agent_types import AgentType
-from langchain_experimental.agents.agent_toolkits import create_csv_agent
-from langchain_openai import ChatOpenAI
 import google.generativeai as genai
 import csv,re
 from unstructured.partition.auto import partition
@@ -101,6 +98,209 @@ def get_chat_history(user_id: str, chat_id: Optional[str] = None) -> List[Dict[s
     # history.sort(key=lambda x: x.get('timestamp', float('-inf')), reverse=True)
     
     return history
+
+
+# ---------------- Ranking Utilities ----------------
+def _parse_month_year(date_str: Optional[str]) -> Optional[datetime]:
+    try:
+        if not date_str:
+            return None
+        ds = str(date_str).strip()
+        if ds.lower() in ("present", "current"):
+            return datetime.utcnow()
+        # Support formats like MM/YYYY or YYYY-MM
+        for fmt in ("%m/%Y", "%Y-%m", "%Y/%m", "%b %Y", "%Y"):
+            try:
+                dt = datetime.strptime(ds, fmt)
+                return dt
+            except Exception:
+                continue
+        # Try DD/MM/YYYY
+        for fmt in ("%d/%m/%Y", "%d-%m-%Y"):
+            try:
+                dt = datetime.strptime(ds, fmt)
+                return dt
+            except Exception:
+                continue
+    except Exception:
+        return None
+    return None
+
+
+def _months_since(dt: Optional[datetime]) -> Optional[int]:
+    if not dt:
+        return None
+    now = datetime.utcnow()
+    # Convert to months difference
+    return max(0, (now.year - dt.year) * 12 + (now.month - dt.month))
+
+
+def _extract_recency_months(experiences: Optional[List[Dict[str, Any]]]) -> int:
+    if not experiences:
+        return 120  # default: very old
+    months_list = []
+    for exp in experiences:
+        try:
+            if exp.get("is_current") or str(exp.get("end_date", "")).strip().lower() in ("present", "current"):
+                months_list.append(0)
+                continue
+            end_dt = _parse_month_year(exp.get("end_date")) or _parse_month_year(exp.get("start_date"))
+            months = _months_since(end_dt)
+            if months is not None:
+                months_list.append(months)
+        except Exception:
+            continue
+    return min(months_list) if months_list else 120
+
+
+def _compute_quality_score(doc: Dict[str, Any]) -> float:
+    score = 0.0
+    # Education weight
+    education = doc.get("education") or []
+    highest = 0.0
+    for edu in education:
+        degree = str(edu.get("degree", "")).lower()
+        if any(k in degree for k in ["phd", "doctor"]):
+            highest = max(highest, 1.0)
+        elif any(k in degree for k in ["master", "msc", "m.s", "mtech", "m.tech"]):
+            highest = max(highest, 0.7)
+        elif any(k in degree for k in ["bachelor", "bsc", "b.tech", "btech", "b.e", "be"]):
+            highest = max(highest, 0.5)
+        elif degree:
+            highest = max(highest, 0.3)
+    score += 0.5 * highest  # up to 0.5
+
+    # Certifications
+    certs = doc.get("certifications") or []
+    score += min(0.3, 0.03 * len(certs))  # up to 0.3
+
+    # Awards / honors
+    awards = doc.get("awards_honors") or []
+    score += min(0.2, 0.05 * len(awards))  # up to 0.2
+
+    return min(1.0, score)
+
+
+def _compute_title_matched_years(doc: Dict[str, Any], context_text: Optional[str]) -> Optional[float]:
+    try:
+        if not context_text:
+            return None
+        title_years = doc.get("total_experience_by_title")
+        if not isinstance(title_years, dict) or not title_years:
+            return None
+        ctx = str(context_text).lower()
+        # Tokenize context a bit to allow partial matches
+        ctx_tokens = set(re.findall(r"[a-zA-Z][a-zA-Z\-]+", ctx))
+        matched_sum = 0.0
+        for title, yrs in title_years.items():
+            try:
+                if not title or not isinstance(yrs, (int, float)):
+                    continue
+                t = str(title).lower()
+                t_tokens = set(re.findall(r"[a-zA-Z][a-zA-Z\-]+", t))
+                # Match if full title is substring or there is meaningful token overlap
+                if t in ctx or bool(t_tokens & ctx_tokens):
+                    matched_sum += float(yrs)
+            except Exception:
+                continue
+        return matched_sum if matched_sum > 0 else None
+    except Exception:
+        return None
+
+
+def compute_candidate_ranking(doc: Dict[str, Any], context_text: Optional[str] = None) -> float:
+    """
+    Score combines:
+    - Time invested: total experience years
+    - Recency: months since last role ended (current -> 0)
+    - Quality: education, certifications, awards
+    Returns score in [0, 1.0+]
+    """
+    # Time invested
+    # Prefer title-matched experience based on job description/query context
+    years = _compute_title_matched_years(doc, context_text)
+    if years is None:
+        total_years = doc.get("total_experience_years") or doc.get("total_years_of_experience")
+        try:
+            years = float(total_years) if total_years is not None else None
+        except Exception:
+            years = None
+        if years is None and isinstance(doc.get("total_experience_by_title"), dict):
+            try:
+                years = float(sum(v for v in doc["total_experience_by_title"].values() if isinstance(v, (int, float))))
+            except Exception:
+                years = 0.0
+    years = years or 0.0
+    time_score = min(1.0, years / 10.0)  # cap at 10 years
+
+    # Recency (smaller months -> better)
+    months = _extract_recency_months(doc.get("experience"))
+    # Map months to [0..1], 0 months -> 1.0, 60+ months -> ~0.0
+    recency_score = max(0.0, 1.0 - (months / 60.0))
+
+    # Quality
+    quality_score = _compute_quality_score(doc)
+
+    # Weighted sum
+    score = 0.4 * time_score + 0.4 * recency_score + 0.2 * quality_score
+    return score
+
+
+def _extract_skill_patterns_from_mongo_query(query_obj: Any) -> List[str]:
+    patterns: List[str] = []
+    try:
+        def walk(obj: Any, parent_key: Optional[str] = None):
+            if isinstance(obj, dict):
+                # If this dict represents a field filter on skills/key_qualifications
+                for field in ("skills", "key_qualifications"):
+                    if field in obj and isinstance(obj[field], dict):
+                        inner = obj[field]
+                        if "$regex" in inner and isinstance(inner["$regex"], str):
+                            patterns.append(inner["$regex"])
+                # Recurse all values
+                for k, v in obj.items():
+                    walk(v, k)
+            elif isinstance(obj, list):
+                for it in obj:
+                    walk(it, parent_key)
+        walk(query_obj)
+    except Exception:
+        return []
+    return patterns
+
+
+def _compute_skills_overlap_count(doc: Dict[str, Any], regex_patterns: List[str]) -> int:
+    if not regex_patterns:
+        return 0
+    try:
+        skills_list = doc.get("skills") or []
+        quals_list = doc.get("key_qualifications") or []
+        summary = doc.get("summary") or ""
+        # Safely normalize to strings
+        def _to_text(items):
+            try:
+                return " \n ".join([str(x) for x in items if x])
+            except Exception:
+                return ""
+        corpus = (" "+_to_text(skills_list)+" "+_to_text(quals_list)+" "+str(summary)).lower()
+        match_count = 0
+        seen = set()
+        for pat in regex_patterns:
+            try:
+                compiled = re.compile(pat, re.IGNORECASE)
+                if compiled.search(corpus):
+                    if pat not in seen:
+                        seen.add(pat)
+                        match_count += 1
+            except Exception:
+                # If regex fails, fallback to substring search
+                term = str(pat).split("|")[0].strip()
+                if term and term.lower() in corpus and pat not in seen:
+                    seen.add(pat)
+                    match_count += 1
+        return match_count
+    except Exception:
+        return 0
 
 def get_chat_list(user_id):
     """
@@ -607,191 +807,6 @@ def execute_query2(query, user_id, temp=False, continuation_token=None):
         print('Error in execute_query2 (general query):', e)
 
 
-# def execute_query3(query, user_id, temp=False, continuation_token=None, user_conversation=[]):
-#     print(" -- execute_query is called --")
-#     print(f"   - Query: {query}")
-#     print(f"   - User ID: {user_id}")
-#     print(f"   - Temp: {temp}")
-#     print(f"   - Continuation Token: {continuation_token}")
-#     print(f"   - Current File Path from Session: {session.get('current_file_path')}")
-#     print(f"   - Current Data Source from Session: {session.get('current_data_source')}")
-
-#     mongo_results_str = ""
-#     csv_results_str = ""
-#     fetched_from_csv = False
-
-#     try:
-#         # Dynamic query generation based on user input for MongoDB
-#         if "dsasaasasd" in query.lower():
-#             print("Inside how many query")
-#             mongo_client = get_mongo_client()
-#             ses_data_collection = mongo_client['user_db']['SES_data']
-#             sample_document = ses_data_collection.find_one()
-#             sample_document = convert_objectid_to_str(sample_document)
-#             sample_document_str = json.dumps(sample_document, indent=2)
-#             prompt = f"Based on the following sample document:\n{sample_document_str}\nGenerate a MongoDB query filter for the user query: '{query}' and give me only query filter in the response no other text"
-#             messages = [
-#                 {"role": "model", "parts": "You are an AI that generates MongoDB query filters based on user queries and sample documents. Use regex for search more efficiently"},
-#                 {"role": "user", "parts": prompt}
-#             ]
-#             response = model.generate_content(messages)
-#             json_match = re.search(r'```json\n(.*?)```', response.text, re.DOTALL)
-#             json_str = json_match.group(1) if json_match else '{}'
-#             results = ses_data_collection.find(json.loads(json_str))
-#             results = [convert_objectid_to_str(result) for result in list(results)]
-#             mongo_results_str = json.dumps(results)
-#             csv_file_path = f"tmp/{user_id}_results.csv"
-#             print(f"Step 1 CSV File path is: {csv_file_path}")
-#             with open(csv_file_path, mode='w', newline='') as file:
-#                 print("Step 2 writing in csv")
-#                 writer = csv.writer(file, escapechar='\\')
-#                 if results:
-#                     writer.writerow(results[0].keys())
-#                     for result in results:
-#                         writer.writerow(result.values())
-
-#         # Fetch from CSV if the current data source is CSV and a path exists
-#         if session.get('current_data_source') == 'csv' and session.get('current_file_path'):
-            
-#             fetched_from_csv = True
-#             csv_file_path = session.get('current_file_path')
-#             try:
-#                 with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
-#                     reader = csv.DictReader(file)
-#                     csv_data = list(reader)
-
-#                 # Basic filtering (adapt as needed)
-#                 # relevant_candidates = [
-#                 #     candidate for candidate in csv_data
-#                 #     if any(keyword.lower() in ' '.join(candidate.values()).lower() for keyword in query.lower().split())
-#                 # ]
-
-    
-#                 # Or 
-
-#                 # --- Improved Filtering Logic ---
-#                 relevant_candidates = []
-#                 if csv_data:
-#                     query_lower = query.lower()
-#                     nationality_keywords = [kw.strip() for kw in re.findall(r"(?:nationality:|are|who are|from)\s*([a-zA-Z]+)", query_lower)]
-#                     language_keywords = [kw.strip() for kw in re.findall(r"(?:speak|speaks|language:|who speak)\s*([a-zA-Z]+)", query_lower)]
-#                     skill_keywords = [kw.strip() for kw in re.findall(r"(?:skills:|have skills|with skills|skill:)\s*([a-zA-Z]+)", query_lower)]
-#                     job_title_keywords = [kw.strip() for kw in re.findall(r"(?:role of|for the role of|job title:)\s*([a-zA-Z\s]+)", query_lower)]
-
-#                     for candidate in csv_data:
-#                         nationality_match = not nationality_keywords or any(kw.lower() in candidate.get("Nationality", "").lower() for kw in nationality_keywords) or any(kw.lower() in candidate.get("nationalities", "").lower() for kw in nationality_keywords) # Check both 'Nationality' and 'nationalities' if they exist
-#                         language_match = not language_keywords or any(kw.lower() in candidate.get("Languages", "").lower() for kw in language_keywords) or any(kw.lower() in candidate.get("languages", "").lower() for kw in language_keywords) # Check both 'Languages' and 'languages' if they exist
-#                         skill_match = not skill_keywords or any(kw.lower() in candidate.get("Skills", "").lower() for kw in skill_keywords) or any(kw.lower() in candidate.get("Skills", "").lower() for kw in skill_keywords) # Check 'Skills'
-#                         job_title_match = not job_title_keywords or any(kw.lower() in candidate.get("Job Title", "").lower() for kw in job_title_keywords) or any(kw.lower() in candidate.get("jobTitle", "").lower() for kw in job_title_keywords) # Check both 'Job Title' and 'jobTitle' if they exist
-
-#                         if nationality_match and language_match and skill_match and job_title_match:
-#                             relevant_candidates.append(candidate)
-
-#                 # Format relevant candidates for the prompt
-#                 formatted_candidates = []
-#                 for candidate in relevant_candidates:
-#                     candidate_info = "\n".join(f"{key}: {value}" for key, value in candidate.items())
-#                     formatted_candidates.append(candidate_info)
-
-#                 csv_results_str = "\n\n".join(formatted_candidates)
-#                 print("<><><><> Fetched from CSV (Session Path):\n", csv_results_str)
-
-               
-
-#             except FileNotFoundError:
-#                 csv_results_str = "Uploaded CSV file not found."
-#                 print("Error: Uploaded CSV file not found.")
-#             except Exception as e:
-#                 csv_results_str = f"Error reading uploaded CSV file: {e}"
-#                 print(f"Error reading uploaded CSV file: {e}")
-
-#         # Process the job description for embedding (for vector database)
-#         job_desc = job_query.get('job_profile')
-#         embedding_query = ''.join(job_desc['documents']) if job_desc['documents'] else 'give me top candidates'
-
-#         # Generate embeddings for the query (for vector database)
-#         vector = get_embedding(query)
-#         vector_results = None
-#         if temp and not fetched_from_csv: # Only query vector DB if not using CSV
-#             print(' Query Using collection 2  ')
-#             vector_results = collection2.query(query_embeddings=vector, n_results=4000, include=["documents"])
-#         elif not fetched_from_csv:
-#             print(' Query Using collection 1  ')
-#             vector_results = collection.query(query_embeddings=vector, n_results=4000, include=["documents"])
-
-#         vector_results_str = "".join(str(item) for item in vector_results['documents'][0]) if vector_results and vector_results['documents'] else ""
-
-#         available_tokens_for_results = 400000 - len(query)  # Adjust for token limits
-
-#         # Determine the candidate information to use in the prompt, prioritizing CSV
-#         candidate_info_for_prompt = csv_results_str if fetched_from_csv else vector_results_str.replace("\n", " ")
-#         is_truncated = len(candidate_info_for_prompt) > available_tokens_for_results
-#         if is_truncated:
-#             candidate_info_for_prompt = candidate_info_for_prompt[:available_tokens_for_results]
-
-#         # Prepare the prompt for the AI model
-#         if continuation_token:
-#             prompt = f"Continuing: {continuation_token.replace('Context', candidate_info_for_prompt)} and answer the query: {query}"
-#         else:
-#             prompt = f"""
-#                 You are required to act as a specialized expert in matching job candidates with job descriptions.
-#                 Your task is to analyze the provided job description and candidate information, then answer specific queries regarding the candidate's suitability for the role.
-
-#                 Job Description: {embedding_query}
-#                 Candidate Information: {candidate_info_for_prompt}
-
-#                 Guidelines for responses:
-#                 1. Carefully read and understand both the job description and candidate information.
-#                 2. If the query includes greetings, respond briefly in one line.
-#                 3. Base your response on the provided job description and candidate details.
-#                 4. Offer concise, relevant answers that address the query directly.
-#                 5. If the query is unclear, ask the candidate for further clarification.
-#                 6. Responses should be professional, unbiased, and tailored to the specific query and information provided.
-#                 7. If the job description is missing, base your response solely on the candidate's information.
-#                 8. If all information is missing, provide a general yet focused response related to job seeking or recruitment without highlighting the lack of details.
-#                 9. Ensure the response is professional yet easy to understand.
-#                 10. Always review the last few messages and base your reply on them.
-#                 11. If candidate names are mentioned, use those and avoid introducing new ones, unless the user requests new candidates.
-#                 12. Return the candidate information in the following structured format, describing only the available details:
-
-#                     Candidate ID : [Candidate ID]
-#                     Full Name: [Full Name]
-#                     Job Title: [Job Title]
-#                     email: [email]
-#                     Skills: [List of Skills]
-#                     Experience & Overview: [Summary of Experience]
-#                     Location: [Location]
-#                     languages: [languages]
-#                     Nationality: [nationalities]
-
-#                 Last conversation: {str(user_conversation)}
-#                 Reply to this query: {query}
-#             """
-
-#         messages = [
-#             {"role": "system", "content": "You answer questions about job candidates."},
-#             {"role": "user", "content": prompt}
-#         ]
-
-#         # Start streaming the response
-#         response = openai_client.chat.completions.create(
-#             model="gpt-4o",
-#             messages=messages,
-#             temperature=0.1,
-#             stream=True
-#         )
-
-#         # Yield each chunk as it is received
-#         for message in response:
-#             chunk = message.choices[0].delta.content if message.choices[0].delta.content is not None else ""
-#             finish_res = message.choices[0].finish_reason
-#             yield chunk, finish_res
-
-#     except Exception as e:
-#         print('Error in execute_query', e)
-#         print("Error in execute_query")
-
-
 def extract_structured_data_with_ai(candidates=[], query="", embedding_query=""):
 
     print(" =========================== Candiates in AI model ============= :::::  ", len(candidates))
@@ -845,12 +860,6 @@ Respond to this query: "{query}"
         stream=True
     )
 
-    # for message in response:
-    #     chunk = message.choices[0].delta.content if message.choices[0].delta.content else ""
-    #     finish_reason = message.choices[0].finish_reason
-    #     print("===chunk===",chunk)
-    #     print("===finish_res===",finish_reason)
-    #     yield chunk, finish_reason
     return response
 
 
@@ -878,24 +887,49 @@ def scanned_pdf_to_text(file_path):
         print(f"OCR Error: {e}")
         return ""
 
-def get_job_description_from_file(file_path):
-    with open(file_path, 'r', encoding='utf-8') as f:
-        text = f.read()
-
+def get_job_description_from_file(file_path, min_text_length=100):
+    ext = os.path.splitext(file_path)[1].lower()
+    
+    if ext == ".pdf":
+        text = pdf_to_text(file_path)
+        if len(text) < min_text_length:
+            text = scanned_pdf_to_text(file_path)
         return text
+
+    elif ext == ".txt":
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                return f.read().strip()
+        except Exception as e:
+            print(f"File read error: {e}")
+            return ""
+    
+    else:
+        print("Unsupported file type.")
+        return ""
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        elif isinstance(obj, ObjectId):
+            return str(obj)
+        return super().default(obj)
 
 def generate_mongo_query_with_openai(sample_document,user_conversation, user_query, job_description = None):
 
-    sample_document_str = json.dumps(sample_document, indent=2)
+    
+        
+    sample_document_str = json.dumps(sample_document, indent=2, cls=CustomJSONEncoder)
     print("----------------- sample document from DB : --------------- ", sample_document_str)
 
     ses_nationality_instruction = """
         **Important:**
         For SES data source, candidates must be filtered to only those with nationality exactly "Iraqi". No foreign candidates should be included.
         """
-
     prompt = f"""
-        You are an expert assistant for converting user queries into MongoDB filters.
+        ### Task:
+        Generate a **MongoDB query filter** based on the job description and the candidate profile, considering the following flexible matching rules:
 
         Below is a MongoDB document structure:
         {sample_document}
@@ -909,32 +943,53 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
         Previous User Conversation:
         {user_conversation if user_conversation else "None"}
 
-        Your task:
-        Generate a valid MongoDB query filter (as a JSON object only) that best matches the user's query and provided Job Description's job title, using the Job Description and prior conversation context.
+        ### Instructions:
+        1. **Experience Matching:**
+        - From the given job description, identify and extract only job titles that are directly relevant to the described role and responsibilities
+        - Do not include unrelated job titles or roles that are outside the primary scope of the job description.
+        - Use the field experience.title (not nested with $elemMatch).
+        - Create a case-insensitive regular expression ($options: "i") that contains no more than 3–4 closely related job titles.
+        - Related titles should include:
+            - Variations and synonyms of the main role
+            - Common alternative names for the position in industry usage
+        -Avoid adding generic or tangential roles unless they are explicitly stated as acceptable in the job description.
 
-        {ses_nationality_instruction}
+        2. **Experience Years Matching:**
+        - Create a separate filter for experience years using both `total_experience_years` and `experience.total_years` fields.
+        - Use `$gte` operator for both fields in an `$or` condition.
 
-        **Instructions:**
-        1. Return only the MongoDB query filter – no explanation.
-        2. Use only field names from the document structure.
-        3. Use $regex for flexible text fields like  headlineLower, job title, , location.
-        4. If the user is asking for **more candidates** (e.g., "show more", "give me 10 more", "find 13 more candidates"):
-        - Treat it as a continuation.
-        - Extract the most recent filterable criteria (e.g., headlineLower , job title,) from the previous conversation.
-        - reuse the last valid filter context from previous conversation, unless the new query adds or changes filters.
-        5. Do NOT include "$limit" in the filter.
-        6. match candidates with query and give sample MongoDB document structure headlineLower, 
-        6. If the user is asking for recruiters or HR roles, build a filter using $or with $regex that matches the following terms:
-            recruiter, talent acquisition, staffing, hiring manager, hr, human resources, HR Officer and Recruiter, HR Manager, Regional HR Manager, Human Resources Coordinator/Recruiter, HR Executive, Human Resource, Talent Acquisition, Recruitment Specialist, HR Recruiter, Technical Recruiter, Staffing Consultant, Sourcing Specialist, Talent Partner, Hiring Partner, People Operations, Campus Recruiter, Executive Search Consultant, Headhunter, HR Manager, Director of Talent Acquisition, VP of People, Chief People Officer, CHRO, and other similar roles involved in hiring and talent acquisition.
-            Use \\b(...)\\b for precise word boundaries.
-        7. If the user asks for candidates related to a specific industry (e.g., oil, gas, petroleum, recruiting, electrical, mechanical, operations, etc.), generate a MongoDB query with an $or condition that matches any of the related keywords separately using a regex pattern with precise word boundaries, e.g.:
-            \b(keyword1|keyword2|keyword3|...)\b
+        3. **Skills Matching:**
+        - Match skills using `skills` and `key_qualifications` fields.
+        - Use **detailed regular expressions** with specific skill patterns separated by pipes (|).
+        - For skills, use patterns like: "Hazard.*Recognition|Risk.*Evaluation|Permit.*to.*Work|First.*Aid|Fire.*Fighting|H2S|Confined.*Space|Excavation.*Safety|Work.*at.*Height|Lifting.*Operations|Scaffolding.*Inspection|Control.*of.*hazardous.*energy|Chemical.*Hazards|Electrical.*Hazard|Defensive.*Driving"
+        - For key_qualifications, use patterns like: "Hazard.*Identification|Risk.*Assessment|HSE.*Management|Safety.*Training|Emergency.*Response|Permit.*to.*Work|Regulatory.*Compliance"
+        - Include the `$options: "i"` flag for case-insensitive matching.
+
+        4. **Education Matching:**
+        - Match **degrees** using `education.degree` field with `$regex` for patterns like "Engineering|Science|Petroleum Engineering".
+        - Also include an alternative condition using `experience` with `$elemMatch` that checks `total_years` field with `$gte` for the minimum years.
+        - Use `$or` to combine both education conditions.
+
+        5. **Structure Requirements:**
+        - Use a `$and` condition at the root level to combine ALL filter groups.
+        - Each major filter group should be structured as separate objects in the `$and` array.
+        - Do NOT include nationality filters unless explicitly mentioned in the job description.
+        - Do NOT duplicate conditions.
+
+        6. **Field Path Specifications:**
+        - Use `experience.title` (not `experience` with `$elemMatch` for title matching)
+        - Use `experience.total_years` and `total_experience_years` for experience years
+        - Use `education.degree` for degree matching
+        - Use `experience` with `$elemMatch` only when checking nested experience years
+
+        ### Generate the MongoDB query filter **JSON**:
+        - The filter should return a valid JSON query with **all matching conditions**.
+        - Structure should have exactly 4 main filter groups in `$and`: experience titles, experience years, skills, and education.
+        - Do not return any extra explanations or comments. Only return the **MongoDB JSON query**.
+        - Ensure proper nesting and use `$or` conditions within each filter group appropriately.
+    """
 
 
-    cond 
-        **Your output must only be the MongoDB filter in JSON.**
-        """
-    
     messages = [
         {"role": "system", "content": (
             "You are a MongoDB expert AI. Your task is to convert natural language queries into  MongoDB filter queries. "
@@ -949,12 +1004,25 @@ def generate_mongo_query_with_openai(sample_document,user_conversation, user_que
     ai_response_text = response.choices[0].message.content
     print(" ============== Raw AI Response: ============= ", ai_response_text)
     json_match = re.search(r'```json\n(.*?)```', ai_response_text, re.DOTALL)
+
     if json_match:
         mongodb_query_str = json_match.group(1)
-        print(" ============== Generated MongoDB Query (Dict): ============= ", mongodb_query_str)
-        mongo_query_filter = apply_iraqi_filter_to_ses_query(json.loads(mongodb_query_str))
 
-        return mongo_query_filter
+        try:
+            # CRITICAL FIX: Convert string to dictionary
+            mongodb_query_dict = json.loads(mongodb_query_str)
+            print(" ============== Generated MongoDB Query (Dict): ============= ", mongodb_query_dict)
+            print(" ============== Query Type: ============= ", type(mongodb_query_dict))
+            
+            # Optional: Add nationality filter for SES if needed
+            # mongodb_query_dict = apply_iraqi_filter_to_ses_query(mongodb_query_dict)
+            
+            return mongodb_query_dict  # Return dictionary, not string
+            
+        except json.JSONDecodeError as e:
+            print(f"Error parsing JSON: {e}")
+            print(f"Problematic JSON string: {mongodb_query_str}")
+            raise ValueError(f"Could not parse JSON MongoDB query: {e}")
        
     else:
         raise ValueError(f"Could not extract a valid JSON MongoDB query from the AI response: {ai_response_text}")
@@ -1089,7 +1157,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
     if job_description_path:
         job_description = get_job_description_from_file(job_description_path)
-        # print(" job description ---\n\n ", job_description )
+        print(" job description ---\n\n ", job_description )
     else:
         None
 
@@ -1106,7 +1174,9 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
         if current_data_source == 'SES':
             print(" ============== Processing with useSES ============= ")
             mongo_client = get_mongo_client()
-            ses_data_collection = mongo_client['user_db']['Updated_SES_data']
+            ses_data_collection = mongo_client['user_db']['test_db']
+
+            print(" ---------------- ses_data_collection ----------  ", ses_data_collection)
 
             sample_document = ses_data_collection.aggregate([{"$sample": {"size": 1}}]).next()
             if sample_document:
@@ -1132,45 +1202,6 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 requested_count  = extract_positive_integer(query)
                 print(" Request candidates  before query  = === : ",requested_count )
 
-                
-                    
-                    # if requested_count > 20:
-                    #     try:
-                    #         print(f"Fetching all {requested_count} candidates...")
-                    #         results = ses_data_collection.find(mongodb_query).limit(requested_count)
-                    #         candidates = [{k: v for k, v in result.items() if not isinstance(v, ObjectId)} for result in list(results)]
-                    #         print(f"Found {len(candidates)} candidates.")
-
-                    #         csv_file_path = f"tmp/{user_id}_results.csv"
-                    #         csv_data = []
-
-                    #         with open(csv_file_path, mode='w', newline='', encoding='utf-8') as file:
-                    #             print("  - Step 2 writing -- csv_file_path --", csv_file_path)
-                    #             writer = csv.writer(file, escapechar='\\')
-
-                    #             if candidates:
-                    #                 # Write the header row using the keys of the first candidate (dictionary)
-                    #                 writer.writerow(candidates[0].keys())
-
-                    #                 # Iterate through each candidate (dictionary) in the list
-                    #                 for candidate in candidates:
-                    #                     # Write the values of the current candidate
-                    #                     writer.writerow(candidate.values())
-                    #                     csv_data.append(list(candidate.values())) # Append the list of values
-
-                    #                 print('CSV file generated successfully')
-                    #                 yield candidates, 'csv'
-                    #                 return
-                    #             else:
-                    #                 print('No results found for the "how many" query, CSV not generated.')
-                    #                 yield ['CSV not generated'], 'stop' # Or some other appropriate finish signal
-                    #                 return
-
-                    #     except Exception as e:
-                    #         print(f"Error : {e}")
-                    #         return None 
-
-                
 
                 try:
                     results_list =[]
@@ -1180,30 +1211,58 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
 
                     print(" Request candidates  after  query  = === : ",requested_count )
                     print(f"Final MongoDB Query: {mongodb_query} with offset: {offset}")
-                    results_list = list(ses_data_collection.find(mongodb_query).skip(offset).limit(requested_count))
+                    # Fetch a larger pool to rank globally, then paginate in-memory
+                    fetch_limit = max((requested_count or 20) * 10, 100)
+                    results_list = list(ses_data_collection.find(mongodb_query).limit(fetch_limit))
 
+                    # Sort results by ranking before formatting
+                    try:
+                        ranking_context = f"{job_description or ''} {query or ''}".strip()
+                        # Extract skill regex patterns from the stored MongoDB query for tie-breaking
+                        mongo_skill_patterns = _extract_skill_patterns_from_mongo_query(mongodb_query)
+                        # Composite sort: first by score desc, then by skills overlap desc
+                        def _sort_key(r):
+                            base_score = compute_candidate_ranking(r, ranking_context)
+                            skills_hit = _compute_skills_overlap_count(r, mongo_skill_patterns)
+                            # Return a tuple for sorting: primary score, secondary overlap
+                            return (base_score, skills_hit)
+                        results_list.sort(key=_sort_key, reverse=True)
+                    except Exception:
+                        pass
                     candidates = []
                     
                     if results_list:
+                        # print("========== results_list recived  ============ ", results_list)
                         for result in results_list:
+                            # print("========== Result ============ ", result)
                             # Reformat the output to match the desired keys
+                            personal_info = result.get("personal_info", {}) or {}
+                            full_name = personal_info.get("name")
+                            email = personal_info.get("email")
+                            nationality = personal_info.get("nationality")
+
                             candidate_data = {
-                                "Candidate ID": result.get("reference"),
-                                "Full Name": result.get("fullName"),
-                                "Gender": result.get("gender"),
-                                "Job Title": result.get("headline"),
-                                "Email": result.get("email"),
-                                "Location": result.get("address", {}).get("cityName"), # Handle nested field gracefully
-                                "Languages": result.get("knownLanguages"),
-                                "Nationality": [nat.get("name") for nat in result.get("nationalities", [])] if result.get("nationalities") else [],
-                                "candidateId": result.get("candidateId")
+                                "Candidate ID": result.get("candidate_id"),
+                                "Full Name": full_name,
+                                "Email": email,
+                                # "Gender": result.get("gender"),
+                                # "Job Title": result.get("headline"),
+                                # "Email": result.get("personal_info.email"),
+                                # "Location": result.get("address", {}).get("cityName"), # Handle nested field gracefully
+                                "Languages": result.get("languages_spoken"),
+                                # "Nationality": [nat.get("name") for nat in result.get("nationalities", [])] if result.get("nationalities") else [],
+                                # "candidateId": result.get("candidateId")
+                                "Total Experience": result.get("total_experience_years"),
+                                # "Skills": result.get("skills"),
+                                "Education": result.get("education"),     
+                                "nationality" : nationality,
+                                "Rank Score": round(compute_candidate_ranking(result, ranking_context), 3)
                             }
                             candidates.append(candidate_data)
 
                         if not candidates:
                             # Case 1: No candidates found after processing (even if raw results were there, they might have been filtered out by get())
                             yield "We searched our entire database, but couldn't find any candidates with those exact attributes. How about trying a similar role or related skills?", "error"
-                            # Return 0 or empty list as per your request implicitly by yielding an error message
                             return # Exit the generator
                     else:
                         print("No candidates found for the query or at the current offset.")
@@ -1211,27 +1270,27 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                         yield response_ ,"error"
                         
 
-                    print(f"=== Found {len(candidates)} candidates -- ")
-                    # print("- candidates -- ", len(candidates))
-                    # print("------------------ First Candidate Record ========= \n\n", candidates[0])
+                    # Paginate after ranking
+                    start = offset or 0
+                    end = (offset or 0) + (requested_count or 20)
+                    paged_candidates = candidates[start:end]
 
-                    # # Updated: yield streaming response
-                    # response = extract_structured_data_with_ai(candidates, query=query)
+                    if not paged_candidates:
+                        yield "No more candidates available for the current criteria.", "stop"
+                        return
 
-                    # for message in response:
-                    #     chunk = message.choices[0].delta.content if message.choices[0].delta.content else ""
-                    #     finish_reason = message.choices[0].finish_reason
-                    #     yield chunk, finish_reason
+                    print(f"=== Returning {len(paged_candidates)} ranked candidates (from pool {len(candidates)}) -- ")
+                   
 
                     if not candidates:
                         yield "Could you please clarify what specific criteria you are looking for in the best matching candidates? For example, are you interested in candidates by location, job title, or specific skills?","error"
 
                     else:
-                        total_candidates_count = len(candidates)
+                        total_candidates_count = len(paged_candidates)
 
                         yield f"Found {total_candidates_count} matching candidate(s):\n\n", None 
 
-                        formatted_output_chunks = format_candidates_for_display(candidates)
+                        formatted_output_chunks = format_candidates_for_display(paged_candidates)
                         for chunk in formatted_output_chunks:
                             yield chunk, None # Yield chunks, assuming 'None' for finish_reason until the end
                         yield "", "stop" # Signal completion at the end
@@ -1242,8 +1301,8 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                     yield response_ ,"error"
             else:
                 response_text = "Sample document not found in SES_data collection."
-                yield response_text, "error"
                 print(response_text)
+                yield response_text, "error1"
                 return
 
         if current_data_source == 'CSV' or current_data_source == 'JSON_UPLOAD':
@@ -1251,7 +1310,7 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             fetched_from_csv = True
             db_result = db.users.find_one({"app_name": user_id}, {"data_file": 1, "_id": 0})
 
-            if db_result:
+            if db_result:   
                 csv_file_path = db_result.get('data_file')
 
             # print(" ==================== current csv file path :: == ", csv_file_path)
@@ -1259,15 +1318,6 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
                     reader = csv.DictReader(file)
                     csv_data = list(reader)
-
-                # Basic filtering (adapt as needed)
-                # relevant_candidates = [
-                #     candidate for candidate in csv_data
-                #     if any(keyword.lower() in ' '.join(candidate.values()).lower() for keyword in query.lower().split())
-                # ]
-
-    
-                # Or 
 
                 # --- Improved Filtering Logic ---
                 
@@ -1323,35 +1373,11 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 
                 vector_results = collection.query(query_embeddings=vector, n_results=200, include=["documents"])
 
-                # Optin 2 get candidates data from collection directly using query
-                # cleaned_query = generate_vector_query_and_fetch_results(user_conversation, query, job_description)
-                # print(" Cleaned query : ",cleaned_query )
-                # results2 = collection.query(
-                #     query_texts= query,
-                #     n_results=10  
-                # )
-                # first_doc = results2.get("documents", [[]])[0][0] if results2.get("documents", [[]])[0] else None
-
-                # if first_doc:
-                #     print("First record:\n", first_doc)
-                # else:
-                #     print("No results found.")
-
-                # formatted_output = format_chroma_results(results2.get("documents", [[]])[0])
-
-                # for _chunk in formatted_output:
-                #     yield _chunk, None 
-                    
-                # yield "", "stop"
-                
-                # print("\n\n ----- formatted_output ---- \n\n : ", formatted_output)
-                # print(" Line 1112 Number of results found:", vector_results["documents"])
-
             vector_results_str = "".join(str(item) for item in vector_results['documents'][0]) if vector_results and vector_results['documents'] else ""
 
 
             # print(" Line 1115 ======= vector_results_str === : ",vector_results_str )
-            available_tokens_for_results = 400000 - len(query)  # Adjust for token limits
+            available_tokens_for_results = 128000 - len(query)  # Adjust for token limits
 
             # Determine the candidate information to use in the prompt, prioritizing CSV
             candidate_info_for_prompt = csv_results_str if fetched_from_csv else vector_results_str.replace("\n", " ")
@@ -1371,60 +1397,62 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
             else:
                 # print(" Line 1131 ========= Not  continuation token Direct ly prompt  ========== : ", )
                 prompt = f"""
-                    You are required to act as a specialized expert in matching job candidates with job descriptions.
-                    Your task is to analyze the provided job description and candidate information, then answer specific queries regarding the candidate's suitability for the role.
+                You are a specialized assistant for matching job candidates to job descriptions using CSV-style candidate data.
 
-                    Job Description: {job_description}
-                    Candidate Information: {candidate_info_for_prompt}
+                Your task is to evaluate candidates against the provided job description and respond to user queries based on that evaluation.
 
-                    Guidelines for responses:
-                    1. Carefully read and understand both the job description and candidate information.
-                    2. fetch candidates exect match with job description's job title
-                    2. If the query includes greetings, respond briefly in one line.
-                    3. If the query includes a language requirement, match it with the 'Languages' field in the candidate data. Consider variations in phrasing (e.g., "Arabic-speaking", "knows Hindi", "fluent in English") and match against standardized English language names only.
-                    3. Base your response on the provided job description and candidate details.
-                    4. Offer concise, relevant answers that address the query directly.
-                    5. If the query is unclear, ask the candidate for further clarification.
-                    6. Responses should be professional, unbiased, and tailored to the specific query and information provided.
-                    7. If the job description is missing, base your response solely on the candidate's information.
-                    8. If all information is missing, provide a general yet focused response related to job seeking or recruitment without highlighting the lack of details.
-                    9. Ensure the response is professional yet easy to understand.
-                    10. Always review the last few messages and base your reply on them.
-                    11. If candidate names are mentioned, use those and avoid introducing new ones, unless the user requests new candidates.
-                    12. Return the candidate information in the following structured format, describing only the available details:
+                ---
+                **Job Description:**
+                {job_description if job_description else "None provided"}
 
-                    Special Case – Best Candidate Comparison:
-                        - If the query involves comparing candidates or selecting the best one:
-                        - Compare based on Experience, Skills, and Education.
-                        - Return the best matching candidate.
-                        - In case of a tie, mention multiple candidates and explain briefly.
+                **Candidate Information:**
+                {candidate_info_for_prompt} 
 
-                        Formatting Rules:
-                        - If fewer than 3 candidates match, state the count explicitly.
-                        - Present data in a structured, readable format for the web. Use proper paragraph spacing, bolded section titles, and indentations.
+                **User Query:**
+                {query}
 
-                    Remember
-                    - *Fetch candidates only if their profile closely aligns with the job description title and core responsibilities.*
-                    - *If the user explicitly asks to fetch all candidates, then return all candidates matching the job title, even if their profiles are not closely aligned with the full job description.*   
-                    - *Avoid job title mismatches or overly broad interpretations.*  
-                    - If candidate count is less than 3, state the count along with candidate details (e.g., "There are 2 candidates matching the job description").   
-                    - **All responses should be in a well-structured, professional document format, suitable for direct display or reporting.**  
-                    - Ensure the data is displayed in a clean format: preserve paragraph spacing, headings, subheadings, bold field labels, and proper indentation.
+                **Previous Conversation:**
+                {str(user_conversation) if user_conversation else "None"}
+                ---
 
-                        **Candidate ID :** [reference]
-                        **Full Name:** [Full Name]
-                        **Gender:** [Gender]
-                        **Job Title:** [Current Job Title]
-                        **Email:** [Email]
-                        **Skills:** [Skills]
-                        **Location:** [Address City or County/Region or Country]
-                        **Languages:** [Leave blank if not available]
-                        **Nationality:** [Nationality]
+                ### Matching Rules:
 
-                        display only the fields that are available, and omit any that are not specified
+                1. **Strictly match candidates by Job Title** from the JD. Match only those whose job title **exactly or closely aligns** with the JD title.
+                - Ignore unrelated titles unless user says "show all."
+                2. If the JD includes core responsibilities or tools, match them with candidate skills as secondary criteria.
+                3. If the query mentions a **language**, check if it's included in the candidate's "Languages" field (match known variations like "knows Hindi", "fluent in English").
+                4. If the query is a **greeting or casual**, reply briefly and politely in one line.
+                5. If the query involves **finding best** or **comparing** candidates, compare strictly based on:
+                - **Experience (years)**
+                - **Skills**
+                - **Education** (if available)
 
-                    Last conversation: {str(user_conversation)}
-                    Reply to this query: {query}
+                ### Formatting Guidelines:
+
+                - Display candidates only if they pass filters.
+                - Show results in this exact structured format (omit empty fields):
+
+                    **Candidate ID:** [reference]  
+                    **Full Name:** [Full Name]  
+                    **Gender:** [Gender]  
+                    **Job Title:** [Current Job Title]  
+                    **Email:** [Email]  
+                    **Skills:** [Skills]  
+                    **Location:** [Address City / County / Region / Country]  
+                    **Languages:** [Languages]  
+                    **Nationality:** [Nationality]  
+
+                - Use proper paragraph spacing, bold field labels, and indentation.
+                - If < 3 candidates match, state that clearly. If none, say so politely.
+
+                ### Behavior Rules:
+
+                - If JD is missing, use only candidate data to respond.
+                - If all data is missing, give a general recruitment-related response.
+                - Never return broad or loosely related profiles unless user explicitly asks.
+                - Ask for clarification if the query is ambiguous.
+
+                **Output only the final structured candidate response or direct reply. No comments. No markdown.**
                 """
 
             messages = [
@@ -1447,41 +1475,67 @@ def execute_query3(query, user_id, temp=False, continuation_token=None, user_con
                 yield chunk, finish_res
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         error_message = f"We searched our entire database, but couldn't find any candidates with those exact attributes. How about trying a similar role or related skills? "
+        print(e)
         yield error_message, "error"  #  yield error
 
-
 def format_candidates_for_display(candidates_list):
-    
     for i, candidate in enumerate(candidates_list):
         output = []
-        # Add the candidate number at the beginning
         output.append(f"{i + 1}. ")
 
         if candidate.get("Candidate ID"):
-            output.append(f"**Candidate ID :** {candidate['Candidate ID']}")
+            output.append(f"**Candidate ID:** {candidate['Candidate ID']}")
         if candidate.get("Full Name"):
             output.append(f"**Full Name:** {candidate['Full Name']}")
-        if candidate.get("Gender"):
-            output.append(f"**Gender:** {candidate['Gender']}")
-        if candidate.get("Job Title"):
-            output.append(f"**Job Title:** {candidate['Job Title']}")
         if candidate.get("Email"):
             output.append(f"**Email:** {candidate['Email']}")
-        if candidate.get("Location"):
-            output.append(f"**Location:** {candidate['Location']}")
         if candidate.get("Languages"):
-            # Join languages with a comma, or handle as needed
-            output.append(f"**Languages:** {', '.join(candidate['Languages'])}")
-        if candidate.get("Nationality"):
-            # Join nationalities with a comma, or handle as needed
-            output.append(f"**Nationality:** {', '.join(candidate['Nationality'])}")
-        if candidate.get("candidateId"):
+            try:
+                # Handle both list of strings and list of dicts
+                if isinstance(candidate["Languages"], list):
+                    if all(isinstance(v, dict) and "language" in v for v in candidate["Languages"]):
+                        langs = [v.get("language") for v in candidate["Languages"] if v.get("language")]
+                    else:
+                        langs = [str(v) for v in candidate["Languages"] if v]
+                    output.append(f"**Languages:** {', '.join(langs)}")
+            except Exception:
+                output.append("**Languages:** ")
+        if candidate.get("Total Experience") is not None:
+            output.append(f"**Total Experience:** {candidate['Total Experience']}")
+        if candidate.get("Education"):
+            try:
+                if isinstance(candidate["Education"], list):
+                    edus = []
+                    for edu in candidate["Education"]:
+                        degree = edu.get("degree", "")
+                        institution = edu.get("institution", "")
+                        if degree and institution:
+                            edus.append(f"{degree} ({institution})")
+                        elif degree:
+                            edus.append(degree)
+                        elif institution:
+                            edus.append(institution)
+                    output.append(f"**Education:** {', '.join(edus)}")
+            except Exception:
+                output.append("**Education:** ")
+        if candidate.get ("nationality"):
+            output.append(f"**nationality:** {candidate['nationality']}")
+        if candidate.get("Rank Score") is not None:
+            try:
+                score_val = candidate.get("Rank Score")
+                numeric_val = float(score_val)
+                score_percent = int(round(numeric_val * 100))
+                score_str = f"{score_percent}"
+            except Exception:
+                score_str = str(candidate.get("Rank Score"))
+            output.append(f"**Rank Score:** {score_str}")
+        if candidate.get("Candidate ID"):
             # Generate profile URL using candidateId
-            profile_url = f"https://secure.recruitly.io/candidate?id={candidate['candidateId']}"
+            profile_url = f"https://secure.recruitly.io/candidate?id={candidate['Candidate ID']}"
             output.append(f"**Profile Link:** <a href='{profile_url}' target='_blank' style='color:#1a0dab; text-decoration:underline;'>View Full Profile</a>")
-        # Join the lines for the current candidate and yield
-        # Add a newline after the number for better formatting if it's the first line
         yield output[0] + '\n'.join(output[1:]) + "\n\n"
 
 

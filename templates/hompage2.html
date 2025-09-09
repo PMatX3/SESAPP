@@ -8,8 +8,8 @@
                     <h1>Find Top Talent Fast. YourBestCandidateAI.</h1>
                     <p class="hero-para-text">YourBestCandidateAI streamlines hiring with AI-powered candidate
                         selection.</p>
-                    <button class="btn hero-btn starting_btn" data-bs-toggle="modal" data-bs-target="#demoModal">
-                        Book a Demo
+                    <button class="btn hero-btn starting_btn" data-bs-toggle="modal" data-bs-target="#startDemoModal">
+                        Try the Interactive Demo
                     </button>
                     <ul class="banifit-list">
                         <li>
@@ -31,6 +31,38 @@
     </div>
 </section>
 
+<div class="modal fade" id="startDemoModal" tabindex="-1" aria-labelledby="startDemoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="startDemoModalLabel">Start Your Interactive Demo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Enter your details to begin. This will grant you one-time access to the interactive demo.</p>
+                <form id="startDemoForm">
+                    <div class="mb-3">
+                        <label for="firstName" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="firstName" name="firstName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="lastName" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="lastName" name="lastName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="demoEmail" class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="demoEmail" name="email" required>
+                    </div>
+                    <div id="demoFormError" style="color: red; display: none;" class="mt-2"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="submitDemoRequest">Start Demo</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal -->
 <div class="modal fade" id="demoModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
@@ -52,7 +84,7 @@
                         <input type="email" class="form-control" id="email" required pattern="\S.*">
                         <p id="email_error" style="color: red; display: none;">Email cannot be empty or just spaces.</p>
                     </div>
-                    <div class="mb-3">
+                    <!-- <div class="mb-3">
                         <label for="phone" class="form-label">Phone Number</label>
                         <input type="tel" class="form-control" id="phone" required pattern="\d+" maxlength="13" title="Please enter a valid phone number without spaces.">
                         <p id="phone_error" style="color: red; display: none;">Phone number cannot be empty or just spaces and must be 10 to 13 digits.</p>
@@ -70,7 +102,7 @@
                         <select class="form-control" id="timeslot" required>
                             <option value="">Choose a time slot</option>
                         </select>
-                    </div>
+                    </div> -->
                 </form>
             </div>
             <div class="modal-footer">
@@ -82,6 +114,45 @@
 </div>
 
 <script>
+      document.getElementById('submitDemoRequest').addEventListener('click', function() {
+    const form = document.getElementById('startDemoForm');
+    const errorDiv = document.getElementById('demoFormError');
+
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = {
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        email: document.getElementById('demoEmail').value,
+    };
+
+    fetch('/start-demo-session', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Redirect to the demo page on success
+            window.location.href = data.redirect_url;
+        } else {
+            // Show error message in the modal
+            errorDiv.textContent = data.error;
+            errorDiv.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+        errorDiv.style.display = 'block';
+    });
+});
     // date range
     document.addEventListener('DOMContentLoaded', function() {
         const dateInput = document.getElementById('date');
