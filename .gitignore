@@ -12,6 +12,10 @@ build/
 develop-eggs/
 dist/
 downloads/
+cv_uploads/
+flask_session/
+uploads/
+job_descriptions/
 eggs/
 .eggs/
 lib/
@@ -161,3 +165,4 @@ cython_debug/
 
 #files
 *.csv
+nohup.out

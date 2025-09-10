@@ -1,0 +1,14 @@
+command for start yourbestaicandidate.service: 
+sudo systemctl start yourbestcandidate.service
+
+
+command for see status of yourbestaicandidate.service: 
+sudo systemctl status yourbestcandidate.service
+
+
+command for restart yourbestaicandidate.service: 
+sudo systemctl restart yourbestcandidate.service
+
+
+path for check yourbestaicandidate.service logs: 
+/var/log/yourbestaicandidate

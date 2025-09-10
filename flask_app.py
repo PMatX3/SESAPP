@@ -1,46 +1,53 @@
 import eventlet
 eventlet.monkey_patch()
 import fitz
-from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, Response, send_file
-from pymongo import MongoClient
+from flask import Flask, request, render_template, flash, jsonify, session, redirect, url_for, send_file, send_from_directory,abort
 from werkzeug.utils import secure_filename
-from langchain_community.chat_models import ChatOpenAI
 import os,json
-from cromadbTest import load_data, execute_query, execute_query3,execute_query2, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message, clear_collection
-# from test import load_data, execute_query, load_pdf_data, get_chat_history, load_json_data, get_chat_list, add_chat_message
-# from test import execute_query
-from utils import get_pdf_text, get_text_chunks, send_reset_password_mail, send_email, send_demo_email
-import pandas as pd
+from cromadbTest import load_data, execute_query3,execute_query2, get_chat_history, load_json_data, get_chat_list, add_chat_message, clear_collection
+from utils import send_email, send_demo_email
 import uuid
-from io import BytesIO
-
+from demo_process import *
 import threading
 from datetime import datetime,timedelta
-import markdown
 from markdown_it import MarkdownIt
 from mdit_py_plugins.front_matter import front_matter_plugin
 from mdit_py_plugins.footnote import footnote_plugin
 import jwt
 import stripe
 import time
-from htmlTemplates import css, bot_template, user_template
-from flask_socketio import SocketIO, emit, disconnect
+from htmlTemplates import bot_template, user_template
+from flask_socketio import SocketIO, emit
 from flask_cors import CORS
-from flask_session import Session
 import gc
+from flask_session import Session
 from mongo_connection import get_mongo_client
-from cromadbTest import job_query
 import logging
 import html2text
+import secrets
+import string
+from werkzeug.security import _hash_internal,generate_password_hash, check_password_hash
 import re
 from flask_migrate import Migrate
 from models import db  # Assuming 'db' is your SQLAlchemy instance
-import time
+from typing import List, Dict, Any
+salt = secrets.token_hex(16)
 from dotenv import load_dotenv
 
 app = Flask(__name__)
 
 load_dotenv()
+
+# Add session check middleware
+@app.before_request
+def check_session():
+    if request.endpoint and 'static' not in request.endpoint:
+        if 'user_id' in session:
+            # Check if session is still valid
+            if not session.get('_permanent', False):
+                session.clear()
+                return redirect(url_for('login'))
+
 # Initialize SQLAlchemy
 # Import the models
 from models import BookingAppointment
@@ -48,7 +55,20 @@ from models import BookingAppointment
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////home/ubuntu/SES_Flask/bookings_storage.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# db = SQLAlchemy(app)
+
+# Session configuration
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_PERMANENT'] = False
+app.config['SESSION_USE_SIGNER'] = True
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
+
+# Initialize Session
+Session(app)
+
+# Initialize SQLAlchemy
 db.init_app(app)
 # Create the database tables if they don't exist
 with app.app_context():
@@ -58,7 +78,6 @@ migrate = Migrate(app, db)
 
 CORS(app, supports_credentials=True)
 socketio = SocketIO(app, ping_timeout=240, ping_interval=120)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Adjust based on your requirements
 
 cancellation_flag = threading.Event()
 
@@ -78,7 +97,12 @@ UPLOAD_FOLDER = 'uploads'
 JOB_DESCRIPTION_FOLDER = 'job_descriptions'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+demo_jobs_collection = mongo.get_collection('demo_jobs') if mongo.get_collection('demo_jobs') is not None else mongo.create_collection('demo_jobs')
+demo_resumes_collection = mongo.get_collection('demo_resumes') if mongo.get_collection('demo_resumes') is not None else mongo.create_collection('demo_resumes')
+demo_request_collection = mongo.get_collection('demo_requests') if mongo.get_collection('demo_requests') is not None else mongo.create_collection('demo_requests')
+users_collection = mongo.get_collection('users') if mongo.get_collection('users') is not None else mongo.create_collection('users')
 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 DOMAIN = 'https://www.yourbestcandidate.ai'
 
@@ -89,8 +113,6 @@ md = (
     .enable('table')
 )
 
-
-import logging
 
 # Setup logging with a file name
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -113,21 +135,7 @@ def load_and_cache_json_data(user_id, filename=None, temp=False):
 
     return result_holder
 
-# def load_and_cache_json_data(filename=None, user_id=None, temp=False):
-#     def load_json():
-#         if filename and temp:
-#             with open(filename, 'r', encoding='utf-8') as file:
-#                 data = json.load(file)
-#                 load_json_data(data, user_id,True)
-#         else:
-#             with open(filename, 'r', encoding='utf-8') as file:
-#                 data = json.load(file)
-#                 load_json_data(data, user_id)
-        
-
-#     # Start a new thread for loading JSON data
-#     thread = threading.Thread(target=load_json)
-#     thread.start()
+ 
 
 def load_and_cache_file_data(filename=None, temp=False):
     def load_file():
@@ -153,9 +161,7 @@ def list_files():
     return jsonify(files_list)
 
 
-# @app.route('/robots.txt', methods=['GET'])
-# def list_files():
-#     return 'robots.txt'
+ 
 
 def check_for_file(company_name):
     root_dir = 'company_data'  # Start from the root of the filesystem
@@ -181,49 +187,17 @@ def calculate_days_since_join(join_date_str):
     return difference.days
 @app.route('/')
 def index():
+    # If a user is logged in, redirect them to the new chat page
+    if 'user_id' in session:
+        return redirect(url_for('new_chat'))
+    # Otherwise, render the homepage for non-logged-in users
     return render_template('hompage2.html')
 
 @app.route('/chat')
 def chat():
-    job_desc = job_query.get('job_profile')
-    if job_desc['documents']:
-        job_desc['documents'] = []
-    if 'user_id' in session:
-        user_id = session['user_id']
-        try:
-            session.pop('current_data_source', None)
-            session.pop('current_file_path',None)
-            session.pop('job_description_text',None)
-            session.pop('pdf_file_path',None)
-            clear_collection(user_id)
-        except Exception as e:
-            print("error in clear collection => ",e)
-        user_data = mongo.users.find_one({'app_name': user_id})
-        if user_data:
-            days_since_join = calculate_days_since_join(user_data['join_date'])
-            days = user_data.get('days', 0)
-            company = user_data.get('company', '')
-            login_attempts = user_data.get('login_attempts')
-            session['days_since_join'] = days_since_join
-            session['days'] = days
-            session['company'] = company
-            session['login_attempt'] = login_attempts
-            # print("company => ",company)
-            if company == 'SES':
-                print("in if")
-                file_path = check_for_file(company)
-                if file_path:
-                    load_and_cache_json_data(file_path, True)
-            # if days_since_join >= days:
-            #     return redirect(url_for('pricing'))
-            # else:
-            return render_template('index3.html')
-        else:
-            return redirect('/')
-    else:
-        return redirect('/')
-    
-#PAYMENT PART    
+    # This route is now deprecated. Always redirect to new_chat for consistency.
+    return redirect(url_for('new_chat'))
+
 @app.route('/pricing')
 def pricing():
     return render_template('pricing.html')
@@ -239,38 +213,7 @@ def privacy_policy():
 @app.route("/charge", methods=["POST"])
 def charge():
     return render_template('coming_soon.html')
-    # amount = 1000  # amount in cents
-    # currency = "usd"
-    # description = "A Flask Charge"
-
-    # stripe.api_key = stripe_keys["secret_key"]
-    # print("stripe_keys ==> ",stripe_keys)
-    # create_checkout_session = stripe.checkout.Session.create(
-    #     line_items=[
-    #         {
-    #             'price':'price_1P9ng8DJlqPYNFXOetpsVLtL',
-    #             'quantity':1
-    #         }
-    #     ],
-    #     mode='subscription',
-    #     success_url=f'{DOMAIN}/',
-    #     cancel_url=f'{DOMAIN}/pricing'
-    # )
-    # print("123 ---- ==== ")
-    # print("create_checkout_session['payment_status'] => ", create_checkout_session['payment_status'])
-    # if create_checkout_session['payment_status'] == 'unpaid':
-    #     with app.test_client() as client:
-    #         print("in with")
-    #         print("session['user_id'] => ", session['user_id'])
-    #         response = client.post('/edit/' + session['user_id'], data={'new_days': 100, 'new_join_date': datetime.now().date().isoformat()})
-    #         print("response = > ", response)
-    #         if response.status_code == 200:
-    #             print('Days updated to 100 for unpaid session.')
-    #         else:
-    #             print('Failed to update days for unpaid session.')
-    # print("12333")
-    # print("check out url", create_checkout_session.url)
-    # return redirect(create_checkout_session.url,303)
+ 
 
 # admin part
 @app.route('/admin')
@@ -475,6 +418,7 @@ def login():
             session['login_attempt'] = login_attempt
             if login_attempt == 0:
                 session['user_id'] = app_name
+                session.permanent = True
                 return jsonify({'login_attempt':login_attempt,'days_since_join':days_since_join})
             
             if password_from_api:
@@ -482,13 +426,15 @@ def login():
                     # Generate a new chat_id using uuid
                     chat_id = str(uuid.uuid4())
                     session['user_id'] = app_name
-                    session['chat_id'] = chat_id  
+                    session['chat_id'] = chat_id
+                    session.permanent = True
                     with app.test_client() as client:
                         client.post(url_for('update_login_attempts'), data={'app_name': app_name})
                     if user_type == 'admin':
                         return jsonify({'user':'admin'})
                     else:
-                        return jsonify({'user':'user'})
+                        # For regular users, signal client-side to redirect to new_chat
+                        return jsonify({'user':'user', 'redirect_to': url_for('new_chat')}) 
                 else:
                     return jsonify({'message': 'Invalid credentials'}), 401
             else:
@@ -498,58 +444,39 @@ def login():
             session.clear()
             return render_template('login.html')
         else:
-            return redirect('/chat')
+            # If user is already logged in, redirect to new chat
+            return redirect('/new_chat')
 
 @app.route('/logout')
 def logout():
     user_id = session.get('user_id')
-    # if user_id:
-    #     for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-    #         if user_id in filename:
-    #             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    #             try:
-    #                 os.remove(file_path)
-    #                 print(f"Deleted {file_path}")
-    #             except FileNotFoundError:
-    #                 print(f"File not found: {file_path}")
-    # Clear the session
-    session.clear()
-    # Redirect to login page
+    if user_id:
+        # Clear all session data
+        session.clear()
+        # Regenerate session ID to prevent session fixation attacks
+        session.regenerate()
+        # Explicitly mark session as non-permanent (though clear() often handles this)
+        session.permanent = False
+        # Create a response object and delete the session cookie
+        # response = redirect(url_for('login'))
+        # response.delete_cookie('session')
+        # return response
     return redirect(url_for('login'))
 
-@app.route('/chats', methods=['GET', 'POST'])
+@app.route('/chats', methods=['GET']) # Only GET method is needed for the chat list
 def chats():
     with app.app_context():
         user_id = session.get('user_id')
         if not user_id:
-            return redirect(url_for('login'))
+            # If no user_id in session, return a JSON response indicating redirect
+            # This is useful if an AJAX call hits this endpoint when logged out.
+            return jsonify({'redirect': url_for('login')}), 401
 
+        # Fetch the list of chat sessions for the current user
         chat_list = get_chat_list(user_id)
-        chat_history = None
-        if request.method == 'POST':
-            data = request.get_json()  # Get JSON data from request
-            selected_chat_id = data.get('chat_id')  # Extract chat_id from JSON data
-            print("selected_chat_id => ", selected_chat_id)
-            if selected_chat_id:
-                session['chat_id'] = selected_chat_id
-                session['user_id'] = user_id
-                
-                # Use test_client to make a request to the local API
-                with app.test_client() as client:
-                    # Ensure the session is passed to the test client
-                    with client.session_transaction() as sess:
-                        sess['user_id'] = user_id
-                        sess['chat_id'] = selected_chat_id
-                    
-                    # Make a GET request to the local API endpoint
-                    response = client.get('/get_chat_history')
-                if response.status_code == 200:
-                    chat_history = response.json
-                else:
-                    chat_history = {'error': 'Failed to retrieve chat history'}
-                return jsonify({'chat_list': chat_list, 'chat_history': chat_history, 'selected_chat_id': selected_chat_id})
         
-        return jsonify({'chat_list': chat_list, 'chat_history': chat_history})
+        # Return only the chat list. chat_history will be loaded via /get_chat_history
+        return jsonify({'chat_list': chat_list}), 200
 
 @app.route('/new_chat')
 def new_chat():
@@ -557,23 +484,21 @@ def new_chat():
         if 'user_id' in session:
             user_id = session.get('user_id')
             try:
+                # Clear previous data source selections for a new chat
                 session.pop('current_data_source', None)
                 session.pop('current_file_path',None)
                 session.pop('job_description_text',None)
                 session.pop('pdf_file_path',None)
-                clear_collection(user_id)
+                # Clear existing chat collection for the user (if any) to start fresh
+                clear_collection(user_id) 
             except Exception as e:
                 print("error in clear collection => ",e)
             user_conversations[user_id] = []
-            # Generate a new chat_id using uuid
+            # Generate a new unique chat_id for this session
             chat_id = str(uuid.uuid4()) 
-            # Set the new chat_id in the session
-            session['chat_id'] = chat_id
+            session['chat_id'] = chat_id # Set the new chat_id in the session
             print("chat_id from new_chat ===== ", chat_id)
-            # response.headers['Location'] += '?new_chat=false'  # Optionally set new_chat to false
             return render_template('index3.html')
-            # response = redirect(url_for('index'))  # Redirect to index without new_chat in URL
-            return response
         else:
             return redirect('/login')
     except Exception as e:
@@ -581,6 +506,25 @@ def new_chat():
         print(e)
         print("=============")
         return redirect(url_for('login'))
+
+@app.route('/chat/<string:chat_id_param>') # New route to load a specific chat by ID
+def chat_with_id(chat_id_param):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session.get('user_id')
+    
+    # Set the current session's chat_id to the one passed in the URL
+    session['chat_id'] = chat_id_param
+    
+    # Clear any previously loaded data sources to ensure fresh context for the specific chat
+    session.pop('current_data_source', None)
+    session.pop('current_file_path', None)
+    session.pop('job_description_text', None)
+    session.pop('pdf_file_path', None)
+    
+    # Render the main chat template. The client-side JS will then fetch the specific chat history.
+    return render_template('index3.html')
 
 @app.route('/change_password')
 def change_password():
@@ -637,75 +581,7 @@ def extract_text_from_pdf(pdf_path):
     except Exception as e:
         return f"Error: {e}"
 
-# @app.route('/load_data', methods=['POST'])
-# def load_new_data():
-#     print(" Load data clled \n")
-#     user_id = session.get('user_id')
-#     if not user_id:
-#         return jsonify({'error': 'User ID not found in session'}), 401
-    
-#     files = request.files.getlist('file')
-#     use_ses = request.form.get('useSES') == 'true'
-#     job_description_folder = 'job_descriptions'
-    
-#     if not os.path.exists(UPLOAD_FOLDER):
-#         os.makedirs(UPLOAD_FOLDER)
-
-#     if not os.path.exists(job_description_folder):
-#         os.makedirs(job_description_folder)
-    
-#     if files and files[0].filename:
-#         for file in files:
-#             filename = secure_filename(file.filename)
-#             _, file_ext = os.path.splitext(filename)
-#             unique_id = f"{uuid.uuid4()}-{user_id}"
-#             filepath = os.path.join(UPLOAD_FOLDER, f"{unique_id}{file_ext}")
-
-#             try:
-#                 file.save(filepath)
-#             except Exception as e:
-#                 return jsonify({'error': f'Error saving file {filename}: {e}'}), 500    
-
-    
-#             if file_ext.lower() == 'pdf':
-#                 pdf_file_path = os.path.join(job_description_folder,  secure_filename(file.filename))
-#                 file.save(pdf_file_path)  # Save the PDF to the upload folder
-#                 session['pdf_file_path'] = pdf_file_path  # Store the path in session
-#                 job_description = extract_text_from_pdf(pdf_file_path)
-#                 session['job_description'] = job_description  # Save the extracted job description
-#                 message=  "PDF uploaded and processed successfully!"
-
-#             if use_ses:
-#                 session['ses_data'] = True
-#                 session['current_data_source'] = 'ses'
-#                 session.pop('current_file_path', None)
-#                 return jsonify({"message": "SES data loaded successfully!"}), 200
-
-#             if not file:
-#                 return jsonify({"message": "No file uploaded"}), 400
-            
-#             if file_ext.lower() == 'csv':
-#                 print(" inside csv upload  \n")
-#                 csv_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
-#                 file.save(csv_path)
-#                 load_and_cache_file_data(csv_path)
-#                 session['current_file_path'] = csv_path
-#                 session['current_data_source'] = 'csv'
-#                 session.pop('ses_data', None)
-#                 return jsonify({"message": "CSV data loaded successfully!"}), 200
-
-#             if file_ext.lower() == 'json':
-#                 json_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
-#                 file.save(json_path)
-#                 load_and_cache_json_data(json_path, True)
-#                 json_converted_path = 'csvdata/json_data.csv'
-#                 session['current_file_path'] = json_converted_path
-#                 session['current_data_source'] = 'json_data'
-#                 session.pop('ses_data', None)
-#                 return jsonify({"message": "JSON data loaded successfully!"}), 200   
-            
-#     print(" ======= Session ======== ", session)        
-#     return jsonify({"message": "Invalid file type provided."}), 400
+ 
 
 
 
@@ -717,29 +593,36 @@ def load_new_data():
     if not user_id:
         return jsonify({'error': 'User ID not found in session'}), 401
 
-    # Create user directory if it doesn't exist
+    # Step 1: Setup user directory
     user_dir = os.path.join(UPLOAD_FOLDER, user_id)
     if not os.path.exists(user_dir):
         os.makedirs(user_dir)
-
-    clear_collection(user_id)
+    
     
     message = ''
     errors = []
     start_time = time.time()
 
     files = request.files.getlist('file')
-    use_ses_from_form = request.form.get('useSES')
     
+    # Step 2: Check if we're using SES (MongoDB)
+    use_ses_from_form = request.form.get('useSES')    
     if use_ses_from_form == 'true':
         session['useSES'] = True
         session['current_file_path'] = None
-    else:
-        message = "No files uploaded and not using SES data."
-        session['useSES'] = False
+
+        clear_collection(user_id)
+        print(" We are using useSEs Data")
+        message = "SES data loaded successfully!"
+        return jsonify({
+            'message': message,
+            'useSES': True,
+            'load_time_seconds': 0.22
+        }), 200
+    
 
 
-
+    # Step 3: Otherwise process uploaded file(s)
     try:
         if files and files[0].filename:
             for file in files:
@@ -757,8 +640,6 @@ def load_new_data():
                 if file_ext.lower() == '.pdf':
                     print("=============== New PDF Uploaded =========")
 
-                    # Clear previous PDF data from session
-
                     # Extract text from the new PDF
                     raw_text = extract_text_from_pdf(filepath)
 
@@ -767,7 +648,7 @@ def load_new_data():
                         return jsonify({'error': f'Error processing PDF: {raw_text}'}), 500
 
                     # Generate new .txt filename and path
-                    txt_filename = f"jobdescription_{user_id}.txt"
+                    txt_filename = f"jobdescription_{uuid.uuid4()}_{user_id}.txt"
                     txt_path = os.path.join(JOB_DESCRIPTION_FOLDER, txt_filename)
                     update_pdf_file_reference(user_id, 'job_description', txt_path)
 
@@ -781,20 +662,20 @@ def load_new_data():
                     message = "PDF successfully processed and converted to text"
 
                 elif file_ext.lower() == '.csv' :
+                    print("Processing Candidate CSV file...")
                     try:
                         load_and_cache_file_data( filepath)
                         update_user_file_reference(user_id, 'data_file', filepath)
-                        session.pop('useSES', None)
-                        
                         message = "CSV file successfully processed"
                     except Exception as e:
                         os.remove(filepath)
                         return jsonify({'error': f'Error processing CSV: {e}'}), 500
 
                 elif file_ext.lower() == '.json':
+                    print("Processing Candidate JSON file...")
                     try:
                         load_and_cache_json_data(user_id, filepath, False)
-                        session.pop('useSES', None)
+                        update_user_file_reference(user_id, 'data_file', filepath)
                         
                         message = "JSON file successfully processed"
                     except Exception as e:
@@ -803,7 +684,7 @@ def load_new_data():
 
                 else:
                     os.remove(filepath)
-                    return jsonify({'error': f'Invalid or duplicate file uploaded: {filename}'}), 400
+                    return jsonify({'error': f'Unsupported file type: {file_ext}'}), 400
                 
         elapsed = round(time.time() - start_time, 2)
         session.modified = True
@@ -814,7 +695,7 @@ def load_new_data():
         return jsonify({
             'message': message,
             'errors': errors,
-            'useSES': session.get('useSES', False),
+            'useSES': False,
             'load_time_seconds': elapsed
         }), 200
 
@@ -837,35 +718,7 @@ def update_user_file_reference(user_id, file_type, file_path):
         {'$set': {file_type: file_path}},
         upsert=True
     )
-
-
-    # if 'json' in data_types:
-    #     user_id = session.get('user_id')
-    #     session['recrutly_id'] = True
-    #     user = mongo.users.find_one({'app_name': user_id})
-    #     if user:
-    #         company_name = user.get('company', None)
-        
-    #     if company_name:
-
-    #         file_path = check_for_file(company_name) if company_name not in ['', None] else None
-    #         if file_path:
-    #                 load_and_cache_json_data(file_path, True)
-    #                 session['current_data_source'] = 'json_existing'
-    #                 session['current_file_path'] = file_path  # Store path for existing data too
-    #                 if message:
-    #                     message += f' and {company_name} data processed.'
-    #                 else:
-    #                     message = f'{company_name} data processed.'
-    #         else:
-    #             return jsonify({'error': f"No data found for company: {company_name}"}), 404 
-
-    #         if message is not None:
-    #             message += ' and '+f'{company_name} data processed.'
-    #         else:
-    #             message = f'{company_name} data processed.'
-    # print(" ============== Session : ", session)          
-    # return jsonify({'message': message, 'current_data_source': session.get('current_data_source'), 'current_file_path': session.get('current_file_path')}), 200
+ 
 
 # Flask route to handle CSV download
 @app.route('/download_csv/<filename>', methods=['GET'])
@@ -903,8 +756,10 @@ def handle_ask(json):
                 # Make a GET request to the local API endpoint
                 print("Making GET request to /get_chat_history")
                 response = client.get('/get_chat_history')
-                # print("Received response for chat history:")
                 chat_history = response.json
+                # Ensure chat_history is always a list for iteration
+                if not isinstance(chat_history, list):
+                    chat_history = []
         except Exception as e:
             print("Error fetching chat history:", e)
             chat_history = []
@@ -929,11 +784,9 @@ def handle_ask(json):
         user_conversations[user_id].append({'question': user_question})
         # print(f"Appended user question to history for user {user_id}: {user_question}")
 
-        # remove Html, \\ , and links from the conversation
-        if 'error' in chat_history:
-            print("Chat history contains an error, clearing it.")
-            chat_history = []
+        
 
+        # remove Html, \\ , and links from the conversation
         for chat in chat_history:
             # print("Processing chat history item:", chat)
             if 'ai' in chat:
@@ -947,6 +800,8 @@ def handle_ask(json):
                 chat['user'] = chat['user'].replace('\n', '').replace('*', '')
                 chat['user'] = re.sub(r'\!\[.*?\]\(.*?\)', '', chat['user'])
                 chat['user'] = chat['user'].replace('\\', '')
+
+        
                 
 
         while True:
@@ -989,19 +844,11 @@ def handle_ask(json):
                 print("Response length limit reached, setting up for continuation.")
                 continue  # Continue the loop to process the next part of the query
             
-            if finish_res == 'error':
-                retry = True
-                rendered_response = "I couldn't find any candidates for that search. To help me narrow it down, could you try a new query with different skills, locations, or job titles?"
-                emit('message', {'data': rendered_response, 'is_complete': temp_finish_res})
-                continue
+            if temp_finish_res == 'error':
+                emit('message', {'data': rendered_response, 'is_complete': 'stop'})
+                break 
 
-            # elif finish_res == 'csv_download':
-            #     print('done hrer')
-            #     download_link = f"https://yourbestcandidate.ai/download_csv/{user_id}_results.csv"
-            #     entire_response += f"We have large data and because of token limitation I am not able to respond, but here is the download button of that data in CSV: [Download CSV]({download_link})"
-            #     rendered_response = md.render(entire_response)
-            #     emit('message', {'data': rendered_response, 'is_complete': 'stop'})
-            #     break
+            
             else:
                 print("Query execution finished with status:", finish_res)
                 
@@ -1016,7 +863,7 @@ def handle_ask(json):
     except Exception as e:
         error_message = str(e)
         print("Exception in handle_ask:", error_message)
-        emit('error', {'error': error_message})
+        emit('message', {'data': "No candidates found matching your criteria. Please try refining your search with different keywords or filters", 'is_complete': 'stop'})
 
 @socketio.on('ask2')
 def handle_ask2(json):
@@ -1128,21 +975,39 @@ def api_get_chat_history():
             return jsonify([]), 200  # Return empty list instead of error
     
         chat_history = get_chat_history(user_id, chat_id)
+
+        formatted_history: List[Dict[str, str]] = []
         
         if chat_history:
             for message in chat_history:
                 message['_id'] = str(message['_id'])  # Convert ObjectId to string
-            
-            formatted_history = [
-                {
-                    'user': user_template.replace('{{MSG}}', message['message']),
-                    'ai': bot_template.replace('{{MSG}}', message['response'] if isinstance(message['response'], str) else "CSV preview is not displayed in the chat history.")
-                } 
-                for message in chat_history
-            ]
+
+                user_message_content: Any = message.get('message', '')
+                if not isinstance(user_message_content, str):
+                    if isinstance(user_message_content, list):
+                        user_message_content = " ".join(map(str, user_message_content))
+                    else:
+                        user_message_content = str(user_message_content)
+
+
+                ai_response_content: Any = message.get('response', '')
+                if not isinstance(ai_response_content, str):
+                    if ai_response_content == None:
+                        ai_response_content = ""
+                    elif isinstance(ai_response_content, (dict, list)):
+                        ai_response_content = "CSV preview is not displayed in the chat history."
+                    else:
+                        ai_response_content = str(ai_response_content)
+                
+                formatted_history.append(
+                    {
+                        'user': user_template.replace('{{MSG}}', user_message_content),
+                        'ai': bot_template.replace('{{MSG}}', ai_response_content)
+                    }
+                )
             return jsonify(formatted_history), 200
         else:
-            return jsonify([]), 200  # Also return empty array here
+            return jsonify([]), 200
 
 
 @app.route('/delete_chat/<chat_id>', methods=['DELETE','POST'])
@@ -1238,6 +1103,354 @@ def check_slot_is_booked():
         return jsonify({"is_booked": True}), 200
     else:
         return jsonify({"is_booked": False}), 200
+    
+def generate_compatible_password(length=8):
+    if length < 8:
+        length = 8  # enforce minimum length
+
+    upper = secrets.choice(string.ascii_uppercase)  # at least one uppercase
+    digit = secrets.choice(string.digits)           # at least one number
+    special = secrets.choice("!@#$%^&*()-_=+[]{};:,.<>?")  # at least one special char
+
+    # Remaining characters can be any combination of letters, digits, special chars
+    all_chars = string.ascii_letters + string.digits + "!@#$%^&*()-_=+[]{};:,.<>?"
+    remaining_length = length - 3
+    remaining_chars = ''.join(secrets.choice(all_chars) for _ in range(remaining_length))
+
+    # Combine all parts and shuffle
+    password_list = list(upper + digit + special + remaining_chars)
+    secrets.SystemRandom().shuffle(password_list)
+
+    return ''.join(password_list)
+
+@app.route('/start-demo-session', methods=['POST'])
+def start_demo_session():
+    try:
+        data = request.get_json()
+        first_name = data.get('firstName')
+        last_name = data.get('lastName')
+        email = data.get('email', '').strip().lower()
+
+        if not all([first_name, last_name, email]):
+            return jsonify({'success': False, 'error': 'All fields are required.'}), 400
+
+        # Check if user already exists
+        existing_user = users_collection.find_one({'email': email, 'type': 'demo_user'})
+        if existing_user:
+            return jsonify({'success': False, 'error': 'You have already requested a demo with this email.'}), 409
+
+        # Create a new demo user entry
+        demo_user = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'email': email,
+            'created_at': datetime.utcnow(),
+            'type': 'demo_user',
+            'demo_taken': False  # Initialize demo pass as unused
+        }
+        users_collection.insert_one(demo_user)
+
+        # Store the demo user's email in the session to track them
+        session['demo_user_email'] = email
+
+        return jsonify({'success': True, 'redirect_url': url_for('demo_page')})
+
+    except Exception as e:
+        print(f"Error in /start-demo-session: {e}")
+        return jsonify({'success': False, 'error': 'Internal server error.'}), 500
+
+@app.route("/demo")
+def demo_page():
+    """Renders the new interactive demo page."""
+    # Ensure a demo session has been started
+    if 'demo_user_email' not in session:
+        return redirect(url_for('index')) # Redirect to homepage if no session
+
+    demo_user_email = session['demo_user_email']
+    return render_template("demo.html", demo_user_email=demo_user_email)
+
+@app.route('/upload-demo-job-pdf', methods=['POST'])
+def upload_demo_job_pdf():
+    try:
+        # --- ADD THIS CHECK AT THE TOP ---
+        if 'demo_user_email' not in session:
+            return jsonify({"success": False, "error": "No demo session found. Please start again."}), 401
+
+        email = session['demo_user_email']
+        user = users_collection.find_one({'email': email, 'type': 'demo_user'})
+
+        if not user:
+            return jsonify({"success": False, "error": "Demo user not found."}), 404
+
+        if user.get('demo_taken', False):
+            return jsonify({"success": False, "error": "You have already used your one-time demo. Thank you for trying our product!"}), 403
+        # --- END OF CHECK ---
+
+        if 'job_pdf' not in request.files:
+            return jsonify({"success": False, "error": "No file provided"}), 400
+
+        file = request.files['job_pdf']
+
+        # Use the session email as the unique identifier
+        username = session.get('demo_user_email', 'demo_user')
+
+        result = create_demo_job_entry(username, file)
+
+        if result['success']:
+            session['demo_job_id'] = result['job_id']
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
+        print(f"Error in /upload-demo-job-pdf: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/upload-demo-cvs', methods=['POST'])
+def handle_upload_demo_cvs():
+    """Enhanced CV upload with analysis and storage"""
+    try:
+        # Get job_id from session or form data
+        job_id = session.get('demo_job_id') or request.form.get('job_id')
+        if not job_id:
+            return jsonify({"success": False, "error": "No job ID provided"}), 400
+        print("Demo Job ID: ", job_id)
+        # Get username
+        username = request.form.get('username', 'demo_user')
+        
+        # Get CV files
+        cv_files = []
+        for key in request.files:
+            if key.startswith('cv_'):
+                cv_files.append(request.files[key])
+        
+        if not cv_files:
+            return jsonify({"success": False, "error": "No CV files provided"}), 400
+        
+        # Call the enhanced upload and analyze function
+        result = upload_and_analyze_cvs(username, job_id, cv_files)
+        
+        return jsonify(result), 200 if result['success'] else 400
+        
+    except Exception as e:
+        print(f"Error in handle_upload_demo_cvs: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/process-demo-candidates', methods=['GET'])
+def process_demo_candidates():
+    """Enhanced candidate processing with AI-powered matching"""
+    try:
+        job_id = session.get('demo_job_id')
+        if not job_id:
+            return jsonify({"success": False, "error": "No job ID found in session"}), 400
+
+        username = session.get('demo_user_email', 'demo_user')
+
+        result = process_candidates_with_ai_matching(username, job_id)
+
+        print("============= process-demo-candidates Final result: ===============", result)
+        if result['success']:
+            users_collection.update_one(
+                {'email': username, 'type': 'demo_user'},
+                {'$set': {'demo_taken': True}}
+            )
+            print(f"Demo pass for {username} has been marked as used.")
+
+        return jsonify(result), 200 if result['success'] else 500
+
+    except Exception as e:
+        print(f"Error in /process-demo-candidates: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/cv-analysis-progress/<job_id>', methods=['GET'])
+def cv_analysis_progress(job_id):
+    """Get CV analysis progress for real-time updates"""
+    try:
+        username = request.args.get('username', 'demo_user')
+        
+        # Get job data to check processing status
+        job_result = get_demo_job_by_id(username, job_id)
+        if not job_result['success']:
+            return jsonify({"success": False, "error": "Job not found"}), 404
+        
+        # Get candidates count from database
+        total_candidates = candidates_collection.count_documents({"username": username, "job_id": job_id})
+        processed_candidates = candidates_collection.count_documents({
+            "username": username, 
+            "job_id": job_id, 
+            "is_analyzed": True
+        })
+        
+        progress_data = {
+            "success": True,
+            "total_cvs": total_candidates,
+            "processed_cvs": processed_candidates,
+            "progress_percentage": (processed_candidates / total_candidates * 100) if total_candidates > 0 else 0,
+            "is_complete": processed_candidates == total_candidates and total_candidates > 0,
+            "current_status": "Analyzing candidate profiles..." if processed_candidates < total_candidates else "Analysis complete"
+        }
+        
+        return jsonify(progress_data), 200
+        
+    except Exception as e:
+        print(f"Error in cv_analysis_progress: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/get-candidate-details/<candidate_id>', methods=['GET'])
+def get_candidate_details(candidate_id):
+    """Get detailed candidate information"""
+    try:
+        username = request.args.get('username', 'demo_user')
+        
+        # Get candidate from database
+        candidate = candidates_collection.find_one({
+            "_id": ObjectId(candidate_id),
+            "username": username
+        })
+        
+        if not candidate:
+            return jsonify({"success": False, "error": "Candidate not found"}), 404
+        
+        # Convert ObjectId to string
+        candidate['_id'] = str(candidate['_id'])
+        
+        return jsonify({
+            "success": True,
+            "candidate": candidate
+        }), 200
+        
+    except Exception as e:
+        print(f"Error getting candidate details: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/search-candidates', methods=['POST'])
+def search_candidates():
+    """Search candidates based on criteria"""
+    try:
+        data = request.get_json()
+        username = data.get('username', 'demo_user')
+        search_criteria = data.get('criteria', {})
+        
+        # Build MongoDB query based on search criteria
+        query = {"username": username}
+        
+        if search_criteria.get('skills'):
+            query['skills'] = {'$in': search_criteria['skills']}
+        
+        if search_criteria.get('min_experience'):
+            query['total_experience_years'] = {'$gte': search_criteria['min_experience']}
+        
+        if search_criteria.get('seniority_level'):
+            query['seniority_level'] = search_criteria['seniority_level']
+        
+        if search_criteria.get('location'):
+            query['location'] = {'$regex': search_criteria['location'], '$options': 'i'}
+        
+        # Execute search
+        candidates = list(candidates_collection.find(query).limit(20))
+        
+        # Convert ObjectIds to strings
+        for candidate in candidates:
+            candidate['_id'] = str(candidate['_id'])
+        
+        return jsonify({
+            "success": True,
+            "candidates": candidates,
+            "count": len(candidates)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error searching candidates: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+    
+@app.route('/cv/<job_id>/<filename>')
+def serve_cv(job_id, filename):
+    # Ensure user is logged in for security
+    if 'user' not in session:
+        abort(401) # Unauthorized
+
+    # Sanitize inputs to prevent directory traversal attacks
+    safe_job_id = os.path.basename(job_id)
+    safe_filename = os.path.basename(filename)
+
+    # Path to the directory where this job's CVs are stored
+    cv_directory = os.path.join('cv_uploads', safe_job_id)
+    
+    # Use Flask's secure function to send the file
+    return send_from_directory(cv_directory, safe_filename, as_attachment=False)
+
+@app.route('/request-demo', methods=['POST'])
+def request_demo():
+    try:
+        data = request.get_json()
+
+        # Validate required fields
+        required_fields = ['name', 'email', 'company']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+
+        email = data['email'].strip().lower()
+        name = data['name'].strip()
+        company = data['company'].strip()
+
+        # Check if user already exists
+        existing_user = demo_request_collection.find_one({'email': email})
+        print("Existing user check:", existing_user)
+        if existing_user:
+            return jsonify({'error': 'you already have requested demo once..'}), 400
+
+        # Create username from full name (sanitize spaces and lowercase)
+        username = name.replace(" ", "").lower()
+
+        # Generate a strong password that meets JS validation
+        plain_password = generate_compatible_password(8)
+
+        # Encrypt password exactly like /register
+        hashed_password = generate_password_hash(plain_password)
+
+        print(f"Generated password for demo user {email}: {plain_password}")
+        print(f"Hashed password for demo user {email}: {hashed_password}")
+
+        # Create demo user entry
+        user = {
+            "username": username,
+            "company": company,
+            "created_at": datetime.utcnow(),
+            "registered_email": email,
+            "password": hashed_password,
+            "verification_status": "Approved",
+            "user_type": "demo",
+            "subscription": {
+                "is_subscribed": False,
+                "plan": "demo",
+                "status": "active"
+            },
+            "first_job_uploaded": False,
+            "is_superadmin": False
+        }
+
+        user_result = users_collection.insert_one(user)
+
+        # Create demo request entry
+        demo_request = {
+            'name': name,
+            'email': email,
+            'company': company,
+            'created_at': datetime.utcnow()
+        }
+        demo_result = demo_request_collection.insert_one(demo_request)
+
+        # Pass relevant data to demo.html
+        return jsonify({
+                    "user_id": str(user_result.inserted_id),
+                    "username": username,
+                    "password": plain_password
+                })
+
+    except Exception as e:
+        print(f"Error processing demo request: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/book_demo', methods=['POST'])
 def book_demo():
@@ -1328,4 +1541,4 @@ def available_time_slots():
 
 if __name__ == '__main__':
     # app.run(host="0.0.0.0", port=8501)
-    socketio.run(app, host="0.0.0.0", port=8501)
+    socketio.run(app, host="0.0.0.0", port=8501,debug=True)

@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yourbestcandidateai</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XFPZ1ZM909"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XFPZ1ZM909');
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="shortcut icon" href="https://www.yourbestcandidate.ai/static/images/favion2.png">
@@ -416,20 +423,7 @@
         </div>
     </div>
 
-    <!-- SES Data Processing Popup -->
-    <!-- <div id="ses-processing-popup"
-        class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col items-center max-w-md mx-auto">
-            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <h3 class="text-xl font-semibold mb-2">Processing SES Data</h3>
-            <p class="text-gray-600 text-center mb-4">This may take a moment as we analyze your candidate data and
-                prepare personalized responses.</p>
-            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-2">
-                <div id="ses-progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
-            </div>
-            <p id="ses-progress-text" class="text-sm text-gray-500">Processing: 0%</p>
-        </div>
-    </div> -->
+  
 
     <!-- Popup Loader -->
     <div id="popup-loader" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
@@ -653,13 +647,6 @@
             }, 1000);
 
 
-            // Add default candidate reference functionality
-            // document.getElementById('question-input').addEventListener('focus', function () {
-            //     // Check if input already has candidate reference prefixed
-            //     if (!this.value.trim().startsWith('Candidate:') && !this.value.trim()) {
-            //         this.value = 'Show me candidates: ';
-            //     }
-            // });
 
             document.getElementById('question-input').addEventListener('keypress', function (event) {
                 if (event.key === 'Enter') {
@@ -710,6 +697,7 @@
 
                 if (useSES) {
                     formData.append('useSES', useSES);
+                    dataSource = 'SES';
                     console.log("Appending useSES to formData:", useSES);
                 }
 
@@ -741,10 +729,11 @@
                             successContainer.style.display = 'flex';
                         }
 
+                        console.log(" ========== Load time seconds recived : ", data.load_time_seconds)
                         hideLoader(data.load_time_seconds || undefined);
                         setTimeout(() => {
                             successContainer.style.display = 'none';
-                        }, 3000);
+                        }, 6000);
                     })
                     .catch(error => {
                         hideLoader();
@@ -801,6 +790,7 @@
                     pdfTemp = true;
                     file = pdfInput.files[0];
                     type = 'pdf';
+                    gtag('event', 'file_upload', { 'file_type': 'pdf' });
                     formData.append('file', file);
                     formData.append('type', type);
                 }
@@ -809,6 +799,7 @@
                     file = csvInput.files[0];
                     dataSource = 'CSV'
                     type = 'csv';
+                    gtag('event', 'file_upload', { 'file_type': 'csv' });
                     recruitly = false;
                     formData.append('file', file);
                     formData.append('type', type);
@@ -818,6 +809,7 @@
                     file = jsonInput.files[0];
                     dataSource = 'JSON_UPLOAD'
                     type = 'json';
+                    gtag('event', 'file_upload', { 'file_type': 'json' });
                     recruitly = true;
                     recrutlyTemp = true
                     formData.append('file', file);
@@ -829,8 +821,11 @@
                     recruitly = true;
                     recrutlyTemp = true;
                     dataSource = 'SES'
+                    type = '';
+                    gtag('event', 'select_data_source', {
+                        'data_source': 'Recruitly Database'
+                    });
                     formData.append('useSES', true);
-                    formData.append('type', 'json');
                     csvInput.disabled = true;
                     jsonInput.disabled = true;
                     if (csvInput.files.length > 0) {
@@ -871,6 +866,8 @@
             } else {
                 dataSource = ''
             }
+
+
 
             function getChatHistory() {
                 fetch('/get_chat_history', {
@@ -1007,26 +1004,10 @@
 
             function postChat(chatId) {
                 console.log('Inner chat id', chatId)
-                fetch('/chats', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ chat_id: chatId })
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        displayChatHistory(data.chat_history)
-                        selected_chat_id = data.selected_chat_id;
-                    })
-                    .catch(error => {
-                        console.error('Error posting chat:', error);
-                    });
+                window.location.href = `/chat/${chatId}`;
             }
 
 
-            // var socket = io('https://www.yourbestcandidate.ai', {
-            // console.log(window.location.origin)
             var socket = io('https://www.yourbestcandidate.ai', {
                 reconnection: true,
                 reconnectionAttempts: Infinity,
@@ -1194,7 +1175,7 @@
                 if (typeof selected_chat_id === 'undefined') {
                     selected_chat_id = "{{ session.get('chat_id') }}"
                 }
-
+                console.log("current data source ::",dataSource)
                 // Send the question to the server using Socket.IO
                 socket.emit('ask', {
                     question: question,
@@ -1382,7 +1363,8 @@
 
                 // Show the popup
                 popup.classList.remove('hidden');
-
+                
+                gtag('event', 'show_popup', { 'popup_message': message });
                 // Auto-hide after 3 seconds
                 setTimeout(function () {
                     popup.classList.add('hidden');
