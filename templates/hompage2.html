@@ -114,47 +114,47 @@
 </div>
 
 <script>
-      document.getElementById('submitDemoRequest').addEventListener('click', function() {
-    const form = document.getElementById('startDemoForm');
-    const errorDiv = document.getElementById('demoFormError');
+    document.getElementById('submitDemoRequest').addEventListener('click', function () {
+        const form = document.getElementById('startDemoForm');
+        const errorDiv = document.getElementById('demoFormError');
 
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-
-    const formData = {
-        firstName: document.getElementById('firstName').value,
-        lastName: document.getElementById('lastName').value,
-        email: document.getElementById('demoEmail').value,
-    };
-
-    fetch('/start-demo-session', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Redirect to the demo page on success
-            window.location.href = data.redirect_url;
-        } else {
-            // Show error message in the modal
-            errorDiv.textContent = data.error;
-            errorDiv.style.display = 'block';
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        errorDiv.textContent = 'An unexpected error occurred. Please try again.';
-        errorDiv.style.display = 'block';
+
+        const formData = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            email: document.getElementById('demoEmail').value,
+        };
+
+        fetch('/start-demo-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Redirect to the demo page on success
+                    window.location.href = data.redirect_url;
+                } else {
+                    // Show error message in the modal
+                    errorDiv.textContent = data.error;
+                    errorDiv.style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                errorDiv.textContent = 'An unexpected error occurred. Please try again.';
+                errorDiv.style.display = 'block';
+            });
     });
-});
     // date range
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const dateInput = document.getElementById('date');
         const today = new Date();
         const tomorrow = new Date(today);
@@ -182,7 +182,7 @@
     // date range
 
     // time slot
-    document.getElementById('date').addEventListener('input', function() {
+    document.getElementById('date').addEventListener('input', function () {
         const date = this.value; // Get the date value from the input field
         fetch(`/available_time_slots?date=${date}`)
             .then(response => response.json())
@@ -207,7 +207,7 @@
     });
 
 
-    document.getElementById('date').addEventListener('input', function() {
+    document.getElementById('date').addEventListener('input', function () {
         const input = this;
         const currentDate = new Date();
         const inputDate = new Date(input.value);
@@ -218,7 +218,7 @@
             input.setCustomValidity("");
         }
     });
-    function validate_form(){
+    function validate_form() {
         const nameInput = document.getElementById('name');
         const nameValue = nameInput.value;
 
@@ -228,7 +228,7 @@
         } else {
             document.getElementById('name_error').style.display = 'none';
         }
-        
+
         const phoneInput = document.getElementById('phone');
         const phoneValue = phoneInput.value;
 
@@ -251,7 +251,7 @@
 
         res = validate_form();
         console.log("res ==> ", res);
-        if(!res){
+        if (!res) {
             return;
         }
         console.log("res 123123");
@@ -278,17 +278,17 @@
                             },
                             body: JSON.stringify(formData),
                         })
-                        .then(response => response.json())
-                        .then(data => {
-                            alert(data.message);
-                            location.reload();
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('demoModal'));
-                            modal.hide();
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('There was an error booking your demo. Please try again.');
-                        });
+                            .then(response => response.json())
+                            .then(data => {
+                                alert(data.message);
+                                location.reload();
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('demoModal'));
+                                modal.hide();
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                alert('There was an error booking your demo. Please try again.');
+                            });
                     }
                 })
                 .catch(error => {
@@ -299,7 +299,7 @@
             form.reportValidity();
         }
     }
-    </script>
+</script>
 
 
 <!-- <section class="video-section">
@@ -314,7 +314,10 @@
 <section class="video-section"></section>
 <div class="video-wrp">
     <div class="ratio ratio-4x3">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/QivRb-QOSkQ?si=2KDlutqnRqMy_Bge" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+        <iframe width="560" height="315" src="https://www.youtube.com/embed/QivRb-QOSkQ?si=2KDlutqnRqMy_Bge"
+            title="YouTube video player" frameborder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
 
         </iframe>
     </div>
@@ -347,10 +350,10 @@
 
             <div class="col-lg-6">
                 <div class="generator-wrp">
-                    
+
                     <video class="demo-video" autoplay loop muted>
                         <source src="./static/assets/video/demo_video.mp4" type="video/mp4" />
-                      </video>
+                    </video>
                 </div>
             </div>
 
@@ -742,9 +745,13 @@
                         Book a Demo
                     </button>
                 </div>
-                
+
             </div>
         </div>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.tinystats.net/scripts/capi.js" async></script>
 {% endblock %}
