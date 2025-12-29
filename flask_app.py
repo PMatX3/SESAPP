@@ -451,16 +451,11 @@ def login():
 def logout():
     user_id = session.get('user_id')
     if user_id:
-        # Clear all session data
         session.clear()
-        # Regenerate session ID to prevent session fixation attacks
-        session.regenerate()
-        # Explicitly mark session as non-permanent (though clear() often handles this)
         session.permanent = False
-        # Create a response object and delete the session cookie
-        # response = redirect(url_for('login'))
-        # response.delete_cookie('session')
-        # return response
+        response = redirect(url_for('login'))
+        response.delete_cookie(app.config.get('SESSION_COOKIE_NAME', 'session'))
+        return response
     return redirect(url_for('login'))
 
 @app.route('/chats', methods=['GET']) # Only GET method is needed for the chat list
@@ -731,7 +726,7 @@ user_conversations = {}
 
 @socketio.on('ask')
 def handle_ask(json):
-    # print("handle_ask called with data:", json)
+    print("handle_ask called with data:", json)
     try:
         global cancellation_flag
         cancellation_flag.clear()
@@ -867,7 +862,7 @@ def handle_ask(json):
 
 @socketio.on('ask2')
 def handle_ask2(json):
-    # print("handle_ask2 called with data:", json)
+    print("handle_ask2 called with data:", json)
     try:
         global cancellation_flag
         cancellation_flag.clear()
@@ -1273,6 +1268,12 @@ def cv_analysis_progress(job_id):
         if not job_result['success']:
             return jsonify({"success": False, "error": "Job not found"}), 404
         
+        job = job_result['job']
+        
+        # Check if CV processing is complete by looking at process_status
+        process_status = job.get('process_status', {})
+        is_processing_complete = process_status.get('Getting resumes from portal') == 'done'
+        
         # Get candidates count from database
         total_candidates = candidates_collection.count_documents({"username": username, "job_id": job_id})
         processed_candidates = candidates_collection.count_documents({
@@ -1281,14 +1282,26 @@ def cv_analysis_progress(job_id):
             "is_analyzed": True
         })
         
-        progress_data = {
-            "success": True,
-            "total_cvs": total_candidates,
-            "processed_cvs": processed_candidates,
-            "progress_percentage": (processed_candidates / total_candidates * 100) if total_candidates > 0 else 0,
-            "is_complete": processed_candidates == total_candidates and total_candidates > 0,
-            "current_status": "Analyzing candidate profiles..." if processed_candidates < total_candidates else "Analysis complete"
-        }
+        # If status is marked as done, consider it complete regardless of candidate count
+        # This handles cases where some CVs failed but processing is finished
+        if is_processing_complete:
+            progress_data = {
+                "success": True,
+                "total_cvs": total_candidates,
+                "processed_cvs": total_candidates,  # Report all as processed if done
+                "progress_percentage": 100,
+                "is_complete": True,
+                "current_status": "Analysis complete"
+            }
+        else:
+            progress_data = {
+                "success": True,
+                "total_cvs": total_candidates,
+                "processed_cvs": processed_candidates,
+                "progress_percentage": (processed_candidates / total_candidates * 100) if total_candidates > 0 else 0,
+                "is_complete": False,
+                "current_status": "Analyzing candidate profiles..."
+            }
         
         return jsonify(progress_data), 200
         
@@ -1537,6 +1550,22 @@ def available_time_slots():
     # Determine available time slots
     available_slots = [slot for slot in all_time_slots if slot not in booked_slots]
     return jsonify({'available_time_slots': available_slots}), 200
+
+@app.route('/ashby')
+def ashby():
+    return render_template('ashby.html')
+
+@app.route('/workable')
+def workable():
+    return render_template('workable.html')
+
+@app.route('/greenhouse')
+def greenhouse():
+    return render_template('greenhouse.html')
+
+@app.route('/teamtailor')
+def teamtailor():
+    return render_template('teamtailor.html')
 
 
 if __name__ == '__main__':
